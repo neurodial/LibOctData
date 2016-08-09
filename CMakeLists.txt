@@ -25,9 +25,9 @@ endif()
 
 file(GLOB sources_b "${CMAKE_CURRENT_SOURCE_DIR}/octdata/*.cpp")
 file(GLOB sources "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/*.cpp")
+file(GLOB sources_r "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/**/*.cpp")
 
-list(APPEND sources ${sources_b})
-
+list(APPEND sources ${sources_b} ${sources_r})
 
 
 if(compiler_flags_debug)
@@ -55,4 +55,4 @@ GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EX
     STATIC_DEFINE SHARED_EXPORTS_BUILT_AS_STATIC)
 
 add_executable(liboctdata main.cpp)
-target_link_libraries(liboctdata octdata ${OpenCV_LIBRARIES})
+target_link_libraries(liboctdata octdata ${OpenCV_LIBRARIES} ${Boost_LIBRARIES})

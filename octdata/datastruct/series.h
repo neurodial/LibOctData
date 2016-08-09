@@ -18,9 +18,11 @@ namespace OctData
 		Series();
 		~Series();
 
-		const SloImage* getSloImage() const                         { return sloImage; }
-		const BScanList getBScans() const                           { return bscans;   }
+		const SloImage& getSloImage() const                         { return *sloImage; }
+		void takeSloImage(SloImage* sloImage);
+		const BScanList getBScans() const                           { return bscans;    }
 		const BScan* getBScan(std::size_t pos) const;
+		std::size_t bscanCount() const                              { return bscans.size(); }
 
 		void takeBScan(BScan* bscan);
 	private:

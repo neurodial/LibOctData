@@ -3,35 +3,36 @@
 #include <vector>
 #include <string>
 
+#include "octextension.h"
+
+namespace boost { namespace filesystem { class path; } }
+
 namespace OctData
 {
 	class OCT;
-
-	struct OctExtension
-	{
-		OctExtension(const std::string& ext, const std::string& name)
-		: extension(ext)
-		, name(name)
-		{}
-
-		std::string extension;
-		std::string name;
-	};
+	class OctFileReader;
 
 	class OctFileRead
 	{
+		friend class OctFileReader;
 	public:
 		typedef std::vector<OctExtension> ExtensionsList;
 		static OctFileRead& getInstance()                        { static OctFileRead instance; return instance; }
 
-		static const ExtensionsList& supportedExtensions()       { return getInstance().extensions; };
-		static OCT&& openFile(const std::string& filename);
+		static const ExtensionsList& supportedExtensions()  ;//     { return getInstance().extensions; };
+		static OCT openFile(const std::string& filename);
+
+	protected:
+		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
+
 
 	private:
 		OctFileRead();
 		~OctFileRead();
 
 		ExtensionsList extensions;
+
+		std::vector<OctFileReader*> fileReaders;
 	};
 	
 }

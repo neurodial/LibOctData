@@ -7,6 +7,7 @@ namespace OctData
 {
 
 	Series::Series()
+	: sloImage(new SloImage)
 	{
 
 	}
@@ -32,5 +33,15 @@ namespace OctData
 			return nullptr;
 		return bscans[pos];
 	}
+
+	void Series::takeSloImage(SloImage* slo)
+	{
+		if(slo)
+		{
+			delete sloImage;
+			sloImage = slo;
+		}
+	}
+
 
 }

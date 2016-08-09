@@ -23,6 +23,10 @@ namespace OctData
 		void setId      (const std::string& v)                   { id       = v; }
 		void setSex     (const Sex          v)                   { sex      = v; }
 
+
+		      Study& getStudy(int seriesId)                     { return getAndInsert(seriesId)         ; }
+		const Study& getStudy(int seriesId) const               { return *(substructureMap.at(seriesId)); }
+
 	private:
 		std::string forename;
 		std::string surname ;
