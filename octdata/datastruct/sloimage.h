@@ -9,7 +9,7 @@ namespace OctData
 	class SloImage
 	{
 		cv::Mat*    image    = nullptr;
-		std::string filename;
+		// std::string filename;
 
 		ScaleFactor scaleFactor;
 		CoordSLOpx  shift;
@@ -27,8 +27,8 @@ namespace OctData
 		const cv::Mat& getImage()                   const           { return *image                 ; }
 		void           setImage(const cv::Mat& image);
 
-		const std::string& getFilename()             const          { return filename               ; }
-		void               setFilename(const std::string& s)        {        filename = s           ; }
+// 		const std::string& getFilename()             const          { return filename               ; }
+// 		void               setFilename(const std::string& s)        {        filename = s           ; }
 
 		const ScaleFactor& getScaleFactor()         const           { return scaleFactor            ; }
 		const CoordSLOpx&  getShift()               const           { return shift                  ; }

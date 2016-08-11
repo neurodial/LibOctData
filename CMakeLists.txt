@@ -56,3 +56,4 @@ GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EX
 
 add_executable(liboctdata main.cpp)
 target_link_libraries(liboctdata octdata ${OpenCV_LIBRARIES} ${Boost_LIBRARIES})
+
