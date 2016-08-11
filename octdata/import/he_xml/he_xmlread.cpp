@@ -118,6 +118,9 @@ namespace OctData
 
 	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct)
 	{
+		if(file.extension() != ".xml")
+			return false;
+
 		if(!bfs::exists(file))
 			return false;
 		// std::cout << xmlfile.branch_path() << std::endl;
@@ -132,6 +135,11 @@ namespace OctData
 		// (cannot open file, parse error), an exception is thrown.
 		bpt::xml_parser::read_xml(file.generic_string(), pt);
 
+
+		boost::optional<bpt::ptree&> hedxNode = pt.get_child_optional("HEDX");
+
+		if(!hedxNode)
+			return false; // no Heidelberg Engineering Xml File
 
 		const char* patientNodeStr = "HEDX.BODY.Patient";
 

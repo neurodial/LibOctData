@@ -5,6 +5,7 @@
 
 #include "import/he_vol/volread.h"
 #include "import/he_xml/he_xmlread.h"
+#include "cirrus_raw/cirrus_rawread.h"
 
 namespace OctData
 {
@@ -30,8 +31,9 @@ namespace OctData
 
 	void OctFileReader::registerReaders()
 	{
-		OctData::VOLRead::getInstance();
-		OctData::HeXmlRead::getInstance();
+		VOLRead::getInstance();
+		HeXmlRead::getInstance();
+		CirrusRawRead::getInstance();
 
 	}
 

@@ -158,11 +158,12 @@ namespace OctData
 
 	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct)
 	{
+		if(file.extension() != ".vol")
+			return false;
+		
 		if(!bfs::exists(file))
 			return false;
 
-		if(file.extension() != ".vol")
-			return false;
 
 		std::string dir      = file.branch_path().generic_string();
 		std::string filename = file.filename().generic_string();
