@@ -35,8 +35,11 @@ namespace OctData
 		bfs::path file(filename);
 
 		for(OctFileReader* reader : obj.fileReaders)
+		{
 			if(reader->readFile(file, oct))
 				break;
+			oct.clear();
+		}
 
 		return std::move(oct);
 	}

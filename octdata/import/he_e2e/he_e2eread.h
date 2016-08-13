@@ -7,15 +7,15 @@
 
 namespace OctData
 {
-	class HeXmlRead : public OctFileReader
+	class HeE2ERead : public OctFileReader
 	{
-		HeXmlRead();
+		HeE2ERead();
 
 		boost::filesystem::path xmlFilename;
 		boost::filesystem::path xmlPath;
 
 	public:
-		static HeXmlRead* getInstance();
+		static HeE2ERead* getInstance();
 
 		virtual bool readFile(const boost::filesystem::path& file, OCT& oct);
 	};

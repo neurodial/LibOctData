@@ -12,15 +12,18 @@ find_package(OpenJPEG REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/octdata/)
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${LibE2E_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	set(compiler_flags_debug "-Wall -Wextra -Wunreachable-code -Werror")        ## -Weverything
 	set(CMAKE_CXX_FLAGS "-std=c++11")
+	set(CMAKE_CFLAGS "-fPIC")
 
 	if(${WIN32})
 		set(CMAKE_CXX_FLAGS "-mno-ms-bitfields -static -static-libstdc++ ${CMAKE_CXX_FLAGS}")
 	endif()
 endif()
+
 
 
 file(GLOB sources_b "${CMAKE_CURRENT_SOURCE_DIR}/octdata/*.cpp")
@@ -41,12 +44,20 @@ if(compiler_flags)
 endif()
 
 
-add_library(octdata ${sources})
+
+add_library(octdata SHARED ${sources})
+
+
+IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+  SET_TARGET_PROPERTIES(octdata PROPERTIES COMPILE_FLAGS "-fPIC")
+ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+
 
 if(${DCMTK_FOUND})
 	add_definitions(-DUSE_DCMTK)
 	target_link_libraries(octdata ${DCMTK_LIBRARIES})
 endif()
+target_link_libraries(octdata ${LibE2E_LIBRARIES})
 
 GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EXPORTS.h automatically
     BASE_NAME octdata

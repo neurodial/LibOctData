@@ -8,8 +8,9 @@ namespace OctData
 	class OCT : public SubstructureTemplate<Patient>
 	{
 	public:
-		      Patient& getPatient(int patientId)                     { return getAndInsert        (patientId) ; }
-		const Patient& getPatient(int patientId) const               { return *(substructureMap.at(patientId)); }
+		      Patient& getPatient(int patientId)                  { return getAndInsert        (patientId) ; }
+		const Patient& getPatient(int patientId) const            { return *(substructureMap.at(patientId)); }
+		void clear()                                              { clearSubstructure(); }
 	};
 
 }

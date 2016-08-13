@@ -11,6 +11,7 @@ namespace OctData
 	class OctFileReader
 	{
 	public:
+		OctFileReader();
 		OctFileReader(const OctExtension& ext);
 		OctFileReader(const std::vector<OctExtension>& ext);
 

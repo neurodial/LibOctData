@@ -47,6 +47,13 @@ namespace OctData
 			return *(it->second);
 		};
 
+		void clearSubstructure()
+		{
+			for(SubstructurePair obj : substructureMap)
+				delete obj.second;
+			substructureMap.clear();
+		}
+
 
 		SubstructureMap substructureMap;
 	};

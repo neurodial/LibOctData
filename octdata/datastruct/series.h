@@ -14,6 +14,8 @@ namespace OctData
 		Series& operator=(const Series&) = delete;
 
 	public:
+		enum class Laterality { undef, OD, LD};
+
 		typedef std::vector<BScan*> BScanList;
 		Series();
 		~Series();
@@ -24,11 +26,16 @@ namespace OctData
 		const BScan* getBScan(std::size_t pos) const;
 		std::size_t bscanCount() const                              { return bscans.size(); }
 
+		void setLaterality(Laterality l)                            { laterality = l; }
+		Laterality getLaterality() const                            { return laterality; }
+
 		void takeBScan(BScan* bscan);
 	private:
 		SloImage*                               sloImage = nullptr;
 		std::string                             seriesID;
 		std::string                             refSeriesID;
+
+		Laterality                              laterality = Laterality::undef;
 
 		BScanList                               bscans;
 	};

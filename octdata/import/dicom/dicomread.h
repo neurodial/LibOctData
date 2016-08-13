@@ -1,22 +1,20 @@
 #pragma once
-#include <string>
 
+#include <string>
 #include "../octfilereader.h"
 
 #include <boost/filesystem.hpp>
 
 namespace OctData
 {
-	class HeXmlRead : public OctFileReader
+	class DicomRead : public OctFileReader
 	{
-		HeXmlRead();
-
-		boost::filesystem::path xmlFilename;
-		boost::filesystem::path xmlPath;
-
+	    DicomRead();
 	public:
-		static HeXmlRead* getInstance();
+		static DicomRead* getInstance();
 
 		virtual bool readFile(const boost::filesystem::path& file, OCT& oct);
 	};
+
 }
+
