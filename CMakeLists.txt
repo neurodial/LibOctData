@@ -44,7 +44,6 @@ if(compiler_flags)
 endif()
 
 
-
 add_library(octdata SHARED ${sources})
 
 
@@ -53,11 +52,11 @@ IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 
 
-if(${DCMTK_FOUND})
+if(DEFINED DCMTK_FOUND)
 	add_definitions(-DUSE_DCMTK)
 	target_link_libraries(octdata ${DCMTK_LIBRARIES})
 endif()
-target_link_libraries(octdata ${LibE2E_LIBRARIES})
+target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${Boost_LIBRARIES})
 
 GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EXPORTS.h automatically
     BASE_NAME octdata

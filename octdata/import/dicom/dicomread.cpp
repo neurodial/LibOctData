@@ -14,7 +14,7 @@
 #include <boost/lexical_cast.hpp>
 
 
-// #include <dcmtk/config/cfunix.h>
+#include <dcmtk/config/cfunix.h>
 #include <dcmtk/config/osconfig.h>
 #include <dcmtk/dcmimgle/dcmimage.h>
 
@@ -28,7 +28,6 @@
 #include <datastruct/bscan.h>
 
 namespace bfs = boost::filesystem;
-
 
 
 namespace
@@ -429,8 +428,10 @@ namespace OctData
 
 
 }
+#pragma message("build with dicom support")
 
 #else
+#pragma message("build withhout dicom support")
 
 namespace OctData
 {
@@ -440,7 +441,7 @@ namespace OctData
 
 	bool DicomRead::readFile(const boost::filesystem::path&, OCT&)
 	{
-
+		return false;
 	}
 
 

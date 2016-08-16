@@ -216,6 +216,7 @@ namespace OctData
 			int factor   = sizeof(float);
 			readCVImage(stream, bscanImage, cvFormat, factor, volHeader.data.sizeZ, volHeader.data.sizeX);
 
+			cv::threshold(bscanImage, bscanImage, 1.0, 1.0, cv::THRESH_TRUNC); // schneide hohe werte ab, sonst: bei der konvertierung werden sie auf 0 gesetzt
 			cv::pow(bscanImage, 0.25, bscanImagePow);
 			bscanImagePow.convertTo(bscanImageConv, CV_8U, 255, 0);
 
