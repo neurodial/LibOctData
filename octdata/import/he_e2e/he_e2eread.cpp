@@ -18,6 +18,7 @@
 #include <E2E/dataelements/image.h>
 #include <E2E/dataelements/segmentationdata.h>
 #include <E2E/dataelements/bscanmetadataelement.h>
+#include <E2E/dataelements/imageregistration.h>
 
 
 namespace bfs = boost::filesystem;
@@ -99,6 +100,17 @@ namespace OctData
 			cv::pow(dest, 8, dest);
 			dest.convertTo(bscanImageConv, CV_8U, 255, 0);
 
+			// testcode
+			const E2E::ImageRegistration* reg = e2eBScan.getImageRegistrationData();
+			if(reg)
+			{
+				std::cout << "shift X: " << reg->values[9] << std::endl;
+				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, -reg->values[7], 1, -reg->values[9]);
+				cv::warpAffine(bscanImageConv, bscanImageConv, trans_mat, bscanImageConv.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255));
+				// void warpAffine(InputArray src, OutputArray dst, InputArray M, Size dsize, int flags=INTER_LINEAR, int borderMode=BORDER_CONSTANT, const Scalar& borderValue=Scalar())
+
+				// bscanImageConv = trans_mat;
+			}
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
 			bscan->setRawImage(e2eImage);
