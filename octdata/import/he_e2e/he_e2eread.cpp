@@ -55,7 +55,7 @@ namespace OctData
 			series.takeSloImage(slo);
 		}
 
-		void addSegData(BScan::Data& bscanData, BScan::SegmentlineType segType, const E2E::BScan::SegmentationMap& e2eSegMap, std::size_t index, std::size_t type)
+		void addSegData(BScan::Data& bscanData, BScan::SegmentlineType segType, const E2E::BScan::SegmentationMap& e2eSegMap, std::size_t index, std::size_t type, const E2E::ImageRegistration* reg, std::size_t imagecols)
 		{
 			const E2E::BScan::SegmentationMap::const_iterator segPair = e2eSegMap.find(E2E::BScan::SegPair(index, type));
 			if(segPair != e2eSegMap.end())
@@ -64,7 +64,14 @@ namespace OctData
 				if(segData)
 				{
 					std::vector<double> segVec(segData->begin(), segData->end());
-					bscanData.segmentlines.at(static_cast<std::size_t>(segType)) = segVec;
+					if(reg)
+					{
+						double degree = -reg->values[7];
+						double shiftX = -reg->values[9] - degree*imagecols/2.;
+						double pos = 0;
+						std::transform(segVec.begin(), segVec.end(), segVec.begin(), [&pos, shiftX, degree](double value) { return value + shiftX + (++pos)*degree; });
+					}
+					bscanData.segmentlines.at(static_cast<std::size_t>(segType)) = std::move(segVec);
 				}
 			}
 		}
@@ -74,6 +81,8 @@ namespace OctData
 			const E2E::Image* e2eBScanImg = e2eBScan.getImage();
 			if(!e2eBScanImg)
 				return;
+
+			const cv::Mat& e2eImage = e2eBScanImg->getImage();
 
 
 			BScan::Data bscanData;
@@ -86,30 +95,29 @@ namespace OctData
 				bscanData.end   = CoordSLOmm(e2eMeta->getX2()*factor, e2eMeta->getY2()*factor);
 			}
 
+			const E2E::ImageRegistration* reg = e2eBScan.getImageRegistrationData();
 
 			// segmenation lines
 			const E2E::BScan::SegmentationMap& e2eSegMap = e2eBScan.getSegmentationMap();
-			addSegData(bscanData, BScan::SegmentlineType::ILM, e2eSegMap, 0, 5);
-			addSegData(bscanData, BScan::SegmentlineType::BM , e2eSegMap, 1, 2);
+			addSegData(bscanData, BScan::SegmentlineType::ILM, e2eSegMap, 0, 5, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::BM , e2eSegMap, 1, 2, reg, e2eImage.cols);
 
 			// convert image
-			const cv::Mat& e2eImage = e2eBScanImg->getImage();
-
 			cv::Mat dest, bscanImageConv;
 			e2eImage.convertTo(dest, CV_32FC1, 1/static_cast<double>(1 << 16), 0);
 			cv::pow(dest, 8, dest);
 			dest.convertTo(bscanImageConv, CV_8U, 255, 0);
 
-#if true
 			// testcode
-			const E2E::ImageRegistration* reg = e2eBScan.getImageRegistrationData();
 			if(reg)
 			{
 				// std::cout << "shift X: " << reg->values[9] << std::endl;
-				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, -reg->values[7], 1, -reg->values[9]); // +reg->values[7]*bscanImageConv.cols);
+				double degree = -reg->values[7];
+				double shiftX = -reg->values[9];
+				std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
+				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, degree, 1, shiftX - degree*bscanImageConv.cols/2.);
 				cv::warpAffine(bscanImageConv, bscanImageConv, trans_mat, bscanImageConv.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255));
 			}
-#endif
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
 			bscan->setRawImage(e2eImage);
