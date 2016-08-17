@@ -100,17 +100,16 @@ namespace OctData
 			cv::pow(dest, 8, dest);
 			dest.convertTo(bscanImageConv, CV_8U, 255, 0);
 
+#if true
 			// testcode
 			const E2E::ImageRegistration* reg = e2eBScan.getImageRegistrationData();
 			if(reg)
 			{
-				std::cout << "shift X: " << reg->values[9] << std::endl;
-				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, -reg->values[7], 1, -reg->values[9]);
+				// std::cout << "shift X: " << reg->values[9] << std::endl;
+				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, -reg->values[7], 1, -reg->values[9]); // +reg->values[7]*bscanImageConv.cols);
 				cv::warpAffine(bscanImageConv, bscanImageConv, trans_mat, bscanImageConv.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255));
-				// void warpAffine(InputArray src, OutputArray dst, InputArray M, Size dsize, int flags=INTER_LINEAR, int borderMode=BORDER_CONSTANT, const Scalar& borderValue=Scalar())
-
-				// bscanImageConv = trans_mat;
 			}
+#endif
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
 			bscan->setRawImage(e2eImage);
@@ -144,8 +143,8 @@ namespace OctData
 			{
 				char buffer[100];
 				const E2E::Patient& e2ePat = *(e2ePatPair.second);
-				// 00000001.pdb
 				std::sprintf(buffer, "%08d.pdb", e2ePatPair.first);
+				// std::string filenname =
 				bfs::path patientDataFile(file.branch_path() / buffer);
 				if(bfs::exists(patientDataFile))
 					e2eData.readE2EFile(patientDataFile.generic_string());

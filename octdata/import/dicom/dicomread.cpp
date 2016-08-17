@@ -8,6 +8,9 @@
 #include <fstream>
 #include <iomanip>
 
+#include <algorithm>
+#include <string>
+
 #include <opencv2/opencv.hpp>
 
 #include <boost/filesystem.hpp>
@@ -104,7 +107,10 @@ namespace OctData
 
 	bool DicomRead::readFile(const boost::filesystem::path& file, OCT& /*oct*/)
 	{
-		if(file.extension() != ".dicom")
+		std::string ext = file.extension().generic_string();
+
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+		if(ext != ".dicom" && ext != ".dcm")
 			return false;
 
 		if(!bfs::exists(file))

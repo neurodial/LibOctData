@@ -176,14 +176,14 @@ namespace OctData
 		VolHeader volHeader;
 
 		readFStream(stream, &(volHeader.data));
-		volHeader.printData(std::cout);
+		// volHeader.printData(std::cout);
 		stream.seekg(VolHeader::getHeaderSize());
 
 		Patient& pat = oct.getPatient(volHeader.data.pid);
 		Study& study = pat.getStudy(volHeader.data.vid);
 		Series& series = study.getSeries(1); // TODO
 
-		std::cerr << "oct.size() : " << oct.size() << '\n';
+		// std::cerr << "oct.size() : " << oct.size() << '\n';
 
 		// Read SLO
 		cv::Mat sloImage;
