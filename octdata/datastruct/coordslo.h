@@ -31,8 +31,8 @@ namespace OctData
 		CoordSLOpx(double x, double y) : x(x), y(y)                 {}
 		CoordSLOpx() : x(0), y(0)                                   {}
 
-		int getX() const                                            { return std::round(x); }
-		int getY() const                                            { return std::round(y); }
+		int getX() const                                            { return static_cast<int>(std::round(x)); }
+		int getY() const                                            { return static_cast<int>(std::round(y)); }
 
 
 		double getXf() const                                        { return x; }

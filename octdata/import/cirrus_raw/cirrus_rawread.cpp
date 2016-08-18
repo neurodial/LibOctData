@@ -24,7 +24,7 @@ namespace
 {
 	void readCVImage(std::istream& stream, cv::Mat& image, int cvFormat, int factor, std::size_t sizeX, std::size_t sizeY)
 	{
-		image = cv::Mat(sizeX, sizeY, cvFormat);
+		image = cv::Mat(static_cast<int>(sizeX), static_cast<int>(sizeY), cvFormat);
 
 		std::size_t num = sizeX*sizeY;
 

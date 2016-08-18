@@ -12,6 +12,7 @@
 
 #include <boost/filesystem.hpp>
 
+#include "../../octdata_packhelper.h"
 
 namespace bfs = boost::filesystem;
 
@@ -35,7 +36,7 @@ namespace
 
 	struct VolHeader
 	{
-		struct RawData
+		PACKSTRUCT(struct RawData
 		{
 			char     version     [12];
 			uint32_t sizeX           ;
@@ -67,7 +68,7 @@ namespace
 			int32_t  gridOffset      ;
 			char     spare       [ 8];
 			char     progID      [32];
-		} __attribute__((packed));
+		});
 		RawData data;
 
 		void printData(std::ostream& stream)
@@ -116,7 +117,7 @@ namespace
 
 	struct BScanHeader
 	{
-		struct Data
+		PACKSTRUCT(struct Data
 		{
 		double  startX ;
 		double  startY ;
@@ -126,7 +127,7 @@ namespace
 		int32_t offSeg ;
 		float   quality;
 		int32_t shift  ;
-		} __attribute__((packed));
+		});
 
 		Data data;
 

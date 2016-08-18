@@ -16,7 +16,7 @@ find_path(LibE2E_INCLUDE_DIR NAMES E2E PATHS ../
 
 message(${LibE2E_INCLUDE_DIR})
 
-find_library(LibE2E_LIBRARY NAMES libe2e.a
+find_library(LibE2E_LIBRARY NAMES libe2e.a e2e.lib
 			PATHS ${LibE2E_INCLUDE_DIR}
 			PATH_SUFFIXES release build
              # HINTS ${PC_LIBXML_LIBDIR} ${PC_LIBXML_LIBRARY_DIRS}

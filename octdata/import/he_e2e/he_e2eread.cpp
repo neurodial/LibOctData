@@ -114,7 +114,7 @@ namespace OctData
 				// std::cout << "shift X: " << reg->values[9] << std::endl;
 				double degree = -reg->values[7];
 				double shiftX = -reg->values[9];
-				std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
+				// std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
 				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, degree, 1, shiftX - degree*bscanImageConv.cols/2.);
 				cv::warpAffine(bscanImageConv, bscanImageConv, trans_mat, bscanImageConv.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255));
 			}
