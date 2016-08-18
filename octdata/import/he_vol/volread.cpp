@@ -8,6 +8,9 @@
 #include <fstream>
 #include <iomanip>
 
+#include <chrono>
+#include <ctime>
+
 #include <opencv2/opencv.hpp>
 
 #include <boost/filesystem.hpp>
@@ -19,6 +22,16 @@ namespace bfs = boost::filesystem;
 
 namespace
 {
+	#define WINDOWS_TICK 10000000
+	#define SEC_TO_UNIX_EPOCH 11644473600LL
+
+	std::chrono::system_clock::time_point windowsTickToTime(long long windowsTicks)
+	{
+		std::time_t time = (windowsTicks / WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
+		return std::chrono::system_clock::from_time_t(time);
+		
+	}
+	
 	template<typename T>
 	void readFStream(std::istream& stream, T* dest, std::size_t num = 1)
 	{
@@ -183,6 +196,14 @@ namespace OctData
 		Patient& pat = oct.getPatient(volHeader.data.pid);
 		Study& study = pat.getStudy(volHeader.data.vid);
 		Series& series = study.getSeries(1); // TODO
+		
+		series.setTime(windowsTickToTime(volHeader.data.examTime));
+		
+		/*
+		time_t time = std::chrono::system_clock::to_time_t(series.getTime());
+		struct tm* tmw = std::localtime(&time);
+		std::cout << (tmw->tm_mday) << "." << (tmw->tm_mon+1) << "." << (tmw->tm_year + 1900) << std::endl;
+		*/
 
 		// std::cerr << "oct.size() : " << oct.size() << '\n';
 

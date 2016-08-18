@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace OctData
 {
@@ -16,6 +17,7 @@ namespace OctData
 	public:
 		enum class Laterality { undef, OD, LD};
 
+		typedef std::chrono::system_clock::time_point Time;
 		typedef std::vector<BScan*> BScanList;
 		Series();
 		~Series();
@@ -28,6 +30,9 @@ namespace OctData
 
 		void setLaterality(Laterality l)                            { laterality = l; }
 		Laterality getLaterality() const                            { return laterality; }
+		
+		const Time& getTime() const                                 { return examTime; }
+		void setTime(const Time& time)                              { examTime = time; }
 
 		void takeBScan(BScan* bscan);
 	private:
@@ -38,6 +43,8 @@ namespace OctData
 		Laterality                              laterality = Laterality::undef;
 
 		BScanList                               bscans;
+		
+		Time                                    examTime;
 	};
 
 }
