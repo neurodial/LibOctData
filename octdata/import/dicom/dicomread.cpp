@@ -17,7 +17,7 @@
 #include <boost/lexical_cast.hpp>
 
 
-#include <dcmtk/config/cfunix.h>
+// #include <dcmtk/config/cfunix.h>
 #include <dcmtk/config/osconfig.h>
 #include <dcmtk/dcmimgle/dcmimage.h>
 
@@ -102,21 +102,102 @@ namespace
 namespace OctData
 {
 	DicomRead::DicomRead()
-	: OctFileReader(OctExtension("dicom", "Dicom File"))
-	{ }
+	: OctFileReader({OctExtension(".dicom", "Dicom File"), OctExtension("DICOMDIR", "DICOM DIR")})
+	{
+	}
 
-	bool DicomRead::readFile(const boost::filesystem::path& file, OCT& /*oct*/)
+	bool DicomRead::readFile(const boost::filesystem::path& file, OCT& oct)
 	{
 		std::string ext = file.extension().generic_string();
+		std::string filename = file.filename().generic_string();
 
-		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+		std::transform(ext.begin()     , ext.end()     , ext.begin()     , ::tolower);
+		std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+
+		if(filename == "dicomdir")
+			return readDicomDir(file, oct);
+
 		if(ext != ".dicom" && ext != ".dcm")
 			return false;
 
 		if(!bfs::exists(file))
 			return false;
 
+		std::cout << "ReadDICOM: " << filename << std::endl;
+
+		OFCondition result = EC_Normal;
+		/* Load file and get pixel data element */
+		DcmFileFormat dfile;
+		result = dfile.loadFile(file.c_str());
+		std::cout << __LINE__ << std::endl;
+		if(result.bad())
+			return false;
+
+		std::cout << __LINE__ << std::endl;
+
+		DcmDataset *data = dfile.getDataset();
+		if (data == NULL)
+			return false;
+		std::cout << __LINE__ << std::endl;
+
+		data->print(std::cout);
+
 		return false;
+	}
+
+	bool DicomRead::readDicomDir(const boost::filesystem::path& file, OCT& /*oct*/)
+	{
+		DcmDicomDir dicomdir(file.c_str());
+
+		dicomdir.print(std::cout);
+	//Retrieve root node
+		DcmDirectoryRecord *root = &dicomdir.getRootRecord();
+		//Prepare child elements
+		DcmDirectoryRecord* rootTest      = new DcmDirectoryRecord(*root);
+		DcmDirectoryRecord* patientRecord = nullptr;
+		DcmDirectoryRecord* studyRecord   = nullptr;
+		DcmDirectoryRecord* seriesRecord  = nullptr;
+		DcmDirectoryRecord* image         = nullptr;
+
+		if(rootTest == NULL || rootTest->nextSub(patientRecord) == NULL)
+		{
+			std::cout << "It looks like the selected file does not have the expected format." << std::endl;
+			return false;
+		}
+		else
+		{
+			while((patientRecord = root->nextSub(patientRecord)) != NULL)
+			{
+				while((studyRecord = patientRecord->nextSub(studyRecord)) != NULL)
+				{
+					while((seriesRecord = studyRecord->nextSub(seriesRecord)) != NULL)
+					{
+						while((image = seriesRecord->nextSub(image)) != NULL)
+						{
+							const char *sName;
+							//Retrieve the file name
+							image->findAndGetString(DCM_ReferencedFileID, sName);
+
+							//If a file is selected
+							if(sName != nullptr)
+							{
+							//sName is the path for the file from the DICOMDIR file
+							//You need to create the absolute path to use the DICOM file
+
+							//Here you can do different tests (does the file exists ? for example)
+
+							//Treat the dicom file
+								std::cout << "sName: " << sName << std::endl;
+
+
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return true;
 	}
 
 

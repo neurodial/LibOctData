@@ -10,6 +10,8 @@ namespace OctData
 	class DicomRead : public OctFileReader
 	{
 	    DicomRead();
+
+		bool readDicomDir(const boost::filesystem::path& file, OCT& oct);
 	public:
 		static DicomRead* getInstance();
 

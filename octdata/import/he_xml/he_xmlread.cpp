@@ -107,7 +107,7 @@ namespace OctData
 
 
 	HeXmlRead::HeXmlRead()
-	: OctFileReader(OctExtension("xml", "Heidelberg Engineering Xml File"))
+	: OctFileReader(OctExtension(".xml", "Heidelberg Engineering Xml File"))
 	{
 	}
 
@@ -234,53 +234,6 @@ namespace OctData
 
 }
 
-/*
-
-void OctXml::readOctXml(const std::string& filename, CScan* cscan)
-{
-	if(!cscan)
-		return;
-
-
-
-/ *
-	const char* numImageNodeStr = "HEDX.BODY.Patient.Study.Series.NumImages";
-
-	boost::optional<bpt::ptree&> numImagesNode = pt.get_child(numImageNodeStr);
-	if(!numImagesNode)
-	{
-		std::cerr << "no Node " << numImageNodeStr << std::endl;
-		throw "";
-	}
-	std::size_t numImages = numImagesNode.get().get_value<std::size_t>();
-* /
-
-	for(std::pair<const std::string, bpt::ptree>& imageNode : pt.get_child("HEDX.BODY.Patient.Study.Series"))
-	{
-		if(imageNode.first != "Image")
-			continue;
-
-		// std::cout << t.first << std::endl;
-
-		boost::optional<bpt::ptree&> type = imageNode.second.get_child_optional("ImageType.Type");
-
-		if(!type)
-		{
-			std::cerr << __FILE__ << ":" << __LINE__ << ": image type not found\n";
-			continue;
-		}
-
-		std::string typeStr = type.get().get_value<std::string>();
-
-		if(typeStr == "LOCALIZER")
-			fillSLOImage(imageNode.second, cscan->sloImage, xmlPath);
-
-		if(typeStr == "OCT")
-			fillBScann(imageNode.second, *cscan, xmlPath);
-	}
-}
-
-*/
 
 
 

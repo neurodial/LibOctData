@@ -36,7 +36,7 @@ namespace
 namespace OctData
 {
 	CirrusRawRead::CirrusRawRead()
-	: OctFileReader(OctExtension("img", "Cirrus img files"))
+	: OctFileReader(OctExtension(".img", "Cirrus img files"))
 	{
 
 	}

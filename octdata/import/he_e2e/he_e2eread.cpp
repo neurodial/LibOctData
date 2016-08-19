@@ -127,7 +127,7 @@ namespace OctData
 
 
 	HeE2ERead::HeE2ERead()
-	: OctFileReader({OctExtension("E2E", "Heidelberg Engineering E2E File"), OctExtension("sdb", "Heidelberg Engineering HEYEX File")})
+	: OctFileReader({OctExtension(".E2E", "Heidelberg Engineering E2E File"), OctExtension(".sdb", "Heidelberg Engineering HEYEX File")})
 	{
 	}
 

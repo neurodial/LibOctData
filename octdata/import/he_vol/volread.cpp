@@ -153,7 +153,7 @@ namespace OctData
 {
 
 	VOLRead::VOLRead()
-	: OctFileReader(OctExtension("vol", "Heidelberg Engineering Raw File"))
+	: OctFileReader(OctExtension(".vol", "Heidelberg Engineering Raw File"))
 	{
 	}
 
