@@ -16,6 +16,7 @@
 #include <boost/filesystem.hpp>
 
 #include "../../octdata_packhelper.h"
+#include <filereadoptions.h>
 
 namespace bfs = boost::filesystem;
 
@@ -170,7 +171,7 @@ namespace OctData
 	{
 	}
 
-	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct)
+	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
 	{
 		if(file.extension() != ".vol")
 			return false;
@@ -238,7 +239,8 @@ namespace OctData
 			int factor   = sizeof(float);
 			readCVImage(stream, bscanImage, cvFormat, factor, volHeader.data.sizeZ, volHeader.data.sizeX);
 
-			cv::threshold(bscanImage, bscanImage, 1.0, 1.0, cv::THRESH_TRUNC); // schneide hohe werte ab, sonst: bei der konvertierung werden sie auf 0 gesetzt
+			if(op.fillEmptyPixelWhite)
+				cv::threshold(bscanImage, bscanImage, 1.0, 1.0, cv::THRESH_TRUNC); // schneide hohe werte ab, sonst: bei der konvertierung werden sie auf 0 gesetzt
 			cv::pow(bscanImage, 0.25, bscanImagePow);
 			bscanImagePow.convertTo(bscanImageConv, CV_8U, 255, 0);
 

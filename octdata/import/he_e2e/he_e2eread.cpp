@@ -4,6 +4,7 @@
 #include <datastruct/coordslo.h>
 #include <datastruct/sloimage.h>
 #include <datastruct/bscan.h>
+#include <filereadoptions.h>
 
 #include <iostream>
 #include <fstream>
@@ -76,7 +77,81 @@ namespace OctData
 			}
 		}
 
-		void copyBScan(Series& series, const E2E::BScan& e2eBScan)
+		template<typename T>
+		void fillEmptyBroderCols(cv::Mat& image, T broderValue, T fillValue)
+		{
+			const int cols = image.cols;
+			const int rows = image.rows;
+
+			// find left Broder
+			int leftEnd = cols;
+			for(int row = 0; row<rows; ++row)
+			{
+				T* it = image.ptr<T>(row);
+				for(int col = 0; col < leftEnd; ++col)
+				{
+					if(*it != broderValue)
+					{
+						leftEnd = col;
+						break;
+					}
+					++it;
+				}
+				if(leftEnd == 0)
+					break;
+			}
+
+			// fill left Broder
+			if(leftEnd > 0)
+			{
+				for(int row = 0; row<rows; ++row)
+				{
+					T* it = image.ptr<T>(row);
+					for(int col = 0; col < leftEnd; ++col)
+					{
+						*it = fillValue;
+						++it;
+					}
+				}
+			}
+			else
+				if(leftEnd == cols) // empty Image
+					return;
+
+			// find right Broder
+			int rightEnd = leftEnd;
+			for(int row = 0; row<rows; ++row)
+			{
+				T* it = image.ptr<T>(row, cols-1);
+				for(int col = cols-1; col >= rightEnd; --col)
+				{
+					if(*it != broderValue)
+					{
+						rightEnd = col;
+						break;
+					}
+					--it;
+				}
+				if(rightEnd == cols-1)
+					break;
+			}
+
+			// fill right Broder
+			if(rightEnd < cols)
+			{
+				for(int row = 0; row<rows; ++row)
+				{
+					T* it = image.ptr<T>(row, rightEnd);
+					for(int col = rightEnd; col < cols; ++col)
+					{
+						*it = fillValue;
+						++it;
+					}
+				}
+			}
+		}
+
+		void copyBScan(Series& series, const E2E::BScan& e2eBScan, const FileReadOptions& op)
 		{
 			const E2E::Image* e2eBScanImg = e2eBScan.getImage();
 			if(!e2eBScanImg)
@@ -95,7 +170,9 @@ namespace OctData
 				bscanData.end   = CoordSLOmm(e2eMeta->getX2()*factor, e2eMeta->getY2()*factor);
 			}
 
-			const E2E::ImageRegistration* reg = e2eBScan.getImageRegistrationData();
+			const E2E::ImageRegistration* reg = nullptr;
+			if(op.registerBScanns)
+				reg = e2eBScan.getImageRegistrationData();
 
 			// segmenation lines
 			const E2E::BScan::SegmentationMap& e2eSegMap = e2eBScan.getSegmentationMap();
@@ -108,6 +185,9 @@ namespace OctData
 			cv::pow(dest, 8, dest);
 			dest.convertTo(bscanImageConv, CV_8U, 255, 0);
 
+			if(!op.fillEmptyPixelWhite)
+				fillEmptyBroderCols<uint8_t>(bscanImageConv, 255, 0);
+
 			// testcode
 			if(reg)
 			{
@@ -116,7 +196,11 @@ namespace OctData
 				double shiftX = -reg->values[9];
 				// std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
 				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, degree, 1, shiftX - degree*bscanImageConv.cols/2.);
-				cv::warpAffine(bscanImageConv, bscanImageConv, trans_mat, bscanImageConv.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255));
+
+				uint8_t fillValue = 0;
+				if(op.fillEmptyPixelWhite)
+					fillValue = 255;
+				cv::warpAffine(bscanImageConv, bscanImageConv, trans_mat, bscanImageConv.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(fillValue));
 			}
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
@@ -131,7 +215,7 @@ namespace OctData
 	{
 	}
 
-	bool HeE2ERead::readFile(const boost::filesystem::path& file, OCT& oct)
+	bool HeE2ERead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
 	{
 		if(file.extension() != ".E2E" && file.extension() != ".sdb")
 			return false;
@@ -189,7 +273,7 @@ namespace OctData
 
 					for(const E2E::Series::SubstructurePair& e2eBScanPair : e2eSeries)
 					{
-						copyBScan(series, *(e2eBScanPair.second));
+						copyBScan(series, *(e2eBScanPair.second), op);
 					}
 				}
 			}

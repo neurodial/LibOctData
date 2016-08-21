@@ -4,6 +4,8 @@
 
 namespace OctData
 {
+	class FileReadOptions;
+
 	/**
 	 * hidef scan consists of 2 orthogonal bscans intersecting in the center of
 	 * the volume. The first is in the y direction (across B-scans), the second
@@ -17,7 +19,7 @@ namespace OctData
 
 		static CirrusRawRead* getInstance();
 
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct);
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op);
 	};
 
 }

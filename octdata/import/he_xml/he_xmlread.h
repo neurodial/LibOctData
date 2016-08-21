@@ -7,6 +7,8 @@
 
 namespace OctData
 {
+
+	struct FileReadOptions;
 	class HeXmlRead : public OctFileReader
 	{
 		HeXmlRead();
@@ -17,6 +19,6 @@ namespace OctData
 	public:
 		static HeXmlRead* getInstance();
 
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct);
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op);
 	};
 }

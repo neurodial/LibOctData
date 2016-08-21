@@ -11,7 +11,7 @@ namespace OctData
 	public:
 		static VOLRead* getInstance();
 
-	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct);
+	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op);
 	};
 }
 

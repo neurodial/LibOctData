@@ -6,6 +6,7 @@ namespace boost { namespace filesystem { class path; } }
 
 namespace OctData
 {
+	class FileReadOptions;
 	class OCT;
 
 	class OctFileReader
@@ -16,7 +17,7 @@ namespace OctData
 		OctFileReader(const std::vector<OctExtension>& ext);
 
 		virtual ~OctFileReader();
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct) = 0;
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op) = 0;
 
 		static void registerReaders();
 	};

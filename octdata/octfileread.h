@@ -11,6 +11,8 @@ namespace OctData
 {
 	class OCT;
 	class OctFileReader;
+	class FileReadOptions;
+
 
 	class OctFileRead
 	{
@@ -20,11 +22,12 @@ namespace OctData
 		static OctFileRead& getInstance()                        { static OctFileRead instance; return instance; }
 
 		static const ExtensionsList& supportedExtensions()  ;//     { return getInstance().extensions; };
+		static OCT openFile(const std::string& filename, const FileReadOptions& op);
 		static OCT openFile(const std::string& filename);
 
 	protected:
 		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
-
+		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op);
 
 	private:
 		OctFileRead();

@@ -7,6 +7,8 @@
 
 namespace OctData
 {
+	class FileReadOptions;
+	
 	class HeE2ERead : public OctFileReader
 	{
 		HeE2ERead();
@@ -17,6 +19,6 @@ namespace OctData
 	public:
 		static HeE2ERead* getInstance();
 
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct);
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op);
 	};
 }

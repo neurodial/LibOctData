@@ -106,7 +106,7 @@ namespace OctData
 	{
 	}
 
-	bool DicomRead::readFile(const boost::filesystem::path& file, OCT& oct)
+	bool DicomRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/)
 	{
 		std::string ext = file.extension().generic_string();
 		std::string filename = file.filename().generic_string();

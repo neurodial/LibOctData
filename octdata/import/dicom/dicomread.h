@@ -7,6 +7,8 @@
 
 namespace OctData
 {
+	class FileReadOptions;
+
 	class DicomRead : public OctFileReader
 	{
 	    DicomRead();
@@ -15,7 +17,7 @@ namespace OctData
 	public:
 		static DicomRead* getInstance();
 
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct);
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op);
 	};
 
 }

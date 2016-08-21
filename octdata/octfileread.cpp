@@ -2,6 +2,7 @@
 
 #include <datastruct/oct.h>
 #include "import/octfilereader.h"
+#include "filereadoptions.h"
 
 #include <iostream>
 
@@ -14,7 +15,6 @@ namespace OctData
 {
 	OctFileRead::OctFileRead()
 	{
-		// extensions.push_back(OctExtension("xml","Heidelberg Engineering OCT XML"));
 	}
 
 
@@ -24,19 +24,29 @@ namespace OctData
 	}
 
 
-	OCT OctData::OctFileRead::openFile(const std::string& filename)
+	OCT OctFileRead::openFile(const std::string& filename)
+	{
+		return getInstance().openFilePrivat(filename, FileReadOptions());
+	}
+
+	OCT OctFileRead::openFile(const std::string& filename, const FileReadOptions& op)
+	{
+		return getInstance().openFilePrivat(filename, op);
+	}
+
+
+
+	OCT OctFileRead::openFilePrivat(const std::string& filename, const FileReadOptions& op)
 	{
 		OctFileReader::registerReaders(); // TODO: serch better implementation to prevent remove by linker
 
-		OctFileRead& obj = getInstance();
 		OctData::OCT oct;
-
 
 		bfs::path file(filename);
 
-		for(OctFileReader* reader : obj.fileReaders)
+		for(OctFileReader* reader : fileReaders)
 		{
-			if(reader->readFile(file, oct))
+			if(reader->readFile(file, oct, op))
 				break;
 			oct.clear();
 		}

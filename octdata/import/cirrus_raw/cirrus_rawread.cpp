@@ -41,7 +41,7 @@ namespace OctData
 
 	}
 
-	bool CirrusRawRead::readFile(const boost::filesystem::path& file, OCT& oct)
+	bool CirrusRawRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/)
 	{
 		if(file.extension() != ".img")
 			return false;

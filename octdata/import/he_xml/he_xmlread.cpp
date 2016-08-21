@@ -116,7 +116,7 @@ namespace OctData
 		static HeXmlRead instance; return &instance;
 	}
 
-	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct)
+	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/)
 	{
 		if(file.extension() != ".xml")
 			return false;
