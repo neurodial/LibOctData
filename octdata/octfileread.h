@@ -21,7 +21,7 @@ namespace OctData
 		typedef std::vector<OctExtension> ExtensionsList;
 		static OctFileRead& getInstance()                        { static OctFileRead instance; return instance; }
 
-		static const ExtensionsList& supportedExtensions()  ;//     { return getInstance().extensions; };
+		static const ExtensionsList& supportedExtensions();
 		static OCT openFile(const std::string& filename, const FileReadOptions& op);
 		static OCT openFile(const std::string& filename);
 

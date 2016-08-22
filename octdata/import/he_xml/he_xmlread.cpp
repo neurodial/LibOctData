@@ -87,6 +87,10 @@ namespace OctData
 			std::string filepath = xmlPath + '/' + filename;
 			cv::Mat image = cv::imread(filepath, true);
 
+			/// Separate the image in 3 places (B, Gand R)
+			std::vector<cv::Mat> bgr_planes;
+			cv::split(image, bgr_planes);
+			image = bgr_planes[0];
 
 			boost::optional<const bpt::ptree&> koordEndNode = imageNode.get_child_optional("OphthalmicAcquisitionContext.End");
 
