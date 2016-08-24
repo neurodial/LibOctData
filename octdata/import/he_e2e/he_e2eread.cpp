@@ -178,6 +178,7 @@ namespace OctData
 			const E2E::BScan::SegmentationMap& e2eSegMap = e2eBScan.getSegmentationMap();
 			addSegData(bscanData, BScan::SegmentlineType::ILM, e2eSegMap, 0, 5, reg, e2eImage.cols);
 			addSegData(bscanData, BScan::SegmentlineType::BM , e2eSegMap, 1, 2, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::NFL, e2eSegMap, 2, 7, reg, e2eImage.cols);
 
 			// convert image
 			cv::Mat dest, bscanImageConv;
@@ -228,6 +229,24 @@ namespace OctData
 
 		const E2E::DataRoot& e2eRoot = e2eData.getDataRoot();
 
+
+		// std::vector<int> loadedPatients;
+		std::vector<int> loadedStudies;
+		std::vector<int> loadedSeries;
+
+		for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
+		{
+			for(const E2E::Patient::SubstructurePair& e2eStudyPair : *(e2ePatPair.second))
+			{
+				loadedStudies.push_back(e2eStudyPair.first);
+
+				for(const E2E::Study::SubstructurePair& e2eSeriesPair : *(e2eStudyPair.second))
+				{
+					loadedSeries.push_back(e2eSeriesPair.first);
+				}
+			}
+		}
+
 		// load extra Data from patient file (pdb) and study file (edb)
 		if(file.extension() == ".sdb")
 		{
@@ -258,16 +277,27 @@ namespace OctData
 			const E2E::Patient& e2ePat = *(e2ePatPair.second);
 			copyPatData(pat, e2ePat);
 
-			for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
+		//	for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
+		//	{
+		//		Study& study = pat.getStudy(e2eStudyPair.first);
+		//		const E2E::Study& e2eStudy = *(e2eStudyPair.second);
+			for(int studyID : loadedStudies)
 			{
-				Study& study = pat.getStudy(e2eStudyPair.first);
-				const E2E::Study& e2eStudy = *(e2eStudyPair.second);
+				std::cout << "studyID: " << studyID << std::endl;
+				Study& study = pat.getStudy(studyID);
+				const E2E::Study& e2eStudy = e2ePat.getStudy(studyID);
 
-				for(const E2E::Study::SubstructurePair& e2eSeriesPair : e2eStudy)
+
+			//	for(const E2E::Study::SubstructurePair& e2eSeriesPair : e2eStudy)
+			//	{
+			//		Series& series = study.getSeries(e2eSeriesPair.first);
+			//		const E2E::Series& e2eSeries = *(e2eSeriesPair.second);
+
+				for(int seriesID : loadedSeries)
 				{
-					Series& series = study.getSeries(e2eSeriesPair.first);
-					const E2E::Series& e2eSeries = *(e2eSeriesPair.second);
-
+					std::cout << "seriesID: " << seriesID << std::endl;
+					Series& series = study.getSeries(seriesID);
+					const E2E::Series& e2eSeries = e2eStudy.getSeries(seriesID);
 					copySlo(series, e2eSeries);
 
 
