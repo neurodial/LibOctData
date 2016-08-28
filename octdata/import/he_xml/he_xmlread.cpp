@@ -155,7 +155,7 @@ namespace OctData
 		std::string firstNames     = patientNode.get_child("FirstNames").get_value<std::string>();
 		std::string patientLongID  = patientNode.get_child("PatientID" ).get_value<std::string>();
 		std::string sex            = patientNode.get_child("Sex"       ).get_value<std::string>();
-		int         patientID      = patientNode.get_child("ID").get_value<int>();
+		int         patientID      = patientNode.get_child("ID"        ).get_value<int>(0);
 		std::cout << xmlFilename << ": " << lastName << ", " << firstNames << std::endl;
 
 		Patient& pat = oct.getPatient(patientID);
@@ -173,7 +173,7 @@ namespace OctData
 
 
 		bpt::ptree& studyNode = patientNode.get_child("Study");
-		int         studyID   = studyNode  .get_child("ID"   ).get_value<int>();
+		int         studyID   = studyNode  .get_child("ID"   ).get_value<int>(0);
 
 		Study& study = pat.getStudy(studyID);
 		for(const std::pair<const std::string, bpt::ptree>& seriesStudyPair : studyNode)
@@ -183,7 +183,7 @@ namespace OctData
 
 			const bpt::ptree& seriesStudyNode = seriesStudyPair.second;
 
-			int         seriesID          = seriesStudyNode.get_child("ID"               ).get_value<int>();
+			int         seriesID          = seriesStudyNode.get_child("ID"               ).get_value<int>(0);
 			std::string examinedStructure = seriesStudyNode.get_child("ExaminedStructure").get_value<std::string>();
 			std::string type              = seriesStudyNode.get_child("Type"             ).get_value<std::string>();
 

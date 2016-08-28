@@ -21,6 +21,8 @@
 #include <E2E/dataelements/bscanmetadataelement.h>
 #include <E2E/dataelements/imageregistration.h>
 
+#include "he_gray_transform.h"
+
 
 namespace bfs = boost::filesystem;
 
@@ -150,6 +152,25 @@ namespace OctData
 				}
 			}
 		}
+		
+		template<typename SourceType, typename DestType, typename TransformType>
+		void useLUTBScan(const cv::Mat& source, cv::Mat& dest)
+		{
+			dest.create(source.rows, source.cols, cv::DataType<DestType>::type);
+
+			TransformType& lut = TransformType::getInstance();
+			
+			const SourceType* sPtr = source.ptr<SourceType>();
+			DestType* dPtr = dest.ptr<DestType>();
+			
+			const std::size_t size = source.cols * source.rows;
+			for(size_t i = 0; i < size; ++i)
+			{
+				*dPtr = lut.getValue(*sPtr);
+				++dPtr;
+				++sPtr;
+			}
+		}
 
 		void copyBScan(Series& series, const E2E::BScan& e2eBScan, const FileReadOptions& op)
 		{
@@ -182,9 +203,20 @@ namespace OctData
 
 			// convert image
 			cv::Mat dest, bscanImageConv;
-			e2eImage.convertTo(dest, CV_32FC1, 1/static_cast<double>(1 << 16), 0);
-			cv::pow(dest, 8, dest);
-			dest.convertTo(bscanImageConv, CV_8U, 255, 0);
+			switch(op.e2eGray)
+			{
+			case FileReadOptions::E2eGrayTransform::nativ:
+				e2eImage.convertTo(dest, CV_32FC1, 1/static_cast<double>(1 << 16), 0);
+				cv::pow(dest, 8, dest);
+				dest.convertTo(bscanImageConv, CV_8U, 255, 0);
+				break;
+			case FileReadOptions::E2eGrayTransform::xml:
+				useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
+				break;
+			case FileReadOptions::E2eGrayTransform::vol:
+				useLUTBScan<uint16_t, uint8_t, HeGrayTransformVol>(e2eImage, bscanImageConv);
+				break;
+			}
 
 			if(!op.fillEmptyPixelWhite)
 				fillEmptyBroderCols<uint8_t>(bscanImageConv, 255, 0);
