@@ -102,7 +102,7 @@ namespace
 namespace OctData
 {
 	DicomRead::DicomRead()
-	: OctFileReader({OctExtension(".dicom", "Dicom File"), OctExtension("DICOMDIR", "DICOM DIR")})
+	: OctFileReader({OctExtension{".dicom", ".dcm", "Dicom File"}, OctExtension("DICOMDIR", "DICOM DIR")})
 	{
 	}
 
