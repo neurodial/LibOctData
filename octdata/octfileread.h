@@ -25,6 +25,8 @@ namespace OctData
 		static OCT openFile(const std::string& filename, const FileReadOptions& op);
 		static OCT openFile(const std::string& filename);
 
+		static bool isLoadable(const std::string& filename);
+
 	protected:
 		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
 		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op);
