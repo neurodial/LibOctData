@@ -57,7 +57,7 @@ namespace OctData
 
 	void OctFileRead::registerFileRead(OctFileReader* reader, const OctExtension& ext)
 	{
-		std::cout << "register: " << ext.name << std::endl;
+		// std::cout << "register: " << ext.name << std::endl;
 		extensions.push_back(ext);
 		fileReaders.push_back(reader);
 	}

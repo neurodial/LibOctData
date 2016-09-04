@@ -10,6 +10,7 @@ namespace OctData
 		uint8_t* lutXML = nullptr;
 
 		HeGrayTransformXml();
+		~HeGrayTransformXml()                                    { delete[] lutXML; }
 
 		HeGrayTransformXml(const HeGrayTransformXml&)            = delete;
 		HeGrayTransformXml& operator=(const HeGrayTransformXml&) = delete;
@@ -27,6 +28,7 @@ namespace OctData
 		uint8_t* lutVol = nullptr;
 
 		HeGrayTransformVol();
+		~HeGrayTransformVol()                                    { delete[] lutVol; }
 
 		HeGrayTransformVol(const HeGrayTransformVol&)            = delete;
 		HeGrayTransformVol& operator=(const HeGrayTransformVol&) = delete;

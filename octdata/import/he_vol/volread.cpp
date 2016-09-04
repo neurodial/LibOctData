@@ -18,21 +18,12 @@
 #include "../../octdata_packhelper.h"
 #include <filereadoptions.h>
 
+
 namespace bfs = boost::filesystem;
 
 
 namespace
 {
-	#define WINDOWS_TICK 10000000
-	#define SEC_TO_UNIX_EPOCH 11644473600LL
-
-	std::chrono::system_clock::time_point windowsTickToTime(long long windowsTicks)
-	{
-		std::time_t time = (windowsTicks / WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
-		return std::chrono::system_clock::from_time_t(time);
-		
-	}
-	
 	template<typename T>
 	void readFStream(std::istream& stream, T* dest, std::size_t num = 1)
 	{
@@ -101,7 +92,7 @@ namespace
 			stream << "fieldSizeSlo: " << data.fieldSizeSlo << '\n';
 			stream << "scanFocus   : " << data.scanFocus    << '\n';
 			stream << "scanPosition: " << data.scanPosition << '\n';
-			stream << "examTime    : " << data.examTime     << '\n';
+			stream << "examTime    : " << data.examTime     << '\t' << OctData::Date::fromWindowsTicks(data.examTime).timeDateStr() << '\n';
 			stream << "scanPattern : " << data.scanPattern  << '\n';
 			stream << "bScanHdrSize: " << data.bScanHdrSize << '\n';
 			stream << "id          : " << data.id           << '\n';
@@ -112,7 +103,7 @@ namespace
 			stream << "dob         : " << data.dob          << '\n';
 			stream << "vid         : " << data.vid          << '\n';
 			stream << "visitID     : " << data.visitID      << '\n';
-			stream << "visitDate   : " << data.visitDate    << '\n';
+			stream << "visitDate   : " << data.visitDate    << '\t' << OctData::Date::fromWindowsTimeFormat(data.visitDate).timeDateStr()<< '\n';
 			stream << "gridType    : " << data.gridType     << '\n';
 			stream << "gridOffset  : " << data.gridOffset   << '\n';
 			stream << "progID      : ";
@@ -198,7 +189,7 @@ namespace OctData
 		Study& study = pat.getStudy(volHeader.data.vid);
 		Series& series = study.getSeries(1); // TODO
 		
-		series.setTime(windowsTickToTime(volHeader.data.examTime));
+		series.setTime(Date::fromWindowsTimeFormat(volHeader.data.visitDate));
 		
 		/*
 		time_t time = std::chrono::system_clock::to_time_t(series.getTime());

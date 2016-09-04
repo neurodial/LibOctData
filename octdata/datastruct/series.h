@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include "date.h"
 
 namespace OctData
 {
@@ -17,7 +18,6 @@ namespace OctData
 	public:
 		enum class Laterality { undef, OD, LD};
 
-		typedef std::chrono::system_clock::time_point Time;
 		typedef std::vector<BScan*> BScanList;
 		Series();
 		~Series();
@@ -31,8 +31,8 @@ namespace OctData
 		void setLaterality(Laterality l)                            { laterality = l; }
 		Laterality getLaterality() const                            { return laterality; }
 		
-		const Time& getTime() const                                 { return examTime; }
-		void setTime(const Time& time)                              { examTime = time; }
+		const Date& getTime() const                                 { return scanDate; }
+		void setTime(const Date& time)                              { scanDate = time; }
 
 		void takeBScan(BScan* bscan);
 	private:
@@ -41,10 +41,9 @@ namespace OctData
 		std::string                             refSeriesID;
 
 		Laterality                              laterality = Laterality::undef;
+		Date                                    scanDate;
 
 		BScanList                               bscans;
-		
-		Time                                    examTime;
 	};
 
 }
