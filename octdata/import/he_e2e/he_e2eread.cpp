@@ -66,14 +66,32 @@ namespace OctData
 				E2E::SegmentationData* segData = segPair->second;
 				if(segData)
 				{
-					std::vector<double> segVec(segData->begin(), segData->end());
+					typedef std::vector<double> SegDataVec;
+					std::size_t numSegData = segData->size();
+					SegDataVec segVec(numSegData);
 					if(reg)
 					{
+						double shiftY = -reg->values[3];
 						double degree = -reg->values[7];
 						double shiftX = -reg->values[9] - degree*imagecols/2.;
-						double pos = 0;
-						std::transform(segVec.begin(), segVec.end(), segVec.begin(), [&pos, shiftX, degree](double value) { return value + shiftX + (++pos)*degree; });
+						int    shiftXVec = std::round(shiftY);
+						double pos    = shiftXVec;
+
+						SegDataVec::iterator segVecBegin = segVec.begin();
+						E2E::SegmentationData::pointer segDataBegin = segData->begin();
+
+						int numAssign = numSegData-abs(shiftXVec);
+
+						if(shiftXVec < 0)
+							segDataBegin -= shiftXVec;
+						if(shiftXVec > 0)
+							segVecBegin += shiftXVec;
+
+						std::transform(segDataBegin, segDataBegin+numAssign, segVecBegin, [&pos, shiftX, degree](double value) { return value + shiftX + (++pos)*degree; });
 					}
+					else
+						segVec.assign(segData->begin(), segData->end());
+
 					bscanData.segmentlines.at(static_cast<std::size_t>(segType)) = std::move(segVec);
 				}
 			}
@@ -225,10 +243,11 @@ namespace OctData
 			if(reg)
 			{
 				// std::cout << "shift X: " << reg->values[9] << std::endl;
+				double shiftY = -reg->values[3];
 				double degree = -reg->values[7];
 				double shiftX = -reg->values[9];
 				// std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
-				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, 0, degree, 1, shiftX - degree*bscanImageConv.cols/2.);
+				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, shiftY, degree, 1, shiftX - degree*bscanImageConv.cols/2.);
 
 				uint8_t fillValue = 0;
 				if(op.fillEmptyPixelWhite)
