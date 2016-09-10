@@ -20,6 +20,7 @@
 #include <E2E/dataelements/segmentationdata.h>
 #include <E2E/dataelements/bscanmetadataelement.h>
 #include <E2E/dataelements/imageregistration.h>
+#include <E2E/dataelements/slodataelement.h>
 
 #include "he_gray_transform.h"
 
@@ -45,7 +46,7 @@ namespace OctData
 			pat.setTitle   (e2ePatData->getTitle   ());
 		}
 
-		void copySlo(Series& series, const E2E::Series& e2eSeries)
+		void copySlo(Series& series, const E2E::Series& e2eSeries, const FileReadOptions& op)
 		{
 			const E2E::Image* e2eSlo = e2eSeries.getSloImage();
 			if(!e2eSlo)
@@ -53,8 +54,47 @@ namespace OctData
 
 			SloImage* slo = new SloImage;
 
+			const cv::Mat e2eSloImage = e2eSlo->getImage();
+
+			bool imageIsSet = false;
+			if(op.rotateSlo)
+			{
+				E2E::SloDataElement* e2eSloData = e2eSeries.getSloDataElement();
+				if(e2eSloData)
+				{
+					const float* sloTrans = e2eSloData->getTransformData();
+
+					const float a11 = 1./sloTrans[0];
+					const float a12 = -sloTrans[1];
+					const float a21 = -sloTrans[3];
+					const float a22 = 1./sloTrans[4];
+
+					const float b1  = -sloTrans[2] - a12*e2eSloImage.rows/2;
+					const float b2  = -sloTrans[5] + a21*e2eSloImage.cols/2;
+
+					CoordTransform sloTransform(a11, a12, a21, a22, b1, b2);
+
+					cv::Mat trans_mat = (cv::Mat_<double>(2,3) << a11, a12, b1, a21, a22, b2);
+					// cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, shiftY, degree, 1, shiftX - degree*bscanImageConv.cols/2.);
+
+					uint8_t fillValue = 0;
+					if(op.fillEmptyPixelWhite)
+						fillValue = 255;
+
+					cv::Mat affineResult;
+					cv::warpAffine(e2eSloImage, affineResult, trans_mat, e2eSloImage.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(fillValue));
+					slo->setImage(affineResult);
+					imageIsSet = true;
+					slo->setTransform(sloTransform);
+				}
+			}
+
+			if(!imageIsSet)
+			{
+				slo->setImage(e2eSloImage);
+			}
+
 			slo->setShift(CoordSLOpx(e2eSlo->getImageRows()/2., e2eSlo->getImageCols()/2.));
-			slo->setImage(e2eSlo->getImage());
 			series.takeSloImage(slo);
 		}
 
@@ -349,7 +389,7 @@ namespace OctData
 					std::cout << "seriesID: " << seriesID << std::endl;
 					Series& series = study.getSeries(seriesID);
 					const E2E::Series& e2eSeries = e2eStudy.getSeries(seriesID);
-					copySlo(series, e2eSeries);
+					copySlo(series, e2eSeries, op);
 
 
 					for(const E2E::Series::SubstructurePair& e2eBScanPair : e2eSeries)

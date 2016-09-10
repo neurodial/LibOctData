@@ -5,6 +5,7 @@
 
 namespace OctData
 {
+
 	class ScaleFactor
 	{
 		double x;
@@ -66,6 +67,31 @@ namespace OctData
 		CoordSLOpx operator*(const ScaleFactor& factor) const       { return CoordSLOpx(x/factor.getX(), y/factor.getY()); }
 
 		operator bool() const                                       { return set; }
+	};
+
+
+	class CoordTransform
+	{
+		double a11 = 1.;
+		double a12 = 0.;
+		double a21 = 0.;
+		double a22 = 1.;
+
+		double b1 = 0.;
+		double b2 = 0.;
+	public:
+		CoordTransform() = default;
+		CoordTransform(double a11, double a12, double a21, double a22, double b1, double b2)
+		: a11(a11)
+		, a12(a12)
+		, a21(a21)
+		, a22(a22)
+		, b1 (b1 )
+		, b2 (b2 )
+		{}
+
+		CoordSLOmm operator*(const CoordSLOmm& mm) const            { return CoordSLOmm(a11*mm.getX()  + a12*mm.getY()  + b1, a21*mm.getX()  + a22*mm.getY()  + b2); }
+		CoordSLOpx operator*(const CoordSLOpx& px) const            { return CoordSLOpx(a11*px.getXf() + a12*px.getYf() + b1, a21*px.getXf() + a22*px.getYf() + b2); }
 	};
 
 }

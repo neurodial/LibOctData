@@ -13,6 +13,7 @@ namespace OctData
 
 		ScaleFactor scaleFactor;
 		CoordSLOpx  shift;
+		CoordTransform transform;
 
 		int    numAverage              = 0 ;
 		int    imageQuality            = 0 ;
@@ -30,10 +31,12 @@ namespace OctData
 // 		const std::string& getFilename()             const          { return filename               ; }
 // 		void               setFilename(const std::string& s)        {        filename = s           ; }
 
-		const ScaleFactor& getScaleFactor()         const           { return scaleFactor            ; }
-		const CoordSLOpx&  getShift()               const           { return shift                  ; }
-		void               setScaleFactor(const ScaleFactor& f)     { scaleFactor = f               ; }
-		void               setShift      (const CoordSLOpx&  s)     { shift       = s               ; }
+		const ScaleFactor&    getScaleFactor()         const        { return scaleFactor            ; }
+		const CoordSLOpx&     getShift()               const        { return shift                  ; }
+		const CoordTransform& getTransform()           const        { return transform              ; }
+		void   setScaleFactor(const ScaleFactor& f)                 { scaleFactor = f               ; }
+		void   setShift      (const CoordSLOpx&  s)                 { shift       = s               ; }
+		void   setTransform  (const CoordTransform& t)              { transform   = t               ; }
 
 		int    getNumAverage()                      const           { return numAverage             ; }
 		int    getImageQuality()                    const           { return imageQuality           ; }
