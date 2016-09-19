@@ -32,12 +32,13 @@ namespace OctData
 			decoded = true;
 		}
 
-	public:
 		Date(time_t unixtime) : unixtime(unixtime)               { decodeUnixTime(); }
+	public:
 		Date() : unixtime()                                      { }
 
 		static Date fromWindowsTicks(uint64_t ticks)             { return Date(windowsTickToTime_t(ticks)); }
-		static Date fromWindowsTimeFormat(double t)              { return Date((t - 25569)*60*60*24); }
+		static Date fromWindowsTimeFormat(double t)              { return Date(static_cast<time_t>((t - 25569)*60*60*24)); }
+		static Date fromUnixTime(time_t unixtime)                { return Date(unixtime); }
 
 		int day  ()                                        const { return timeinfo.tm_mday       ; }
 		int month()                                        const { return timeinfo.tm_mon  + 1   ; }

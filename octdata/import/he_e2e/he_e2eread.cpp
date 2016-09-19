@@ -64,13 +64,13 @@ namespace OctData
 				{
 					const float* sloTrans = e2eSloData->getTransformData();
 
-					const float a11 = 1./sloTrans[0];
-					const float a12 = -sloTrans[1];
-					const float a21 = -sloTrans[3];
-					const float a22 = 1./sloTrans[4];
+					const double a11 = 1./sloTrans[0];
+					const double a12 = -sloTrans[1];
+					const double a21 = -sloTrans[3];
+					const double a22 = 1./sloTrans[4];
 
-					const float b1  = -sloTrans[2] - a12*e2eSloImage.rows/2;
-					const float b2  = -sloTrans[5] + a21*e2eSloImage.cols/2;
+					const double b1  = -sloTrans[2] - a12*e2eSloImage.rows/2;
+					const double b2  = -sloTrans[5] + a21*e2eSloImage.cols/2;
 
 					CoordTransform sloTransform(a11, a12, a21, a22, b1, b2);
 
@@ -94,11 +94,12 @@ namespace OctData
 				slo->setImage(e2eSloImage);
 			}
 
-			slo->setShift(CoordSLOpx(e2eSlo->getImageRows()/2., e2eSlo->getImageCols()/2.));
+			slo->setShift(CoordSLOpx(static_cast<double>(e2eSlo->getImageRows())/2.,
+			                         static_cast<double>(e2eSlo->getImageCols())/2.));
 			series.takeSloImage(slo);
 		}
 
-		void addSegData(BScan::Data& bscanData, BScan::SegmentlineType segType, const E2E::BScan::SegmentationMap& e2eSegMap, std::size_t index, std::size_t type, const E2E::ImageRegistration* reg, std::size_t imagecols)
+		void addSegData(BScan::Data& bscanData, BScan::SegmentlineType segType, const E2E::BScan::SegmentationMap& e2eSegMap, int index, int type, const E2E::ImageRegistration* reg, std::size_t imagecols)
 		{
 			const E2E::BScan::SegmentationMap::const_iterator segPair = e2eSegMap.find(E2E::BScan::SegPair(index, type));
 			if(segPair != e2eSegMap.end())
@@ -113,14 +114,18 @@ namespace OctData
 					{
 						double shiftY = -reg->values[3];
 						double degree = -reg->values[7];
-						double shiftX = -reg->values[9] - degree*imagecols/2.;
-						int    shiftXVec = std::round(shiftY);
+						double shiftX = -reg->values[9] - degree*static_cast<double>(imagecols)/2.;
+						int    shiftXVec = static_cast<int>(std::round(shiftY));
 						double pos    = shiftXVec;
 
 						SegDataVec::iterator segVecBegin = segVec.begin();
 						E2E::SegmentationData::pointer segDataBegin = segData->begin();
 
-						int numAssign = numSegData-abs(shiftXVec);
+						std::size_t absShiftX = static_cast<std::size_t>(abs(shiftXVec));
+						if(numSegData < absShiftX)
+							return;
+
+						std::size_t numAssign = numSegData-absShiftX;
 
 						if(shiftXVec < 0)
 							segDataBegin -= shiftXVec;

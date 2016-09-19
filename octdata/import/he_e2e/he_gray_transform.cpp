@@ -1,5 +1,6 @@
 
 #include <cstdint>
+#include <limits>
 
 #include "he_gray_transform.h"
 
@@ -10,9 +11,9 @@ namespace OctData
 	: lutXML(new uint8_t[1 << sizeof(uint16_t)*8])
 	{
 		uint8_t* lutXmlIt = lutXML;
-		for(int i = 0; i < (1 << sizeof(uint16_t)*8); ++i)
+		for(int i = 0; i <= std::numeric_limits<char16_t>::max(); ++i)
 		{
-			*lutXmlIt = getXmlValue(i);
+			*lutXmlIt = getXmlValue(static_cast<char16_t>(i));
 			++lutXmlIt;
 		}
 	}
@@ -22,9 +23,9 @@ namespace OctData
 	: lutVol(new uint8_t[1 << sizeof(uint16_t)*8])
 	{
 		uint8_t* lutVolIt = lutVol;
-		for(int i = 0; i < (1 << sizeof(uint16_t)*8); ++i)
+		for(int i = 0; i <= std::numeric_limits<char16_t>::max(); ++i)
 		{
-			*lutVolIt = getVolValue(i);
+			*lutVolIt = getVolValue(static_cast<char16_t>(i));
 			++lutVolIt;
 		}
 	}
