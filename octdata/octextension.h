@@ -7,8 +7,9 @@
 
 namespace OctData
 {
-	struct OctExtension
+	class OctExtension
 	{
+	public:
 		typedef std::vector<std::string> ExtList;
 
 		OctExtension(const std::string& ext, const std::string& name)

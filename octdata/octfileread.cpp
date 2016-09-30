@@ -51,7 +51,7 @@ namespace OctData
 			oct.clear();
 		}
 
-		return std::move(oct);
+		return oct;
 	}
 
 

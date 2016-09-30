@@ -2,8 +2,9 @@
 
 namespace OctData
 {
-	struct FileReadOptions
+	class FileReadOptions
 	{
+	public:
 		enum class E2eGrayTransform { nativ, xml, vol };
 
 		bool fillEmptyPixelWhite = true;

@@ -7,8 +7,8 @@
 
 namespace OctData
 {
-
-	struct FileReadOptions;
+	class FileReadOptions;
+	
 	class HeXmlRead : public OctFileReader
 	{
 		HeXmlRead();
