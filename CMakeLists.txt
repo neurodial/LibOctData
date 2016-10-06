@@ -8,7 +8,8 @@ find_package(Boost 1.40 COMPONENTS filesystem system REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(DCMTK QUIET)
 find_package(LibE2E REQUIRED)
-find_package(OpenJPEG REQUIRED)
+find_package(OpenJPEG QUIET)
+find_package(TIFF REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/octdata/)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -56,7 +57,8 @@ if(DEFINED DCMTK_FOUND)
 	add_definitions(-DUSE_DCMTK)
 	target_link_libraries(octdata ${DCMTK_LIBRARIES})
 endif()
-target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${Boost_LIBRARIES})
+# target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES})
 
 GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EXPORTS.h automatically
     BASE_NAME octdata

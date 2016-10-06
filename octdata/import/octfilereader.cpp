@@ -8,6 +8,7 @@
 #include "cirrus_raw/cirrus_rawread.h"
 #include "dicom/dicomread.h"
 #include "he_e2e/he_e2eread.h"
+#include "tiffstack/tiffstackread.h"
 
 namespace OctData
 {
@@ -39,6 +40,7 @@ namespace OctData
 		CirrusRawRead::getInstance();
 		DicomRead::getInstance();
 		HeE2ERead::getInstance();
+		TiffStackRead::getInstance();
 	}
 
 }
