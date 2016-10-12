@@ -11,8 +11,19 @@ find_package(LibE2E REQUIRED)
 find_package(OpenJPEG QUIET)
 find_package(TIFF REQUIRED)
 
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: Debug Release
+RelWithDebInfo MinSizeRel."
+      FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
+
+include_directories(SYSTEM ${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/octdata/)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${TIFF_INCLUDE_DIRS})
 include_directories(${LibE2E_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -58,15 +69,18 @@ if(DEFINED DCMTK_FOUND)
 	target_link_libraries(octdata ${DCMTK_LIBRARIES})
 endif()
 # target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES})
+target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES})
 
 GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EXPORTS.h automatically
     BASE_NAME octdata
-    EXPORT_MACRO_NAME octdata_EXPORTS
+    EXPORT_MACRO_NAME Octdata_EXPORTS
     EXPORT_FILE_NAME octdata_EXPORTS.h
     STATIC_DEFINE SHARED_EXPORTS_BUILT_AS_STATIC)
 
+
+add_definitions(-DOCTDATA_EXPORT)
+
 add_executable(liboctdata main.cpp)
-target_link_libraries(liboctdata octdata ${OpenCV_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(liboctdata octdata)
 
 

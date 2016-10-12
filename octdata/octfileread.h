@@ -5,6 +5,12 @@
 
 #include "octextension.h"
 
+#ifdef OCTDATA_EXPORT
+	#include "octdata_EXPORTS.h"
+#else
+	#define Octdata_EXPORTS
+#endif
+
 namespace boost { namespace filesystem { class path; } }
 
 namespace OctData
@@ -14,7 +20,7 @@ namespace OctData
 	class FileReadOptions;
 
 
-	class OctFileRead
+	class Octdata_EXPORTS OctFileRead
 	{
 		friend class OctFileReader;
 	public:
