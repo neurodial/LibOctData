@@ -46,6 +46,8 @@ namespace OctData
 		int hour ()                                        const { return timeinfo.tm_hour; }
 		int min  ()                                        const { return timeinfo.tm_min ; }
 		int sec  ()                                        const { return timeinfo.tm_sec ; }
+		
+		bool isEmpty()                                     const { return !decoded;         }
 
 		std::string str(char trenner = '.') const
 		{

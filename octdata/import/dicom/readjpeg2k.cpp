@@ -54,11 +54,11 @@ namespace
 	//This will read from our memory to the buffer.
 	static OPJ_SIZE_T opj_memory_stream_read(void * p_buffer, OPJ_SIZE_T p_nb_bytes, void * p_user_data)
 	{
-		opj_memory_stream* l_memory_stream = (opj_memory_stream*)p_user_data;//Our data.
+		opj_memory_stream* l_memory_stream = reinterpret_cast<opj_memory_stream*>(p_user_data);//Our data.
 		OPJ_SIZE_T l_nb_bytes_read = p_nb_bytes;//Amount to move to buffer.
 		//Check if the current offset is outside our data buffer.
 		if (l_memory_stream->offset >= l_memory_stream->dataSize)
-			return (OPJ_SIZE_T)-1;
+			return static_cast<OPJ_SIZE_T>(-1);
 		
 		//Check if we are reading more than we have.
 		if (p_nb_bytes > (l_memory_stream->dataSize - l_memory_stream->offset))
@@ -73,11 +73,11 @@ namespace
 	//This will write from the buffer to our memory.
 	static OPJ_SIZE_T opj_memory_stream_write(void * p_buffer, OPJ_SIZE_T p_nb_bytes, void * p_user_data)
 	{
-		opj_memory_stream* l_memory_stream = (opj_memory_stream*)p_user_data;//Our data.
+		opj_memory_stream* l_memory_stream = reinterpret_cast<opj_memory_stream*>(p_user_data);//Our data.
 		OPJ_SIZE_T l_nb_bytes_write = p_nb_bytes;//Amount to move to buffer.
 		//Check if the current offset is outside our data buffer.
 		if(l_memory_stream->offset >= l_memory_stream->dataSize)
-			return (OPJ_SIZE_T)-1;
+			return static_cast<OPJ_SIZE_T>(-1);
 		
 		//Check if we are write more than we have space for.
 		if(p_nb_bytes > (l_memory_stream->dataSize - l_memory_stream->offset))
@@ -93,10 +93,10 @@ namespace
 	//Moves the pointer forward, but never more than we have.
 	static OPJ_OFF_T opj_memory_stream_skip(OPJ_OFF_T p_nb_bytes, void * p_user_data)
 	{
-		opj_memory_stream* l_memory_stream = (opj_memory_stream*)p_user_data;
+		opj_memory_stream* l_memory_stream = reinterpret_cast<opj_memory_stream*>(p_user_data);
 		OPJ_SIZE_T l_nb_bytes;
 		if(p_nb_bytes < 0) return -1;//No skipping backwards.
-		l_nb_bytes = (OPJ_SIZE_T)p_nb_bytes;//Allowed because it is positive.
+		l_nb_bytes = static_cast<OPJ_SIZE_T>(p_nb_bytes);//Allowed because it is positive.
 		// Do not allow jumping past the end.
 		if(l_nb_bytes >l_memory_stream->dataSize - l_memory_stream->offset)
 			l_nb_bytes = l_memory_stream->dataSize - l_memory_stream->offset;//Jump the max.
@@ -111,14 +111,14 @@ namespace
 	//Sets the pointer to anywhere in the memory.
 	static OPJ_BOOL opj_memory_stream_seek(OPJ_OFF_T p_nb_bytes, void * p_user_data)
 	{
-		opj_memory_stream* l_memory_stream = (opj_memory_stream*)p_user_data;
+		opj_memory_stream* l_memory_stream = reinterpret_cast<opj_memory_stream*>(p_user_data);
 
 		if(p_nb_bytes < 0)
 			return OPJ_FALSE;//No before the buffer.
-		if(p_nb_bytes >(OPJ_OFF_T)l_memory_stream->dataSize)
+		if(p_nb_bytes > static_cast<OPJ_OFF_T>(l_memory_stream->dataSize))
 			return OPJ_FALSE;//No after the buffer.
 			
-		l_memory_stream->offset = (OPJ_SIZE_T)p_nb_bytes;//Move to new position.
+		l_memory_stream->offset = static_cast<OPJ_SIZE_T>(p_nb_bytes);//Move to new position.
 		return OPJ_TRUE;
 	}
 
@@ -374,8 +374,8 @@ bool ReadJPEG2K::copyMatrix(cv::Mat& cvImage, bool flip)
 	const int channels = image->numcomps>4?4:image->numcomps;
 	const int type     = CV_MAKETYPE(cv::DataType<T>::type, channels);
 
-	const int width  = (int)image->comps[0].w;
-	const int height = (int)image->comps[0].h;
+	const int width  = static_cast<int>(image->comps[0].w);
+	const int height = static_cast<int>(image->comps[0].h);
 
 	// flip the image
 	int rows = height;
@@ -410,7 +410,7 @@ bool ReadJPEG2K::copyMatrix(cv::Mat& cvImage, bool flip)
 		{
 			for(int c = 0; c < channels; ++c)
 			{
-				*mi = *(dataIt[c]);
+				*mi = static_cast<T>(*(dataIt[c]));
 				++mi;
 				dataIt[c] += lineAdd;
 			}

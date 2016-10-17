@@ -33,6 +33,20 @@ namespace OctData
 
 	namespace
 	{
+		Patient::Sex convertSex(E2E::PatientDataElement::Sex e2eSex)
+		{
+			switch(e2eSex)
+			{
+				case E2E::PatientDataElement::Sex::Female:
+					return Patient::Sex::Female;
+				case E2E::PatientDataElement::Sex::Male:
+					return Patient::Sex::Male;
+				case E2E::PatientDataElement::Sex::Unknown:
+					return Patient::Sex::Unknown;
+			}
+			return Patient::Sex::Unknown;
+		}
+		
 		void copyPatData(Patient& pat, const E2E::Patient& e2ePat)
 		{
 			const E2E::PatientDataElement* e2ePatData = e2ePat.getPatientData();
@@ -42,8 +56,9 @@ namespace OctData
 			pat.setForename(e2ePatData->getForename());
 			pat.setSurname (e2ePatData->getSurname ());
 			pat.setId      (e2ePatData->getId      ());
-			// pat.setSex     (e2ePatData.getSex     ());
+			pat.setSex     (convertSex(e2ePatData->getSex()));
 			pat.setTitle   (e2ePatData->getTitle   ());
+			pat.setBirthdate(Date::fromWindowsTimeFormat(e2ePatData->getWinBDate()));
 		}
 
 		void copySlo(Series& series, const E2E::Series& e2eSeries, const FileReadOptions& op)
