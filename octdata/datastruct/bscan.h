@@ -11,7 +11,7 @@ namespace OctData
 	class BScan
 	{
 	public:
-		enum class SegmentlineType{ ILM, BM, NFL, NR_OF_ELEMENTS };
+		enum class SegmentlineType{ ILM, BM, NFL, I3T1, I4T1, I5T1, I6T1, I8T3, I14T1, I15T1, I16T1, NR_OF_ELEMENTS };
 		typedef std::vector<double> Segmentline;
 		struct Data
 		{

@@ -163,8 +163,11 @@ namespace
 	{
 		pat.setId(header.data.patientID);
 
-
 		series.setTime(OctData::Date::fromWindowsTimeFormat(header.data.visitDate));
+		if(strcmp("OD", header.data.scanPosition) == 0)
+			series.setLaterality(OctData::Series::Laterality::OD);
+		else if(strcmp("OS", header.data.scanPosition) == 0)
+			series.setLaterality(OctData::Series::Laterality::OS);
 	}
 
 }
@@ -199,7 +202,7 @@ namespace OctData
 		VolHeader volHeader;
 
 		readFStream(stream, &(volHeader.data));
-		// volHeader.printData(std::cout);
+		volHeader.printData(std::cout);
 		stream.seekg(VolHeader::getHeaderSize());
 
 		Patient& pat    = oct.getPatient(volHeader.data.pid);

@@ -11,12 +11,12 @@ namespace OctData
 	public:
 		enum class Sex { Unknown, Female, Male};
 
-		std::string getForename () const                         { return forename ; }
-		std::string getSurname  () const                         { return surname  ; }
-		std::string getTitle    () const                         { return title    ; }
-		std::string getId       () const                         { return id       ; }
-		Sex         getSex      () const                         { return sex      ; }
-		Date        getBirthdate() const                         { return birthdate; }
+		const std::string& getForename () const                  { return forename ; }
+		const std::string& getSurname  () const                  { return surname  ; }
+		const std::string& getTitle    () const                  { return title    ; }
+		const std::string& getId       () const                  { return id       ; }
+		Sex                getSex      () const                  { return sex      ; }
+		const Date&        getBirthdate() const                  { return birthdate; }
 
 
 		void setForename (const std::string& v)                  { forename  = v ; }

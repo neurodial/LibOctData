@@ -23,6 +23,8 @@
 #include <E2E/dataelements/slodataelement.h>
 #include <E2E/dataelements/textelement.h>
 
+#include <E2E/dataelements/studydata.h>
+
 #include "he_gray_transform.h"
 
 
@@ -50,16 +52,40 @@ namespace OctData
 		
 		void copyPatData(Patient& pat, const E2E::Patient& e2ePat)
 		{
-			const E2E::PatientDataElement* e2ePatData = e2ePat.getPatientData();
-			if(!e2ePatData)
-				return;
+			if(e2ePat.getPatientUID())
+				pat.setPatientUID(e2ePat.getPatientUID()->getText());
 
-			pat.setForename(e2ePatData->getForename());
-			pat.setSurname (e2ePatData->getSurname ());
-			pat.setId      (e2ePatData->getId      ());
-			pat.setSex     (convertSex(e2ePatData->getSex()));
-			pat.setTitle   (e2ePatData->getTitle   ());
-			pat.setBirthdate(Date::fromWindowsTimeFormat(e2ePatData->getWinBDate()));
+			const E2E::PatientDataElement* e2ePatData = e2ePat.getPatientData();
+			if(e2ePatData)
+			{
+				pat.setForename(e2ePatData->getForename());
+				pat.setSurname (e2ePatData->getSurname ());
+				pat.setId      (e2ePatData->getId      ());
+				pat.setSex     (convertSex(e2ePatData->getSex()));
+				pat.setTitle   (e2ePatData->getTitle   ());
+				pat.setBirthdate(Date::fromWindowsTimeFormat(e2ePatData->getWinBDate()));
+			}
+		}
+		
+		void copyStudyData(Study& study, const E2E::Study& e2eStudy)
+		{
+			if(e2eStudy.getStudyUID())
+				study.setStudyUID(e2eStudy.getStudyUID()->getText());
+			
+			const E2E::StudyData* e2eStudyData = e2eStudy.getStudyData();
+			if(e2eStudyData)
+			{
+				study.setStudyDate(Date::fromWindowsTimeFormat(e2eStudyData->getWindowsStudyDate()));
+				study.setStudyOperator(e2eStudyData->getOperator());
+			}
+		}
+		
+		void copySeriesData(Series& series, const E2E::Series& e2eSeries)
+		{
+			if(e2eSeries.getSeriesUID())
+				series.setSeriesUID(e2eSeries.getSeriesUID()->getText());
+			
+			// e2eSeries.
 		}
 
 		void copySlo(Series& series, const E2E::Series& e2eSeries, const FileReadOptions& op)
@@ -279,6 +305,15 @@ namespace OctData
 			addSegData(bscanData, BScan::SegmentlineType::ILM, e2eSegMap, 0, 5, reg, e2eImage.cols);
 			addSegData(bscanData, BScan::SegmentlineType::BM , e2eSegMap, 1, 2, reg, e2eImage.cols);
 			addSegData(bscanData, BScan::SegmentlineType::NFL, e2eSegMap, 2, 7, reg, e2eImage.cols);
+			
+			addSegData(bscanData, BScan::SegmentlineType::I3T1 , e2eSegMap,  3, 1, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::I4T1 , e2eSegMap,  4, 1, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::I5T1 , e2eSegMap,  5, 1, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::I6T1 , e2eSegMap,  6, 1, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::I8T3 , e2eSegMap,  8, 3, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::I14T1, e2eSegMap, 14, 1, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::I15T1, e2eSegMap, 15, 1, reg, e2eImage.cols);
+			addSegData(bscanData, BScan::SegmentlineType::I16T1, e2eSegMap, 16, 1, reg, e2eImage.cols);
 
 			// convert image
 			cv::Mat dest, bscanImageConv;
@@ -388,31 +423,24 @@ namespace OctData
 			Patient& pat = oct.getPatient(e2ePatPair.first);
 			const E2E::Patient& e2ePat = *(e2ePatPair.second);
 			copyPatData(pat, e2ePat);
-			if(e2ePat.getPatientUID())
-				pat.setPatientUUID(e2ePat.getPatientUID()->getText());
-
-		//	for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
-		//	{
-		//		Study& study = pat.getStudy(e2eStudyPair.first);
-		//		const E2E::Study& e2eStudy = *(e2eStudyPair.second);
+			
 			for(int studyID : loadedStudies)
 			{
 				std::cout << "studyID: " << studyID << std::endl;
 				Study& study = pat.getStudy(studyID);
 				const E2E::Study& e2eStudy = e2ePat.getStudy(studyID);
 
+				copyStudyData(study, e2eStudy);
 
-			//	for(const E2E::Study::SubstructurePair& e2eSeriesPair : e2eStudy)
-			//	{
-			//		Series& series = study.getSeries(e2eSeriesPair.first);
-			//		const E2E::Series& e2eSeries = *(e2eSeriesPair.second);
-
+				
 				for(int seriesID : loadedSeries)
 				{
 					std::cout << "seriesID: " << seriesID << std::endl;
 					Series& series = study.getSeries(seriesID);
 					const E2E::Series& e2eSeries = e2eStudy.getSeries(seriesID);
 					copySlo(series, e2eSeries, op);
+					
+					copySeriesData(series, e2eSeries);
 
 
 					for(const E2E::Series::SubstructurePair& e2eBScanPair : e2eSeries)

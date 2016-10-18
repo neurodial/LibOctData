@@ -16,7 +16,7 @@ namespace OctData
 		Series& operator=(const Series&) = delete;
 
 	public:
-		enum class Laterality { undef, OD, LD};
+		enum class Laterality { undef, OD, OS};
 
 		typedef std::vector<BScan*> BScanList;
 		Series();
@@ -33,11 +33,17 @@ namespace OctData
 		
 		const Date& getTime() const                                 { return scanDate; }
 		void setTime(const Date& time)                              { scanDate = time; }
+		
+		const std::string& getSeriesUID() const                     { return seriesUID; }
+		void setSeriesUID(const std::string& uid)                   { seriesUID = uid;  }
+		
+		const std::string& getRefSeriesUID() const                  { return refSeriesID; }
+		void setRefSeriesUID(const std::string& uid)                { refSeriesID = uid;  }
 
 		void takeBScan(BScan* bscan);
 	private:
 		SloImage*                               sloImage = nullptr;
-		std::string                             seriesID;
+		std::string                             seriesUID;
 		std::string                             refSeriesID;
 
 		Laterality                              laterality = Laterality::undef;

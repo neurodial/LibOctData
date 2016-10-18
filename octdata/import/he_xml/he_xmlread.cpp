@@ -150,24 +150,27 @@ namespace OctData
 
 		bpt::ptree& patientNode = pt.get_child(patientNodeStr);
 
+		
+		boost::optional<bpt::ptree&> patUIDNode = patientNode.get_child_optional("PatientUIDList.PatientUID.UID");
 
-		std::string lastName       = patientNode.get_child("LastName"  ).get_value<std::string>();
-		std::string firstNames     = patientNode.get_child("FirstNames").get_value<std::string>();
-		std::string patientLongID  = patientNode.get_child("PatientID" ).get_value<std::string>();
-		std::string sex            = patientNode.get_child("Sex"       ).get_value<std::string>();
+		std::string lastName       = patientNode.get_child("LastName"  ).get_value<std::string>(std::string());
+		std::string firstNames     = patientNode.get_child("FirstNames").get_value<std::string>(std::string());
+		std::string patientLongID  = patientNode.get_child("PatientID" ).get_value<std::string>(std::string());
+		std::string sex            = patientNode.get_child("Sex"       ).get_value<std::string>(std::string());
 		int         patientID      = patientNode.get_child("ID"        ).get_value<int>(0);
-		std::cout << xmlFilename << ": " << lastName << ", " << firstNames << std::endl;
+		// std::cout << xmlFilename << ": " << lastName << ", " << firstNames << std::endl;
 
 		Patient& pat = oct.getPatient(patientID);
 		pat.setForename(firstNames   );
 		pat.setSurname (lastName     );
 		pat.setId      (patientLongID);
+		if(patUIDNode)
+			pat.setPatientUID(patUIDNode->get_value<std::string>(""));
 
 		if(sex == "F")
 			pat.setSex(Patient::Sex::Female);
 		else if(sex == "M")
 			pat.setSex(Patient::Sex::Male  );
-
 
 		// copyPTree(pt, dest, "Series");
 
@@ -184,11 +187,19 @@ namespace OctData
 			const bpt::ptree& seriesStudyNode = seriesStudyPair.second;
 
 			int         seriesID          = seriesStudyNode.get_child("ID"               ).get_value<int>(0);
-			std::string examinedStructure = seriesStudyNode.get_child("ExaminedStructure").get_value<std::string>();
-			std::string type              = seriesStudyNode.get_child("Type"             ).get_value<std::string>();
+			std::string examinedStructure = seriesStudyNode.get_child("ExaminedStructure").get_value<std::string>(std::string());
+			std::string type              = seriesStudyNode.get_child("Type"             ).get_value<std::string>(std::string());
+			std::string laterality        = seriesStudyNode.get_child("Laterality"       ).get_value<std::string>(std::string());
 
 
 			Series& series = study.getSeries(seriesID);
+			
+			
+			if(laterality == "R")
+				series.setLaterality(Series::Laterality::OD);
+			else if(laterality == "L")
+				series.setLaterality(Series::Laterality::OS);
+			
 			for(const std::pair<const std::string, bpt::ptree>& imageNode : seriesStudyNode)
 			{
 				if(imageNode.first != "Image")
