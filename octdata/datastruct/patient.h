@@ -19,22 +19,25 @@ namespace OctData
 		Date        getBirthdate() const                         { return birthdate; }
 
 
-		void setForename (const std::string& v)                  { forename  = v; }
-		void setSurname  (const std::string& v)                  { surname   = v; }
-		void setTitle    (const std::string& v)                  { title     = v; }
-		void setId       (const std::string& v)                  { id        = v; }
-		void setSex      (const Sex          v)                  { sex       = v; }
+		void setForename (const std::string& v)                  { forename  = v ; }
+		void setSurname  (const std::string& v)                  { surname   = v ; }
+		void setTitle    (const std::string& v)                  { title     = v ; }
+		void setId       (const std::string& v)                  { id        = v ; }
+		void setSex      (const Sex          v)                  { sex       = v ; }
 		void setBirthdate(const Date&       bd)                  { birthdate = bd; }
 
+		const std::string& getPatientUID() const                 { return uid; }
+		void setPatientUID(const std::string& id)                { uid = id  ; }
 
-		      Study& getStudy(int seriesId)                     { return getAndInsert(seriesId)         ; }
-		const Study& getStudy(int seriesId) const               { return *(substructureMap.at(seriesId)); }
+		      Study& getStudy(int seriesId)                      { return getAndInsert(seriesId)         ; }
+		const Study& getStudy(int seriesId) const                { return *(substructureMap.at(seriesId)); }
 
 	private:
 		std::string forename;
 		std::string surname ;
 		std::string title   ;
 		std::string id      ;
+		std::string uid     ;
 
 		Date birthdate      ;
 

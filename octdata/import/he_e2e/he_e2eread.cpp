@@ -21,6 +21,7 @@
 #include <E2E/dataelements/bscanmetadataelement.h>
 #include <E2E/dataelements/imageregistration.h>
 #include <E2E/dataelements/slodataelement.h>
+#include <E2E/dataelements/textelement.h>
 
 #include "he_gray_transform.h"
 
@@ -387,6 +388,8 @@ namespace OctData
 			Patient& pat = oct.getPatient(e2ePatPair.first);
 			const E2E::Patient& e2ePat = *(e2ePatPair.second);
 			copyPatData(pat, e2ePat);
+			if(e2ePat.getPatientUID())
+				pat.setPatientUUID(e2ePat.getPatientUID()->getText());
 
 		//	for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
 		//	{

@@ -111,12 +111,20 @@ namespace
 				stream << data.progID[i];
 			stream << std::endl;
 		}
-		
-		std::size_t getSLOPixelSize() const   { return data.sizeXSlo*data.sizeYSlo; }
-		std::size_t getBScanPixelSize() const { return data.sizeX   *data.sizeZ   *sizeof(float); }
-		std::size_t getBScanSize() const      { return getBScanPixelSize() + data.bScanHdrSize; }
-		
-		constexpr static std::size_t getHeaderSize() { return 2048; }
+
+		std::size_t getSLOPixelSize() const   {
+			return data.sizeXSlo*data.sizeYSlo;
+		}
+		std::size_t getBScanPixelSize() const {
+			return data.sizeX   *data.sizeZ   *sizeof(float);
+		}
+		std::size_t getBScanSize() const      {
+			return getBScanPixelSize() + data.bScanHdrSize;
+		}
+
+		constexpr static std::size_t getHeaderSize() {
+			return 2048;
+		}
 
 	};
 
@@ -124,14 +132,14 @@ namespace
 	{
 		PACKSTRUCT(struct Data
 		{
-		double  startX ;
-		double  startY ;
-		double  endX   ;
-		double  endY   ;
-		int32_t numSeg ;
-		int32_t offSeg ;
-		float   quality;
-		int32_t shift  ;
+			double  startX ;
+			double  startY ;
+			double  endX   ;
+			double  endY   ;
+			int32_t numSeg ;
+			int32_t offSeg ;
+			float   quality;
+			int32_t shift  ;
 		});
 
 		Data data;
@@ -148,8 +156,17 @@ namespace
 			          << data.shift   << std::endl;
 
 		}
-		
+
 	};
+
+	void copyMetaData(const VolHeader& header, OctData::Patient& pat, OctData::Study& /*study*/, OctData::Series& series)
+	{
+		pat.setId(header.data.patientID);
+
+
+		series.setTime(OctData::Date::fromWindowsTimeFormat(header.data.visitDate));
+	}
+
 }
 
 
@@ -166,7 +183,7 @@ namespace OctData
 	{
 		if(file.extension() != ".vol")
 			return false;
-		
+
 		if(!bfs::exists(file))
 			return false;
 
@@ -185,12 +202,13 @@ namespace OctData
 		// volHeader.printData(std::cout);
 		stream.seekg(VolHeader::getHeaderSize());
 
-		Patient& pat = oct.getPatient(volHeader.data.pid);
-		Study& study = pat.getStudy(volHeader.data.vid);
-		Series& series = study.getSeries(1); // TODO
-		
-		series.setTime(Date::fromWindowsTimeFormat(volHeader.data.visitDate));
-		
+		Patient& pat    = oct.getPatient(volHeader.data.pid);
+		Study&   study  = pat.getStudy(volHeader.data.vid);
+		Series&  series = study.getSeries(1); // TODO
+
+
+		copyMetaData(volHeader, pat, study, series);
+
 		/*
 		time_t time = std::chrono::system_clock::to_time_t(series.getTime());
 		struct tm* tmw = std::localtime(&time);
@@ -217,7 +235,7 @@ namespace OctData
 
 			std::size_t bscanPos = VolHeader::getHeaderSize() + volHeader.getSLOPixelSize() + numBscan*volHeader.getBScanSize();
 
-		    stream.seekg(16+bscanPos);
+			stream.seekg(16+bscanPos);
 			readFStream(stream, &(bscanHeader.data));
 
 			// bscanHeader.printData();
@@ -257,12 +275,12 @@ namespace OctData
 				}
 				switch(segNum)
 				{
-					case 0:
-						bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
-						break;
-					case 1:
-						bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::BM)) = segVec;
-						break;
+				case 0:
+					bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
+					break;
+				case 1:
+					bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::BM)) = segVec;
+					break;
 
 				}
 				// bscan->addSegLine(segVec);
@@ -279,7 +297,8 @@ namespace OctData
 
 	VOLRead* VOLRead::getInstance()
 	{
-		static VOLRead instance; return &instance;
+		static VOLRead instance;
+		return &instance;
 	}
 
 
