@@ -43,10 +43,7 @@ find_package(TIFF REQUIRED)
 
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Choose the type of build, options are: Debug Release
-RelWithDebInfo MinSizeRel."
-      FORCE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 
@@ -124,5 +121,4 @@ add_definitions(-DOCTDATA_EXPORT)
 
 add_executable(liboctdata main.cpp)
 target_link_libraries(liboctdata octdata)
-
 

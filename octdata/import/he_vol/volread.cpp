@@ -65,7 +65,7 @@ namespace
 			uint32_t pid             ;
 			char     patientID   [21];
 			char     padding     [ 3];
-			double   dob             ;
+			double   dob             ; // Patient date of birth
 			uint32_t vid             ;
 			char     visitID     [24];
 			double   visitDate       ;
@@ -100,7 +100,7 @@ namespace
 			stream << "pid         : " << data.pid          << '\n';
 			stream << "patientID   : " << data.patientID    << '\n';
 			stream << "padding     : " << data.padding      << '\n';
-			stream << "dob         : " << data.dob          << '\n';
+			stream << "dob         : " << data.dob          << '\n' << OctData::Date::fromWindowsTimeFormat(data.dob).timeDateStr()<< '\n';
 			stream << "vid         : " << data.vid          << '\n';
 			stream << "visitID     : " << data.visitID      << '\n';
 			stream << "visitDate   : " << data.visitDate    << '\t' << OctData::Date::fromWindowsTimeFormat(data.visitDate).timeDateStr()<< '\n';
@@ -159,15 +159,26 @@ namespace
 
 	};
 
-	void copyMetaData(const VolHeader& header, OctData::Patient& pat, OctData::Study& /*study*/, OctData::Series& series)
+	void copyMetaData(const VolHeader& header, OctData::Patient& pat, OctData::Study& study, OctData::Series& series)
 	{
+		// Patient data
 		pat.setId(header.data.patientID);
+		pat.setBirthdate(OctData::Date::fromWindowsTimeFormat(header.data.dob));
 
-		series.setTime(OctData::Date::fromWindowsTimeFormat(header.data.visitDate));
+		// Study data
+		study.setStudyDate(OctData::Date::fromWindowsTicks(header.data.examTime));
+		
+		// Series data
+		series.setScanDate(OctData::Date::fromWindowsTimeFormat(header.data.visitDate));
 		if(strcmp("OD", header.data.scanPosition) == 0)
 			series.setLaterality(OctData::Series::Laterality::OD);
 		else if(strcmp("OS", header.data.scanPosition) == 0)
 			series.setLaterality(OctData::Series::Laterality::OS);
+		
+		series.setSeriesUID   (header.data.id);
+		series.setRefSeriesUID(header.data.referenceID);
+		
+		// series.setScanDate(OctData::Date::fromWindowsTicks(data.examTime));
 	}
 
 }

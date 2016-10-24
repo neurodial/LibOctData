@@ -31,8 +31,8 @@ namespace OctData
 		void setLaterality(Laterality l)                            { laterality = l; }
 		Laterality getLaterality() const                            { return laterality; }
 		
-		const Date& getTime() const                                 { return scanDate; }
-		void setTime(const Date& time)                              { scanDate = time; }
+		const Date& getScanDate() const                             { return scanDate; }
+		void setScanDate(const Date& time)                          { scanDate = time; }
 		
 		const std::string& getSeriesUID() const                     { return seriesUID; }
 		void setSeriesUID(const std::string& uid)                   { seriesUID = uid;  }
