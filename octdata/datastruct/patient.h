@@ -9,6 +9,8 @@ namespace OctData
 	class Patient : public SubstructureTemplate<Study>
 	{
 	public:
+		explicit Patient(int internalId) : internalId(internalId) {}
+
 		enum class Sex { Unknown, Female, Male};
 
 		const std::string& getForename () const                  { return forename ; }
@@ -32,7 +34,10 @@ namespace OctData
 		      Study& getStudy(int seriesId)                      { return getAndInsert(seriesId)         ; }
 		const Study& getStudy(int seriesId) const                { return *(substructureMap.at(seriesId)); }
 
+		int getInternalId() const                                      { return internalId; }
 	private:
+		const int internalId;
+
 		std::string forename;
 		std::string surname ;
 		std::string title   ;

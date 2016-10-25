@@ -12,7 +12,10 @@ namespace OctData
 		Date        studyDate    ;
 
 		
+		const int internalId;
 	public:
+		explicit Study(int internalId) : internalId(internalId)   {}
+
 		      Series& getSeries(int seriesId)                     { return getAndInsert        (seriesId) ; }
 		const Series& getSeries(int seriesId) const               { return *(substructureMap.at(seriesId)); }
 
@@ -25,6 +28,8 @@ namespace OctData
 		
 		void setStudyOperator(const std::string& s)               { studyOperator = s; }
 		void setStudyDate    (const Date&        d)               { studyDate     = d; }
+
+		int getInternalId() const                                      { return internalId; }
 	};
 
 }

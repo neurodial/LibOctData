@@ -100,7 +100,7 @@ namespace
 			stream << "pid         : " << data.pid          << '\n';
 			stream << "patientID   : " << data.patientID    << '\n';
 			stream << "padding     : " << data.padding      << '\n';
-			stream << "dob         : " << data.dob          << '\n' << OctData::Date::fromWindowsTimeFormat(data.dob).timeDateStr()<< '\n';
+			stream << "dob         : " << data.dob          << '\t' << OctData::Date::fromWindowsTimeFormat(data.dob).timeDateStr()<< '\n';
 			stream << "vid         : " << data.vid          << '\n';
 			stream << "visitID     : " << data.visitID      << '\n';
 			stream << "visitDate   : " << data.visitDate    << '\t' << OctData::Date::fromWindowsTimeFormat(data.visitDate).timeDateStr()<< '\n';

@@ -39,7 +39,7 @@ namespace OctData
 			SubstructureIterator it = substructureMap.find(id);
 			if(it == substructureMap.end())
 			{
-				std::pair<SubstructureIterator, bool> pit = substructureMap.emplace(id, new Type);
+				std::pair<SubstructureIterator, bool> pit = substructureMap.emplace(id, new Type(id));
 				if(pit.second == false)
 					throw "SubstructureTemplate pit.second == false";
 				return *((pit.first)->second);

@@ -6,8 +6,9 @@
 namespace OctData
 {
 
-	Series::Series()
-	: sloImage(new SloImage)
+	Series::Series(int internalId)
+	: internalId(internalId)
+	, sloImage(new SloImage)
 	{
 
 	}

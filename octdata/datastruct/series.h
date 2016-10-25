@@ -17,9 +17,9 @@ namespace OctData
 
 	public:
 		enum class Laterality { undef, OD, OS};
-
 		typedef std::vector<BScan*> BScanList;
-		Series();
+
+		explicit Series(int internalId);
 		~Series();
 
 		const SloImage& getSloImage() const                         { return *sloImage; }
@@ -41,7 +41,11 @@ namespace OctData
 		void setRefSeriesUID(const std::string& uid)                { refSeriesID = uid;  }
 
 		void takeBScan(BScan* bscan);
+
+		int getInternalId() const                                      { return internalId; }
 	private:
+		const int internalId;
+
 		SloImage*                               sloImage = nullptr;
 		std::string                             seriesUID;
 		std::string                             refSeriesID;
