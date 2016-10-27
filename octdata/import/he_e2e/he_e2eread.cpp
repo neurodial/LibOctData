@@ -294,7 +294,12 @@ namespace OctData
 				uint32_t factor = 30; // TODO
 				bscanData.start = CoordSLOmm(e2eMeta->getX1()*factor, e2eMeta->getY1()*factor);
 				bscanData.end   = CoordSLOmm(e2eMeta->getX2()*factor, e2eMeta->getY2()*factor);
+
+				bscanData.numAverage      = e2eMeta->getNumAve();
+				bscanData.imageQuality    = e2eMeta->getImageQuality();
+				bscanData.acquisitionTime = Date::fromWindowsTicks(e2eMeta->getAcquisitionTime());
 			}
+
 
 			const E2E::ImageRegistration* reg = nullptr;
 			if(op.registerBScanns)

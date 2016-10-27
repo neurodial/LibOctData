@@ -3,6 +3,7 @@
 #include <vector>
 #include <array>
 #include "coordslo.h"
+#include "date.h"
 
 namespace cv { class Mat; }
 
@@ -20,7 +21,8 @@ namespace OctData
 			ScaleFactor scaleFactor;
 
 			int    numAverage              = 0 ;
-			int    imageQuality            = 0 ;
+			double imageQuality            = 0 ;
+			Date   acquisitionTime;
 /*
 			bool   positionWithinTolerance     ;
 			bool   edi                         ;*/
@@ -48,7 +50,8 @@ namespace OctData
 		const std::string getFilename()     const                   { return data.filename               ; }
 
 		int    getNumAverage()              const                   { return data.numAverage             ; }
-		int    getImageQuality()            const                   { return data.imageQuality           ; }
+		double getImageQuality()            const                   { return data.imageQuality           ; }
+		Date   getAcquisitionTime()         const                   { return data.acquisitionTime        ; }
 
 // 		bool   getPositionWithinTolerance() const                   { return data.positionWithinTolerance; }
 // 		bool   getEdi()                     const                   { return data.edi                    ; }

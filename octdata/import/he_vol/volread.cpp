@@ -43,7 +43,8 @@ namespace
 	{
 		PACKSTRUCT(struct RawData
 		{
-			char     version     [12];
+			// char HSF-OCT-        [ 8]; // check first in function
+			char     version     [ 4];
 			uint32_t sizeX           ;
 			uint32_t numBScans       ;
 			uint32_t sizeZ           ;
@@ -179,6 +180,28 @@ namespace
 		series.setRefSeriesUID(header.data.referenceID);
 		
 		// series.setScanDate(OctData::Date::fromWindowsTicks(data.examTime));
+
+		switch(header.data.scanPattern)
+		{
+			case 1:
+				series.setScanPattern(OctData::Series::ScanPattern::SingleLine);
+				break;
+			case 2:
+				series.setScanPattern(OctData::Series::ScanPattern::Circular);
+				break;
+			case 3:
+				series.setScanPattern(OctData::Series::ScanPattern::Volume);
+				break;
+			case 4:
+				series.setScanPattern(OctData::Series::ScanPattern::FastVolume);
+				break;
+			case 5:
+				series.setScanPattern(OctData::Series::ScanPattern::Radial);
+				break;
+			default:
+				series.setScanPattern(OctData::Series::ScanPattern::Unknown);
+				break;
+		}
 	}
 
 }
@@ -208,6 +231,12 @@ namespace OctData
 		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
 
 		if(!stream.good())
+			return false;
+
+		const std::size_t formatstringlength = 8;
+		char fileformatstring[formatstringlength];
+		readFStream(stream, fileformatstring, formatstringlength);
+		if(memcmp(fileformatstring, "HSF-OCT-", formatstringlength) != 0) // 0 = strings are equal
 			return false;
 
 		VolHeader volHeader;
@@ -272,6 +301,7 @@ namespace OctData
 			bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
 			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleZ, volHeader.data.scaleX);
 
+			bscanData.imageQuality = bscanHeader.data.quality;
 			// fseek( fid, 256+2048+(header.SizeXSlo*header.SizeYSlo)+(ii*(header.BScanHdrSize+header.SizeX*header.SizeZ*4)), -1 );
 
 

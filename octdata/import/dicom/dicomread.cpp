@@ -149,7 +149,7 @@ namespace OctData
 	{
 		DcmDicomDir dicomdir(file.c_str());
 
-		dicomdir.print(std::cout);
+		// dicomdir.print(std::cout);
 	//Retrieve root node
 		DcmDirectoryRecord *root = &dicomdir.getRootRecord();
 		//Prepare child elements
@@ -159,20 +159,46 @@ namespace OctData
 		DcmDirectoryRecord* seriesRecord  = nullptr;
 		DcmDirectoryRecord* image         = nullptr;
 
-		if(rootTest == NULL || rootTest->nextSub(patientRecord) == NULL)
+		if(rootTest == nullptr || rootTest->nextSub(patientRecord) == nullptr)
 		{
 			std::cout << "It looks like the selected file does not have the expected format." << std::endl;
 			return false;
 		}
 		else
 		{
-			while((patientRecord = root->nextSub(patientRecord)) != NULL)
+			while((patientRecord = root->nextSub(patientRecord)) != nullptr)
 			{
-				while((studyRecord = patientRecord->nextSub(studyRecord)) != NULL)
+#define ReadRecord(XX) const char* str##XX; patientRecord->findAndGetString(XX, str##XX); if(str##XX) std::cout << #XX" : " << str##XX << std::endl;
+// 				const char* patName;
+// 				const char* patId;
+// 				patientRecord->findAndGetString(DCM_PatientName, patName);
+// 				patientRecord->findAndGetString(DCM_PatientID  , patId);
+
+				ReadRecord(DCM_PatientName);
+				ReadRecord(DCM_PatientID);
+				ReadRecord(DCM_IssuerOfPatientID);
+				ReadRecord(DCM_TypeOfPatientID);
+				ReadRecord(DCM_IssuerOfPatientIDQualifiersSequence);
+				ReadRecord(DCM_PatientSex);
+				ReadRecord(DCM_PatientBirthDate);
+				ReadRecord(DCM_PatientBirthTime);
+
+// 				if(patName)
+// 					std::cout << "patName: " << patName << std::endl;
+// 				if(patId)
+// 					std::cout << "patId: " << patId << std::endl;
+//           if (sqi->GetItem(itemused).FindDataElement(gdcm::Tag (0x0010, 0x0010)))
+//             sqi->GetItem(itemused).GetDataElement(gdcm::Tag (0x0010, 0x0010)).GetValue().Print(strm);
+//           std::cout << "PATIENT NAME : " << strm.str() << std::endl;
+//
+				while((studyRecord = patientRecord->nextSub(studyRecord)) != nullptr)
 				{
-					while((seriesRecord = studyRecord->nextSub(seriesRecord)) != NULL)
+#undef ReadRecord
+#define ReadRecord(XX) const char* str##XX; studyRecord->findAndGetString(XX, str##XX); if(str##XX) std::cout << #XX" : " << str##XX << std::endl;
+					ReadRecord(DCM_StudyID);
+					while((seriesRecord = studyRecord->nextSub(seriesRecord)) != nullptr)
 					{
-						while((image = seriesRecord->nextSub(image)) != NULL)
+						while((image = seriesRecord->nextSub(image)) != nullptr)
 						{
 							const char *sName;
 							//Retrieve the file name
@@ -197,7 +223,7 @@ namespace OctData
 			}
 		}
 
-		return true;
+		return false;
 	}
 
 
@@ -526,7 +552,7 @@ namespace OctData
 	: OctFileReader()
 	{ }
 
-	bool DicomRead::readFile(const boost::filesystem::path&, OCT&)
+	bool DicomRead::readFile(const boost::filesystem::path&, OCT&, const FileReadOptions& /*op*/)
 	{
 		return false;
 	}
