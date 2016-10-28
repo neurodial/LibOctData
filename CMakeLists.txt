@@ -20,7 +20,6 @@ option(BUILD_WITH_SUPPORT_TIFFSTACK "build support for tiffstack" ON)
 option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
 
 
-
 # General build config
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel.")
 
@@ -33,14 +32,54 @@ find_package(OpenCV REQUIRED)
 
 if(BUILD_WITH_SUPPORT_DICOM)
 	find_package(DCMTK REQUIRED)
-	find_package(OpenJPEG REQUIRED)
-
+	find_package(OpenJPEG)
+	list(APPEND import_srcs import/dicom)
+	
+	add_definitions(-DDICOM_SUPPORT)
+		
+	if(DEFINED OpenJPEG_FOUND)
+		add_definitions(-DDICOM_JPEG2K_SUPPORT)
+	endif()
 endif()
 
 
-find_package(LibE2E REQUIRED)
-find_package(TIFF REQUIRED)
+if(BUILD_WITH_SUPPORT_CI_RAW)
+	list(APPEND import_srcs import/cirrus_raw)
+	add_definitions(-DCIRRUS_RAW_SUPPORT)
+endif()
 
+
+if(BUILD_WITH_SUPPORT_HE_E2E)
+	find_package(LibE2E REQUIRED)
+	list(APPEND import_srcs import/he_e2e)
+	
+	add_definitions(-DHE_E2E_SUPPORT)
+endif()
+
+
+if(BUILD_WITH_SUPPORT_HE_VOL)
+	list(APPEND import_srcs import/he_vol)
+	
+	add_definitions(-DHE_VOL_SUPPORT)
+endif()
+
+
+if(BUILD_WITH_SUPPORT_HE_XML)
+	list(APPEND import_srcs import/he_xml)
+	
+	add_definitions(-DHE_XML_SUPPORT)
+endif()
+
+
+if(BUILD_WITH_SUPPORT_TIFFSTACK)
+	find_package(TIFF REQUIRED)
+	list(APPEND import_srcs import/tiffstack)
+	
+	add_definitions(-DTIFFSTACK_SUPPORT)
+endif()
+	
+	
+	
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
@@ -54,8 +93,7 @@ include_directories(SYSTEM ${TIFF_INCLUDE_DIRS})
 include_directories(${LibE2E_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-	set(compiler_flags_debug "-Wall -Wextra -Wunreachable-code -Werror -Wconversion -Wold-style-cast")        ## -Weverything
-	set(CMAKE_CXX_FLAGS "-std=c++11")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wunreachable-code -Werror -Wconversion -Wold-style-cast")        ## -Weverything
 	set(CMAKE_CFLAGS "-fPIC")
 
 	if(${WIN32})
@@ -64,29 +102,26 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 
-
-file(GLOB sources_b "${CMAKE_CURRENT_SOURCE_DIR}/octdata/*.cpp")
-file(GLOB sources "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/*.cpp")
-file(GLOB sources_r "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/**/*.cpp")
-
-list(APPEND sources ${sources_b} ${sources_r})
+file(GLOB liboctdata_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/octdata/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/*.cpp")
 
 
-if(compiler_flags_debug)
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${compiler_flags_debug}")
-endif()
-if(compiler_flags_release)
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${compiler_flags_release}")
-endif()
-if(compiler_flags)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${compiler_flags}")
-endif()
+set(srcs_directories datastruct ${import_srcs})
+foreach(loop_var ${srcs_directories})
+	file(GLOB sources_base "${CMAKE_CURRENT_SOURCE_DIR}/octdata/${loop_var}/*.cpp")
+	list(APPEND liboctdata_SRCS ${sources} ${sources_base})
+endforeach(loop_var)
+
+# file(GLOB sources "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/*.cpp")
+# file(GLOB sources_r "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/**/*.cpp")
+
+# list(APPEND sources ${sources_b} ${sources_r})
 
 
-add_library(octdata SHARED ${sources})
+
+add_library(octdata SHARED ${liboctdata_SRCS})
 
 
-IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+IF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
   SET_TARGET_PROPERTIES(octdata PROPERTIES COMPILE_FLAGS "-fPIC")
 ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 
@@ -119,6 +154,6 @@ GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EX
 
 add_definitions(-DOCTDATA_EXPORT)
 
-add_executable(liboctdata main.cpp)
-target_link_libraries(liboctdata octdata)
+add_executable(liboctdata_test main.cpp)
+target_link_libraries(liboctdata_test octdata)
 

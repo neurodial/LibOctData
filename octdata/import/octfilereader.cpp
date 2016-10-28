@@ -35,12 +35,24 @@ namespace OctData
 
 	void OctFileReader::registerReaders()
 	{
+#ifdef HE_VOL_SUPPORT
 		VOLRead::getInstance();
+#endif
+#ifdef HE_XML_SUPPORT
 		HeXmlRead::getInstance();
+#endif
+#ifdef CIRRUS_RAW_SUPPOR
 		CirrusRawRead::getInstance();
+#endif
+#ifdef DICOM_SUPPORT
 		DicomRead::getInstance();
+#endif
+#ifdef HE_E2E_SUPPORT
 		HeE2ERead::getInstance();
+#endif
+#ifdef TIFFSTACK_SUPPORT
 		TiffStackRead::getInstance();
+#endif
 	}
 
 }
