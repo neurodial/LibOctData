@@ -7,7 +7,7 @@ set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #
 # Build options
@@ -116,6 +116,9 @@ endforeach(loop_var)
 
 # list(APPEND sources ${sources_b} ${sources_r})
 
+# hack for qtcreator (show header files)
+FILE(GLOB_RECURSE includefiles "octdata/*.h")
+add_custom_target(headers SOURCES ${includefiles})
 
 
 add_library(octdata SHARED ${liboctdata_SRCS})

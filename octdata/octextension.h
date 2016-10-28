@@ -11,6 +11,8 @@ namespace OctData
 	{
 	public:
 		typedef std::vector<std::string> ExtList;
+		
+		OctExtension() = default;
 
 		OctExtension(const std::string& ext, const std::string& name)
 		: extensions(1)

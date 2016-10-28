@@ -2,6 +2,13 @@
 
 #include <map>
 
+
+#ifdef OCTDATA_EXPORT
+	#include "octdata_EXPORTS.h"
+#else
+	#define Octdata_EXPORTS
+#endif
+
 namespace OctData
 {
 
@@ -11,19 +18,19 @@ namespace OctData
 		SubstructureTemplate(const SubstructureTemplate&)            = delete;
 		SubstructureTemplate& operator=(const SubstructureTemplate&) = delete;
 	public:
-		SubstructureTemplate()                                       = default;
-		SubstructureTemplate(SubstructureTemplate&& o)          { swapSubstructure(o); }
+		Octdata_EXPORTS SubstructureTemplate()                                       = default;
+		Octdata_EXPORTS SubstructureTemplate(SubstructureTemplate&& o)          { swapSubstructure(o); }
 
 		typedef std::pair<const IndexType, Type*>        SubstructurePair;
 		typedef std::map<IndexType, Type*>               SubstructureMap;
 		typedef typename SubstructureMap::iterator       SubstructureIterator;
 		typedef typename SubstructureMap::const_iterator SubstructureCIterator;
 
-		std::size_t subStructureElements() const                { return substructureMap.size();  }
+		Octdata_EXPORTS std::size_t subStructureElements() const                { return substructureMap.size();  }
 
-		SubstructureCIterator begin() const                     { return substructureMap.begin(); }
-		SubstructureCIterator end()   const                     { return substructureMap.end();   }
-		std::size_t size()            const                     { return substructureMap.size();  }
+		Octdata_EXPORTS SubstructureCIterator begin() const                     { return substructureMap.begin(); }
+		Octdata_EXPORTS SubstructureCIterator end()   const                     { return substructureMap.end();   }
+		Octdata_EXPORTS std::size_t size()            const                     { return substructureMap.size();  }
 
 	protected:
 		void swapSubstructure(SubstructureTemplate& d)          { substructureMap.swap(d.substructureMap); }

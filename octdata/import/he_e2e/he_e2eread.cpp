@@ -406,7 +406,7 @@ namespace OctData
 			{
 				char buffer[100];
 				const E2E::Patient& e2ePat = *(e2ePatPair.second);
-				std::sprintf(buffer, "%08d.pdb", e2ePatPair.first);
+				std::snprintf(buffer, 100, "%08d.pdb", e2ePatPair.first);
 				// std::string filenname =
 				bfs::path patientDataFile(file.branch_path() / buffer);
 				if(bfs::exists(patientDataFile))

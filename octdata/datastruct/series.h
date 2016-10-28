@@ -5,6 +5,16 @@
 #include <chrono>
 #include "date.h"
 
+
+
+#ifdef OCTDATA_EXPORT
+	#include "octdata_EXPORTS.h"
+#else
+	#define Octdata_EXPORTS
+#endif
+
+
+
 namespace OctData
 {
 	class SloImage;
@@ -20,33 +30,34 @@ namespace OctData
 		enum class ScanPattern { Unknown, SingleLine, Circular, Volume, FastVolume, Radial };
 		typedef std::vector<BScan*> BScanList;
 
-		explicit Series(int internalId);
-		~Series();
+		Octdata_EXPORTS explicit Series(int internalId);
+		Octdata_EXPORTS ~Series();
 
-		const SloImage& getSloImage() const                         { return *sloImage; }
+		Octdata_EXPORTS const SloImage& getSloImage() const         { return *sloImage; }
 		void takeSloImage(SloImage* sloImage);
-		const BScanList getBScans() const                           { return bscans;    }
+
+		Octdata_EXPORTS const BScanList getBScans() const           { return bscans;    }
 		const BScan* getBScan(std::size_t pos) const;
-		std::size_t bscanCount() const                              { return bscans.size(); }
+		Octdata_EXPORTS std::size_t bscanCount() const              { return bscans.size(); }
 
+		Octdata_EXPORTS Laterality getLaterality() const            { return laterality; }
 		void setLaterality(Laterality l)                            { laterality = l; }
-		Laterality getLaterality() const                            { return laterality; }
 
+		Octdata_EXPORTS ScanPattern getScanPattern() const          { return scanPattern; }
 		void setScanPattern(ScanPattern p)                          { scanPattern = p;    }
-		ScanPattern getScanPattern() const                          { return scanPattern; }
 		
-		const Date& getScanDate() const                             { return scanDate; }
 		void setScanDate(const Date& time)                          { scanDate = time; }
+		Octdata_EXPORTS const Date& getScanDate() const             { return scanDate; }
 		
-		const std::string& getSeriesUID() const                     { return seriesUID; }
 		void setSeriesUID(const std::string& uid)                   { seriesUID = uid;  }
+		Octdata_EXPORTS const std::string& getSeriesUID() const     { return seriesUID; }
 		
-		const std::string& getRefSeriesUID() const                  { return refSeriesID; }
 		void setRefSeriesUID(const std::string& uid)                { refSeriesID = uid;  }
+		Octdata_EXPORTS const std::string& getRefSeriesUID() const  { return refSeriesID; }
 
 		void takeBScan(BScan* bscan);
 
-		int getInternalId() const                                      { return internalId; }
+		Octdata_EXPORTS int getInternalId() const                   { return internalId; }
 	private:
 		const int internalId;
 
