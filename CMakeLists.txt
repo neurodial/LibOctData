@@ -94,7 +94,7 @@ include_directories(${LibE2E_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wunreachable-code -Werror -Wconversion -Wold-style-cast")        ## -Weverything
-	set(CMAKE_CFLAGS "-fPIC")
+	set(CMAKE_CFLAGS "${CMAKE_CFLAGS} -fPIC")
 
 	if(${WIN32})
 		set(CMAKE_CXX_FLAGS "-mno-ms-bitfields -static -static-libstdc++ ${CMAKE_CXX_FLAGS}")
@@ -104,17 +104,12 @@ endif()
 
 file(GLOB liboctdata_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/octdata/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/*.cpp")
 
-
 set(srcs_directories datastruct ${import_srcs})
 foreach(loop_var ${srcs_directories})
 	file(GLOB sources_base "${CMAKE_CURRENT_SOURCE_DIR}/octdata/${loop_var}/*.cpp")
 	list(APPEND liboctdata_SRCS ${sources} ${sources_base})
 endforeach(loop_var)
 
-# file(GLOB sources "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/*.cpp")
-# file(GLOB sources_r "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/**/*.cpp")
-
-# list(APPEND sources ${sources_b} ${sources_r})
 
 # hack for qtcreator (show header files)
 FILE(GLOB_RECURSE includefiles "octdata/*.h")

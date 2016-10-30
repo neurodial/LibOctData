@@ -130,7 +130,7 @@ namespace OctData
 		// std::cout << xmlfile.branch_path() << std::endl;
 
 		std::string xmlPath     = file.branch_path().generic_string();
-		std::string xmlFilename = file.filename().generic_string();
+		// std::string xmlFilename = file.filename().generic_string();
 
 		// Create an empty property tree object
 		bpt::ptree pt;

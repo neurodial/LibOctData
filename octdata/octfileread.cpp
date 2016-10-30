@@ -54,7 +54,7 @@ namespace OctData
 		return oct;
 	}
 
-
+// used by friend class OctFileReader
 	void OctFileRead::registerFileRead(OctFileReader* reader, const OctExtension& ext)
 	{
 		// std::cout << "register: " << ext.name << std::endl;

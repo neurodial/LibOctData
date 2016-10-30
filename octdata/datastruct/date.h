@@ -13,45 +13,21 @@ namespace OctData
 		struct TimeCollection
 		{
 			time_t unixtime = 0;
-			int    ms = 0;
+			int    ms       = 0;
 		};
-
-		static const long long windowsTicksToUnixFactor = 10000000;
-		static const long long secToUnixEpechFromWindowsTicks = 11644473600LL;
 
 		time_t unixtime;
 		struct tm timeinfo;
-		bool decoded = false;
-		int    millisecunds;
+		bool   decoded      = false;
+		int    millisecunds = 0;
 
 
-		static TimeCollection conviertWindowsTicks(long long windowsTicks)
-		{
-			TimeCollection time;
-			time.unixtime = (windowsTicks/windowsTicksToUnixFactor - secToUnixEpechFromWindowsTicks);
-			time.ms       = static_cast<int>((windowsTicks/(windowsTicksToUnixFactor/1000) - secToUnixEpechFromWindowsTicks*1000) - static_cast<long long>(time.unixtime)*1000);
-			return time;
-		}
+		static TimeCollection conviertWindowsTicks(long long windowsTicks);
+		static TimeCollection convertWindowsTimeFormat(double wintime);
+		void decodeUnixTime();
 
-		static TimeCollection convertWindowsTimeFormat(double wintime)
-		{
-			TimeCollection time;
-			time.unixtime = static_cast<time_t>((wintime - 25569)*60*60*24);
-			time.ms       = static_cast<int>((wintime - 25569)*60*60*24*1000 - std::floor((wintime - 25569)*60*60*24*1000));
-			return time;
-		}
-
-		void decodeUnixTime()
-		{
-			struct tm* ti = gmtime(&unixtime);
-			if(ti == nullptr)
-				return;
-			timeinfo = *ti;
-			decoded = true;
-		}
-
-		Date(time_t unixtime) : unixtime(unixtime)               { decodeUnixTime(); }
-		Date(const TimeCollection& time)
+		explicit Date(time_t unixtime) : unixtime(unixtime)      { decodeUnixTime(); }
+		explicit Date(const TimeCollection& time)
 		: unixtime    (time.unixtime)
 		, millisecunds(time.ms)
 		{
@@ -74,30 +50,8 @@ namespace OctData
 		
 		bool isEmpty()                                     const { return !decoded;         }
 
-		std::string str(char trenner = '.') const
-		{
-			if(!decoded)
-				return "-";
-
-			std::ostringstream datesstring;
-			datesstring << year() << trenner << std::setw(2) << std::setfill('0') << month() << trenner << std::setw(2) << day();
-			return datesstring.str();
-		}
-
-		std::string timeDateStr(char datetrenner = '.', char timeTrenner = ':', bool showMs = false) const
-		{
-			if(!decoded)
-				return "-";
-
-			std::ostringstream datesstring;
-			datesstring << year() << datetrenner << std::setw(2) << std::setfill('0') << month() << datetrenner << std::setw(2) << day();
-			datesstring << " ";
-			datesstring << hour() << timeTrenner << std::setw(2) << min() << timeTrenner << std::setw(2) << sec();
-			if(showMs)
-				datesstring << '.' << std::setw(3) << ms();
-
-			return datesstring.str();
-		}
+		std::string str(char trenner = '.') const;
+		std::string timeDateStr(char datetrenner = '.', char timeTrenner = ':', bool showMs = false) const;
 	};
 
 

@@ -33,13 +33,12 @@ namespace OctData
 
 		Octdata_EXPORTS static bool isLoadable(const std::string& filename);
 
-	protected:
-		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
-		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op);
-
 	private:
 		OctFileRead();
 		~OctFileRead();
+
+		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
+		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op);
 
 		ExtensionsList extensions;
 

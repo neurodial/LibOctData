@@ -13,8 +13,8 @@ namespace OctData
 	{
 	public:
 		OctFileReader();
-		OctFileReader(const OctExtension& ext);
-		OctFileReader(const std::vector<OctExtension>& ext);
+		explicit OctFileReader(const OctExtension& ext);
+		explicit OctFileReader(const std::vector<OctExtension>& ext);
 
 		virtual ~OctFileReader();
 		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op) = 0;

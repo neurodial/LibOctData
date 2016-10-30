@@ -21,7 +21,7 @@ namespace OctData
 			extensions.at(0) = ext;
 		}
 
-		OctExtension(const std::initializer_list<std::string>& seq)
+		explicit OctExtension(const std::initializer_list<std::string>& seq)
 		: extensions(seq.size()-1)
 		{
 			std::initializer_list<std::string>::const_iterator srcIt = seq.begin();

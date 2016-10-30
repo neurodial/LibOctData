@@ -37,7 +37,7 @@ namespace OctData
 		void takeSloImage(SloImage* sloImage);
 
 		Octdata_EXPORTS const BScanList getBScans() const           { return bscans;    }
-		const BScan* getBScan(std::size_t pos) const;
+		Octdata_EXPORTS const BScan* getBScan(std::size_t pos) const;
 		Octdata_EXPORTS std::size_t bscanCount() const              { return bscans.size(); }
 
 		Octdata_EXPORTS Laterality getLaterality() const            { return laterality; }

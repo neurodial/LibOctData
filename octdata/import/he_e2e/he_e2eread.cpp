@@ -404,9 +404,10 @@ namespace OctData
 		{
 			for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
 			{
-				char buffer[100];
+				const std::size_t bufferSize = 100;
+				char buffer[bufferSize];
 				const E2E::Patient& e2ePat = *(e2ePatPair.second);
-				std::snprintf(buffer, 100, "%08d.pdb", e2ePatPair.first);
+				std::snprintf(buffer, bufferSize, "%08d.pdb", e2ePatPair.first);
 				// std::string filenname =
 				bfs::path patientDataFile(file.branch_path() / buffer);
 				if(bfs::exists(patientDataFile))
@@ -414,7 +415,7 @@ namespace OctData
 
 				for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
 				{
-					std::sprintf(buffer, "%08d.edb", e2eStudyPair.first);
+					std::snprintf(buffer, bufferSize, "%08d.edb", e2eStudyPair.first);
 					bfs::path studyDataFile(file.branch_path() / buffer);
 					if(bfs::exists(studyDataFile))
 						e2eData.readE2EFile(studyDataFile.generic_string());
