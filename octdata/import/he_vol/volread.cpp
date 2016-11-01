@@ -108,7 +108,7 @@ namespace
 			stream << "gridType    : " << data.gridType     << '\n';
 			stream << "gridOffset  : " << data.gridOffset   << '\n';
 			stream << "progID      : ";
-			for(std::size_t i=0; i<sizeof(data.progID); ++i)
+			for(std::size_t i=0; i<sizeof(data.progID) && data.progID[i] != 0; ++i)
 				stream << data.progID[i];
 			stream << std::endl;
 		}
@@ -242,7 +242,7 @@ namespace OctData
 		VolHeader volHeader;
 
 		readFStream(stream, &(volHeader.data));
-		volHeader.printData(std::cout);
+		// volHeader.printData(std::cout);
 		stream.seekg(VolHeader::getHeaderSize());
 
 		Patient& pat    = oct.getPatient(volHeader.data.pid);

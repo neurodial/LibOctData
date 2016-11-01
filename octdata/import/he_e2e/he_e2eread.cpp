@@ -336,6 +336,11 @@ namespace OctData
 				useLUTBScan<uint16_t, uint8_t, HeGrayTransformVol>(e2eImage, bscanImageConv);
 				break;
 			}
+			if(bscanImageConv.empty())
+			{
+				std::cerr << "Error: Converted Matrix empty, valid options?\n";
+				useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
+			}
 
 			if(!op.fillEmptyPixelWhite)
 				fillEmptyBroderCols<uint8_t>(bscanImageConv, 255, 0);
