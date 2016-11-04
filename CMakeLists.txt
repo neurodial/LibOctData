@@ -25,7 +25,7 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options a
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_module/)
 
-find_package(Boost 1.40 COMPONENTS filesystem system REQUIRED)
+find_package(Boost 1.40 COMPONENTS filesystem system locale REQUIRED)
 find_package(OpenCV REQUIRED)
 
 

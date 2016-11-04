@@ -27,8 +27,11 @@
 
 #include "he_gray_transform.h"
 
+#include <boost/locale.hpp>
+
 
 namespace bfs = boost::filesystem;
+namespace loc = boost::locale;
 
 
 namespace OctData
@@ -76,7 +79,7 @@ namespace OctData
 			if(e2eStudyData)
 			{
 				study.setStudyDate(Date::fromWindowsTimeFormat(e2eStudyData->getWindowsStudyDate()));
-				study.setStudyOperator(e2eStudyData->getOperator());
+				study.setStudyOperator(loc::conv::to_utf<char>(e2eStudyData->getOperator(), "ISO-8859-15"));
 			}
 		}
 		
