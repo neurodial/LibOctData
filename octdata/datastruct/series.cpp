@@ -3,12 +3,15 @@
 #include "bscan.h"
 #include "sloimage.h"
 
+#include <limits>
+
 namespace OctData
 {
 
 	Series::Series(int internalId)
 	: internalId(internalId)
 	, sloImage(new SloImage)
+	, scanFocus(std::numeric_limits<double>::quiet_NaN())
 	{
 
 	}

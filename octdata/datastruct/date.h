@@ -24,6 +24,7 @@ namespace OctData
 
 		static TimeCollection conviertWindowsTicks(long long windowsTicks);
 		static TimeCollection convertWindowsTimeFormat(double wintime);
+		static TimeCollection convertTime(int year, int month, int day, int hour, int min, double sec, bool withTime);
 		void decodeUnixTime();
 
 		explicit Date(time_t unixtime) : unixtime(unixtime)      { decodeUnixTime(); }
@@ -39,6 +40,9 @@ namespace OctData
 		static Date fromWindowsTicks(uint64_t ticks)             { return Date(conviertWindowsTicks(ticks)); }
 		static Date fromWindowsTimeFormat(double t)              { return Date(convertWindowsTimeFormat(t)); }
 		static Date fromUnixTime(time_t unixtime)                { return Date(unixtime); }
+		static Date fromDate(int year, int month, int day)       { return Date(convertTime(year, month, day, 0, 0, 0, false)); }
+		static Date fromTime(int year, int month, int day, int hour, int min, double sec)
+		                                                         { return Date(convertTime(year, month, day, hour, min, sec, true)); }
 
 		int day  ()                                        const { return timeinfo.tm_mday       ; }
 		int month()                                        const { return timeinfo.tm_mon  + 1   ; }

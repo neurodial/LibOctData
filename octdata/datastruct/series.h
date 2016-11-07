@@ -55,6 +55,9 @@ namespace OctData
 		void setRefSeriesUID(const std::string& uid)                { refSeriesID = uid;  }
 		Octdata_EXPORTS const std::string& getRefSeriesUID() const  { return refSeriesID; }
 
+		void setScanFocus(double focus)                             { scanFocus = focus; }
+		Octdata_EXPORTS   double getScanFocus()              const  { return scanFocus;  }
+
 		void takeBScan(BScan* bscan);
 
 		Octdata_EXPORTS int getInternalId() const                   { return internalId; }
@@ -64,6 +67,7 @@ namespace OctData
 		SloImage*                               sloImage = nullptr;
 		std::string                             seriesUID;
 		std::string                             refSeriesID;
+		double                                  scanFocus;
 
 		Laterality                              laterality = Laterality::undef;
 		ScanPattern                             scanPattern = ScanPattern::Unknown;

@@ -1,5 +1,7 @@
 #include "date.h"
 
+#include <cmath>
+
 namespace
 {
 	const long long windowsTicksToUnixFactor = 10000000;
@@ -34,6 +36,27 @@ namespace OctData
 		timeinfo = *ti;
 		decoded = true;
 	}
+
+	Date::TimeCollection Date::convertTime(int year, int month, int day, int hour, int min, double sec, bool withTime)
+	{
+		struct tm timeinfo{};
+
+		timeinfo.tm_year = year - 1900;
+		timeinfo.tm_mon  = month - 1;
+		timeinfo.tm_mday = day;
+		if(withTime)
+		{
+			timeinfo.tm_hour = hour;
+			timeinfo.tm_min  = min;
+			timeinfo.tm_sec  = static_cast<int>(sec);
+		}
+
+		TimeCollection time;
+		time.unixtime = timegm(&timeinfo);
+		time.ms       = static_cast<int>((sec - std::round(sec))*1000);
+		return time;
+	}
+
 
 
 	std::string Date::str(char trenner) const

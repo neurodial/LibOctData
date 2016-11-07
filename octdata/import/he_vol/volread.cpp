@@ -202,6 +202,8 @@ namespace
 				series.setScanPattern(OctData::Series::ScanPattern::Unknown);
 				break;
 		}
+
+		series.setScanFocus(header.data.scanFocus);
 	}
 
 }

@@ -30,6 +30,16 @@ namespace OctData
 
 	namespace
 	{
+		template<typename T>
+		inline T readOptinalNode(const bpt::ptree& basis, const char* nodeName, T defaultValue)
+		{
+			boost::optional<const bpt::ptree&> optNode  = basis.get_child_optional(nodeName);
+			if(optNode)
+				return optNode->get_value<T>(defaultValue);
+			return defaultValue;
+		}
+
+
 		std::string getFilename(const bpt::ptree& imageNode)
 		{
 			boost::optional<const bpt::ptree&> urlNode = imageNode.get_child_optional("ImageData.ExamURL");
@@ -78,7 +88,65 @@ namespace OctData
 			series.takeSloImage(slo);
 		}
 
-		void fillBScann(const bpt::ptree& imageNode, Series& series, const std::string& xmlPath)
+		Date readDate(const bpt::ptree& dateNode)
+		{
+			int year  = readOptinalNode(dateNode, "Year" , 0);
+			int month = readOptinalNode(dateNode, "Month", 0);
+			int day   = readOptinalNode(dateNode, "Day"  , 0);
+
+			return Date::fromDate(year, month, day);
+		}
+
+		Date readDateTime(const bpt::ptree& dateNode, const bpt::ptree& timeNode)
+		{
+			int    year  = readOptinalNode<int   >(dateNode, "Year"  , 0 );
+			int    month = readOptinalNode<int   >(dateNode, "Month" , 0 );
+			int    day   = readOptinalNode<int   >(dateNode, "Day"   , 0 );
+			int    hour  = readOptinalNode<int   >(timeNode, "Hour"  , 0 );
+			int    min   = readOptinalNode<int   >(timeNode, "Minute", 0 );
+			double sec   = readOptinalNode<double>(timeNode, "Second", 0.);
+
+
+			return Date::fromTime(year, month, day, hour, min, sec);
+		}
+
+		void fillStudy(const bpt::ptree& studyNode, Study& study)
+		{
+			study.setStudyUID     (studyNode.get_child("StudyUID"       ).get_value<std::string>(std::string()));
+			study.setStudyOperator(studyNode.get_child("Operator"       ).get_value<std::string>(std::string()));
+
+
+			boost::optional<const bpt::ptree&> studyDateNode = studyNode.get_child_optional("StudyDate.Date");
+			if(studyDateNode)
+				study.setStudyDate(readDate(*studyDateNode));
+		}
+
+		void fillSeriesLocalizer(const bpt::ptree& imageNode, Series& series)
+		{
+			boost::optional<const bpt::ptree&> scanFocusNode = imageNode.get_child_optional("OphthalmicAcquisitionContext.Focus");
+			if(scanFocusNode)
+				series.setScanFocus(scanFocusNode->get_value<double>(0.));
+		}
+
+		void fillSeries(const bpt::ptree& seriesNode, Series& series)
+		{
+			const std::string examinedStructure = seriesNode.get_child("ExaminedStructure").get_value<std::string>(std::string());
+			const std::string type              = seriesNode.get_child("Type"             ).get_value<std::string>(std::string());
+			const std::string laterality        = seriesNode.get_child("Laterality"       ).get_value<std::string>(std::string());
+
+			if(laterality == "R")
+				series.setLaterality(Series::Laterality::OD);
+			else if(laterality == "L")
+				series.setLaterality(Series::Laterality::OS);
+
+			if(type == "Volume")
+				series.setScanPattern(Series::ScanPattern::Volume);
+
+			series.setSeriesUID   (seriesNode.get_child(                "SeriesUID").get_value<std::string>(std::string()));
+			series.setRefSeriesUID(seriesNode.get_child("ReferenceSeries.SeriesUID").get_value<std::string>(std::string()));
+		}
+
+		void fillBScann(const bpt::ptree& imageNode, const bpt::ptree& studyNode, Series& series, const std::string& xmlPath)
 		{
 			BScan::Data bscanData;
 
@@ -103,7 +171,20 @@ namespace OctData
 			bscanData.scaleFactor = readScaleFactor(imageNode.get_child("OphthalmicAcquisitionContext"));
 
 
+			bscanData.numAverage   = imageNode.get_child("OphthalmicAcquisitionContext.NumAve").get_value<int>(0);
+			bscanData.imageQuality = imageNode.get_child("OphthalmicAcquisitionContext.ImageQuality").get_value<int>(0);
+
+
+			boost::optional<const bpt::ptree&> studyDateNode = studyNode.get_child_optional("StudyDate.Date");
+			if(studyDateNode)
+			{
+				boost::optional<const bpt::ptree&> imageTimeNode = imageNode.get_child_optional("AcquisitionTime.Time");
+				if(imageTimeNode)
+					bscanData.acquisitionTime = readDateTime(*studyDateNode, *imageTimeNode);
+			}
+
 			series.takeBScan(new BScan(image, bscanData));
+
 		}
 
 	}
@@ -158,6 +239,8 @@ namespace OctData
 		std::string patientLongID  = patientNode.get_child("PatientID" ).get_value<std::string>(std::string());
 		std::string sex            = patientNode.get_child("Sex"       ).get_value<std::string>(std::string());
 		int         patientID      = patientNode.get_child("ID"        ).get_value<int>(0);
+
+		boost::optional<bpt::ptree&> patientBirthdateNode = patientNode.get_child_optional("Birthdate.Date");
 		// std::cout << xmlFilename << ": " << lastName << ", " << firstNames << std::endl;
 
 		Patient& pat = oct.getPatient(patientID);
@@ -166,6 +249,8 @@ namespace OctData
 		pat.setId      (patientLongID);
 		if(patUIDNode)
 			pat.setPatientUID(patUIDNode->get_value<std::string>(""));
+		if(patientBirthdateNode)
+			pat.setBirthdate(readDate(*patientBirthdateNode));
 
 		if(sex == "F")
 			pat.setSex(Patient::Sex::Female);
@@ -179,6 +264,9 @@ namespace OctData
 		int         studyID   = studyNode  .get_child("ID"   ).get_value<int>(0);
 
 		Study& study = pat.getStudy(studyID);
+
+		fillStudy(studyNode, study);
+
 		for(const std::pair<const std::string, bpt::ptree>& seriesStudyPair : studyNode)
 		{
 			if(seriesStudyPair.first != "Series")
@@ -186,19 +274,11 @@ namespace OctData
 
 			const bpt::ptree& seriesStudyNode = seriesStudyPair.second;
 
-			int         seriesID          = seriesStudyNode.get_child("ID"               ).get_value<int>(0);
-			std::string examinedStructure = seriesStudyNode.get_child("ExaminedStructure").get_value<std::string>(std::string());
-			std::string type              = seriesStudyNode.get_child("Type"             ).get_value<std::string>(std::string());
-			std::string laterality        = seriesStudyNode.get_child("Laterality"       ).get_value<std::string>(std::string());
-
-
+			int seriesID = seriesStudyNode.get_child("ID").get_value<int>(0);
 			Series& series = study.getSeries(seriesID);
 			
-			
-			if(laterality == "R")
-				series.setLaterality(Series::Laterality::OD);
-			else if(laterality == "L")
-				series.setLaterality(Series::Laterality::OS);
+			fillSeries(seriesStudyNode, series);
+
 			
 			for(const std::pair<const std::string, bpt::ptree>& imageNode : seriesStudyNode)
 			{
@@ -217,10 +297,13 @@ namespace OctData
 				std::string typeStr = type.get().get_value<std::string>();
 
 				if(typeStr == "LOCALIZER")
+				{
 					fillSLOImage(imageNode.second, series, xmlPath);
+					fillSeriesLocalizer(imageNode.second, series);
+				}
 
 				if(typeStr == "OCT")
-					fillBScann(imageNode.second, series, xmlPath);
+					fillBScann(imageNode.second, studyNode, series, xmlPath);
 
 				/*
 				boost::optional<const bpt::ptree&> urlNode = t.second.get_child_optional("ImageData.ExamURL");
