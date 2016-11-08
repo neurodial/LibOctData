@@ -130,9 +130,9 @@ namespace OctData
 
 		void fillSeries(const bpt::ptree& seriesNode, Series& series)
 		{
-			const std::string examinedStructure = seriesNode.get_child("ExaminedStructure").get_value<std::string>(std::string());
-			const std::string type              = seriesNode.get_child("Type"             ).get_value<std::string>(std::string());
-			const std::string laterality        = seriesNode.get_child("Laterality"       ).get_value<std::string>(std::string());
+			const std::string examinedStructure = readOptinalNode<std::string>(seriesNode, "ExaminedStructure", std::string());
+			const std::string type              = readOptinalNode<std::string>(seriesNode, "Type"             , std::string());
+			const std::string laterality        = readOptinalNode<std::string>(seriesNode, "Laterality"       , std::string());
 
 			if(laterality == "R")
 				series.setLaterality(Series::Laterality::OD);
@@ -142,8 +142,8 @@ namespace OctData
 			if(type == "Volume")
 				series.setScanPattern(Series::ScanPattern::Volume);
 
-			series.setSeriesUID   (seriesNode.get_child(                "SeriesUID").get_value<std::string>(std::string()));
-			series.setRefSeriesUID(seriesNode.get_child("ReferenceSeries.SeriesUID").get_value<std::string>(std::string()));
+			series.setSeriesUID   (readOptinalNode<std::string>(seriesNode,                 "SeriesUID", std::string()));
+			series.setRefSeriesUID(readOptinalNode<std::string>(seriesNode, "ReferenceSeries.SeriesUID", std::string()));
 		}
 
 		void fillBScann(const bpt::ptree& imageNode, const bpt::ptree& studyNode, Series& series, const std::string& xmlPath)
