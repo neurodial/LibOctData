@@ -59,4 +59,28 @@ namespace OctData
 	};
 
 
+	inline std::string Date::str(char trenner) const
+	{
+		if(!decoded)
+			return "-";
+
+		std::ostringstream datesstring;
+		datesstring << year() << trenner << std::setw(2) << std::setfill('0') << month() << trenner << std::setw(2) << day();
+		return datesstring.str();
+	}
+
+	inline std::string Date::timeDateStr(char datetrenner, char timeTrenner, bool showMs) const
+	{
+		if(!decoded)
+			return "-";
+
+		std::ostringstream datesstring;
+		datesstring << year() << datetrenner << std::setw(2) << std::setfill('0') << month() << datetrenner << std::setw(2) << day();
+		datesstring << " ";
+		datesstring << hour() << timeTrenner << std::setw(2) << min() << timeTrenner << std::setw(2) << sec();
+		if(showMs)
+			datesstring << '.' << std::setw(3) << ms();
+
+		return datesstring.str();
+	}
 }
