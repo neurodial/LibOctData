@@ -2,7 +2,9 @@
 
 #include <cmath>
 
-#define timegm _mkgmtime
+#ifdef _MSC_VER
+	#define timegm _mkgmtime
+#endif
 
 namespace
 {

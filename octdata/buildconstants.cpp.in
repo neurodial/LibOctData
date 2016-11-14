@@ -1,5 +1,5 @@
 
-#include <src/buildconstants.h>
+#include <buildconstants.h>
 
 namespace OctData
 {
@@ -11,5 +11,6 @@ namespace OctData
 	const char BuildConstants::compiler       [] = "@CMAKE_CXX_COMPILER@";
 	const char BuildConstants::compilerId     [] = "@CMAKE_CXX_COMPILER_ID@";
 	const char BuildConstants::compilerVersion[] = "@CMAKE_CXX_COMPILER_VERSION@";
+	const char BuildConstants::configureTime  [] = "@CMAKE_CONFIGURE_TIME@";
 
 }

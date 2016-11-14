@@ -179,6 +179,8 @@ namespace
 			series.setLaterality(OctData::Series::Laterality::OD);
 		else if(strcmp("OS", header.data.scanPosition) == 0)
 			series.setLaterality(OctData::Series::Laterality::OS);
+		else
+			BOOST_LOG_TRIVIAL(warning) << "Unknown scan position" << header.data.scanPosition;
 		
 		series.setSeriesUID   (header.data.id);
 		series.setRefSeriesUID(header.data.referenceID);
@@ -204,6 +206,7 @@ namespace
 				break;
 			default:
 				series.setScanPattern(OctData::Series::ScanPattern::Unknown);
+				BOOST_LOG_TRIVIAL(warning) << "Unknown scan pattern" << header.data.scanPattern;
 				break;
 		}
 
@@ -224,7 +227,6 @@ namespace OctData
 
 	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
 	{
-		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
 //     BOOST_LOG_TRIVIAL(debug) << "A debug severity message";
@@ -235,6 +237,8 @@ namespace OctData
 
 		if(file.extension() != ".vol")
 			return false;
+
+		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
 
 		if(!bfs::exists(file))
 			return false;
@@ -346,6 +350,8 @@ namespace OctData
 			series.takeBScan(bscan);
 		}
 
+
+		BOOST_LOG_TRIVIAL(debug) << "read vol file \"" << file.generic_string() << "\" finished";
 		return true;
 	}
 

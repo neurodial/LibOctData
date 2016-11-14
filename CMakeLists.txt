@@ -28,6 +28,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_module/)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 find_package(Boost 1.40 COMPONENTS filesystem system locale log REQUIRED)
 find_package(OpenCV REQUIRED)
+string(TIMESTAMP CMAKE_CONFIGURE_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
 
 
 include(GetGitRevisionDescription)

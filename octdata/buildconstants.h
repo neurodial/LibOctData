@@ -12,6 +12,7 @@ namespace OctData
 		static const char compiler[];
 		static const char compilerId[];
 		static const char compilerVersion[];
+		static const char configureTime  [];
 	};
 
 }
