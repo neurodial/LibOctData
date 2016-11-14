@@ -25,8 +25,13 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options a
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_module/)
 
-find_package(Boost 1.40 COMPONENTS filesystem system locale REQUIRED)
+ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+find_package(Boost 1.40 COMPONENTS filesystem system locale log REQUIRED)
 find_package(OpenCV REQUIRED)
+
+
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 
 
@@ -103,6 +108,10 @@ endif()
 
 
 file(GLOB liboctdata_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/octdata/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/octdata/**/*.cpp")
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/octdata/buildconstants.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/buildconstants.cpp" @ONLY)
+list(APPEND liboctdata_SRCS "${CMAKE_CURRENT_BINARY_DIR}/buildconstants.cpp")
+
 
 set(srcs_directories datastruct ${import_srcs})
 foreach(loop_var ${srcs_directories})

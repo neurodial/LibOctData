@@ -4,7 +4,7 @@
 #include <datastruct/sloimage.h>
 #include <datastruct/bscan.h>
 
-#include <iostream>
+#include <ostream>
 #include <fstream>
 #include <iomanip>
 
@@ -19,6 +19,9 @@
 #include <filereadoptions.h>
 
 
+#include <boost/log/trivial.hpp>
+
+
 namespace bfs = boost::filesystem;
 
 
@@ -30,13 +33,14 @@ namespace
 		stream.read(reinterpret_cast<char*>(dest), sizeof(T)*num);
 	}
 
-	void readCVImage(std::istream& stream, cv::Mat& image, int cvFormat, int factor, std::size_t sizeX, std::size_t sizeY)
+	template<typename T>
+	void readCVImage(std::istream& stream, cv::Mat& image, std::size_t sizeX, std::size_t sizeY)
 	{
-		image = cv::Mat(static_cast<int>(sizeX), static_cast<int>(sizeY), cvFormat);
+		image = cv::Mat(static_cast<int>(sizeX), static_cast<int>(sizeY), cv::DataType<T>::type);
 
 		std::size_t num = sizeX*sizeY;
 
-		stream.read(reinterpret_cast<char*>(image.data), num*factor);
+		stream.read(reinterpret_cast<char*>(image.data), num*sizeof(T));
 	}
 
 	struct VolHeader
@@ -220,26 +224,42 @@ namespace OctData
 
 	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
 	{
+		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
+//
+//     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
+//     BOOST_LOG_TRIVIAL(debug) << "A debug severity message";
+//     BOOST_LOG_TRIVIAL(info) << "An informational severity message";
+//     BOOST_LOG_TRIVIAL(warning) << "A warning severity message";
+//     BOOST_LOG_TRIVIAL(error) << "An error severity message";
+//     BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
+
 		if(file.extension() != ".vol")
 			return false;
 
 		if(!bfs::exists(file))
 			return false;
 
+		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as vol file";
+
+		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
+		if(!stream.good())
+		{
+			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << file.generic_string();
+			return false;
+		}
 
 		std::string dir      = file.branch_path().generic_string();
 		std::string filename = file.filename().generic_string();
 
-		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
-
-		if(!stream.good())
-			return false;
 
 		const std::size_t formatstringlength = 8;
 		char fileformatstring[formatstringlength];
 		readFStream(stream, fileformatstring, formatstringlength);
 		if(memcmp(fileformatstring, "HSF-OCT-", formatstringlength) != 0) // 0 = strings are equal
+		{
+			BOOST_LOG_TRIVIAL(error) << file.generic_string() << " Wrong fileformat (not HSF-OCT)";
 			return false;
+		}
 
 		VolHeader volHeader;
 
@@ -254,19 +274,10 @@ namespace OctData
 
 		copyMetaData(volHeader, pat, study, series);
 
-		/*
-		time_t time = std::chrono::system_clock::to_time_t(series.getTime());
-		struct tm* tmw = std::localtime(&time);
-		std::cout << (tmw->tm_mday) << "." << (tmw->tm_mon+1) << "." << (tmw->tm_year + 1900) << std::endl;
-		*/
-
-		// std::cerr << "oct.size() : " << oct.size() << '\n';
 
 		// Read SLO
 		cv::Mat sloImage;
-		int sloCvFormat = CV_8UC1;
-		int sloFactor   = 1;
-		readCVImage(stream, sloImage, sloCvFormat, sloFactor, volHeader.data.sizeXSlo, volHeader.data.sizeYSlo);
+		readCVImage<uint8_t>(stream, sloImage, volHeader.data.sizeXSlo, volHeader.data.sizeYSlo);
 
 		SloImage* slo = new SloImage;
 		slo->setImage(sloImage);
@@ -289,9 +300,7 @@ namespace OctData
 			cv::Mat bscanImage;
 			cv::Mat bscanImagePow;
 			cv::Mat bscanImageConv;
-			int cvFormat = CV_32FC1;
-			int factor   = sizeof(float);
-			readCVImage(stream, bscanImage, cvFormat, factor, volHeader.data.sizeZ, volHeader.data.sizeX);
+			readCVImage<float>(stream, bscanImage, volHeader.data.sizeZ, volHeader.data.sizeX);
 
 			if(op.fillEmptyPixelWhite)
 				cv::threshold(bscanImage, bscanImage, 1.0, 1.0, cv::THRESH_TRUNC); // schneide hohe werte ab, sonst: bei der konvertierung werden sie auf 0 gesetzt
@@ -329,7 +338,6 @@ namespace OctData
 					break;
 
 				}
-				// bscan->addSegLine(segVec);
 			}
 
 

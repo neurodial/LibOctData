@@ -4,8 +4,9 @@
 #include "import/octfilereader.h"
 #include "filereadoptions.h"
 
-#include <iostream>
+#include "buildconstants.h"
 
+#include <boost/log/trivial.hpp>
 
 #include <boost/filesystem.hpp>
 namespace bfs = boost::filesystem;
@@ -15,6 +16,12 @@ namespace OctData
 {
 	OctFileRead::OctFileRead()
 	{
+		BOOST_LOG_TRIVIAL(info) << "OctData: Build Type      : " << BuildConstants::buildTyp;
+		BOOST_LOG_TRIVIAL(info) << "OctData: Git Hash        : " << BuildConstants::gitSha1;
+		BOOST_LOG_TRIVIAL(info) << "OctData: Build Date      : " << BuildConstants::buildDate;
+		BOOST_LOG_TRIVIAL(info) << "OctData: Build Time      : " << BuildConstants::buildTime;
+		BOOST_LOG_TRIVIAL(info) << "OctData: Compiler Id     : " << BuildConstants::compilerId;
+		BOOST_LOG_TRIVIAL(info) << "OctData: Compiler Version: " << BuildConstants::compilerVersion;
 	}
 
 
@@ -57,7 +64,6 @@ namespace OctData
 // used by friend class OctFileReader
 	void OctFileRead::registerFileRead(OctFileReader* reader, const OctExtension& ext)
 	{
-		// std::cout << "register: " << ext.name << std::endl;
 		extensions.push_back(ext);
 		fileReaders.push_back(reader);
 	}
@@ -76,7 +82,6 @@ namespace OctData
 
 		for(const OctExtension& supportedExtension : getInstance().extensions)
 			for(const std::string& ext : supportedExtension.extensions)
-				// std::cout << ext << " - " << fileExt << std::endl;
 				if(ext == fileExt)
 					return true;
 		return false;

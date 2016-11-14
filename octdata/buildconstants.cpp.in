@@ -1,0 +1,15 @@
+
+#include <src/buildconstants.h>
+
+namespace OctData
+{
+
+	const char BuildConstants::gitSha1        [] = "@GIT_SHA1@";
+	const char BuildConstants::buildTyp       [] = "@CMAKE_BUILD_TYPE@";
+	const char BuildConstants::buildTime      [] = __TIME__;
+	const char BuildConstants::buildDate      [] = __DATE__;
+	const char BuildConstants::compiler       [] = "@CMAKE_CXX_COMPILER@";
+	const char BuildConstants::compilerId     [] = "@CMAKE_CXX_COMPILER_ID@";
+	const char BuildConstants::compilerVersion[] = "@CMAKE_CXX_COMPILER_VERSION@";
+
+}
