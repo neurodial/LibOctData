@@ -240,10 +240,6 @@ namespace OctData
 
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
 
-		if(!bfs::exists(file))
-			return false;
-
-		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as vol file";
 
 		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
 		if(!stream.good())
@@ -251,6 +247,8 @@ namespace OctData
 			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << file.generic_string();
 			return false;
 		}
+
+		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as vol file";
 
 		std::string dir      = file.branch_path().generic_string();
 		std::string filename = file.filename().generic_string();

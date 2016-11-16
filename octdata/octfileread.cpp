@@ -51,12 +51,17 @@ namespace OctData
 
 		bfs::path file(filename);
 
-		for(OctFileReader* reader : fileReaders)
+		if(bfs::exists(file))
 		{
-			if(reader->readFile(file, oct, op))
-				break;
-			oct.clear();
+			for(OctFileReader* reader : fileReaders)
+			{
+				if(reader->readFile(file, oct, op))
+					break;
+				oct.clear();
+			}
 		}
+		else
+			BOOST_LOG_TRIVIAL(error) << "file " << file.generic_string() << " not exists";
 
 		return oct;
 	}
