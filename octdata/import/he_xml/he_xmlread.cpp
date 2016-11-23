@@ -16,8 +16,12 @@
 
 #include <boost/filesystem.hpp>
 
+#include "../platform_helper.h"
 
 #include <opencv2/opencv.hpp>
+
+
+#include <boost/log/trivial.hpp>
 
 
 namespace bfs = boost::filesystem;
@@ -146,14 +150,14 @@ namespace OctData
 			series.setRefSeriesUID(readOptinalNode<std::string>(seriesNode, "ReferenceSeries.SeriesUID", std::string()));
 		}
 
-		void fillBScann(const bpt::ptree& imageNode, const bpt::ptree& studyNode, Series& series, const std::string& xmlPath)
+		void fillBScann(const bpt::ptree& imageNode, const bpt::ptree& studyNode, Series& series, const FileString& xmlPath)
 		{
 			BScan::Data bscanData;
 
 
 			std::string filename = getFilename(imageNode);
-			std::string filepath = xmlPath + '/' + filename;
-			cv::Mat image = cv::imread(filepath, true);
+			FileString filepath = xmlPath + '/' + filename;
+			cv::Mat image = cv::imread(filepath, true); // TODO imdecode
 
 			/// Separate the image in 3 places (B, Gand R)
 			std::vector<cv::Mat> bgr_planes;
@@ -206,19 +210,26 @@ namespace OctData
 		if(file.extension() != ".xml")
 			return false;
 
-		if(!bfs::exists(file))
-			return false;
-		// std::cout << xmlfile.branch_path() << std::endl;
 
-		std::string xmlPath     = file.branch_path().generic_string();
+		BOOST_LOG_TRIVIAL(trace) << "Try to open Heidelberg Engineering Xml file as vol";
+
+		FileString xmlPath     = filepathConv(file.branch_path());
 		// std::string xmlFilename = file.filename().generic_string();
 
 		// Create an empty property tree object
 		bpt::ptree pt;
 
+
+		std::fstream stream(filepathConv(file), std::ios::binary | std::ios::in);
+		if(!stream.good())
+		{
+			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << filepathConv(file);
+			return false;
+		}
+
 		// Load the XML file into the property tree. If reading fails
 		// (cannot open file, parse error), an exception is thrown.
-		bpt::xml_parser::read_xml(file.generic_string(), pt);
+		bpt::xml_parser::read_xml(stream, pt);
 
 
 		boost::optional<bpt::ptree&> hedxNode = pt.get_child_optional("HEDX");
