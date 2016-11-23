@@ -16,6 +16,7 @@
 #include <boost/filesystem.hpp>
 
 #include "../../octdata_packhelper.h"
+#include "../platform_helper.h"
 #include <filereadoptions.h>
 
 
@@ -241,7 +242,7 @@ namespace OctData
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
 
 
-		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
+		std::fstream stream(filenameConv(file), std::ios::binary | std::ios::in);
 		if(!stream.good())
 		{
 			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << file.generic_string();
