@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 namespace bfs = boost::filesystem;
 
+#include "import/platform_helper.h"
 
 namespace OctData
 {
@@ -49,7 +50,7 @@ namespace OctData
 
 		OctData::OCT oct;
 
-		bfs::path file(filename);
+		bfs::path file(filenameConv(filename));
 
 		if(bfs::exists(file))
 		{

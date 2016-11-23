@@ -8,27 +8,25 @@
 
 
 #if BOOST_OS_WINDOWS
-std::wstring toUtf16(std::string str)
-{
-	std::wstring ret;
-	int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0);
-	if (len > 0)
-	{
-		ret.resize(len);
-		MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len);
-	}
-return ret;
-}
+	#include <codecvt>
 
-std::wstring filenameConv(const boost::filesystem::path& file)
-{
-	return file.generic_string();
-}
+	inline std::wstring filenameConv(const std::string& utf_str)
+	{
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		return converter.from_bytes(utf_str);
+	}
+
+	inline std::wstring filepathConv(const boost::filesystem::path& file)
+	{
+		return file.generic_wstring();
+	}
 #else
-const std::string& filenameConv(const boost::filesystem::path& file)
-{
-	return file.generic_string();
-}
+
+	inline const std::string& filenameConv(const std::string& utf_str) { return utf_str; }
+	inline const std::string& filepathConv(const boost::filesystem::path& file)
+	{
+		return file.generic_string();
+	}
 
 #endif
 
