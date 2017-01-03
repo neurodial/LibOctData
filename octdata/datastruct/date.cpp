@@ -57,7 +57,7 @@ namespace OctData
 
 		TimeCollection time;
 		time.unixtime = timegm(&timeinfo);
-		time.ms       = static_cast<int>((sec - std::round(sec))*1000);
+		time.ms       = static_cast<int>((sec - std::floor(sec))*1000);
 		return time;
 	}
 
