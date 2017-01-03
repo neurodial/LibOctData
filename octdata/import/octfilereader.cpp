@@ -41,7 +41,7 @@ namespace OctData
 #ifdef HE_XML_SUPPORT
 		HeXmlRead::getInstance();
 #endif
-#ifdef CIRRUS_RAW_SUPPOR
+#ifdef CIRRUS_RAW_SUPPORT
 		CirrusRawRead::getInstance();
 #endif
 #ifdef DICOM_SUPPORT
