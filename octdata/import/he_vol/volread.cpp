@@ -22,6 +22,7 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <emmintrin.h>
 
 namespace bfs = boost::filesystem;
 
@@ -214,6 +215,40 @@ namespace
 		series.setScanFocus(header.data.scanFocus);
 	}
 
+
+	void simdQuadRoot(const cv::Mat& in, cv::Mat& out)
+	{
+		if(in.type() == cv::DataType<float>::type)
+		{
+			out.create(in.size(), in.type());
+
+			std::size_t size = in.rows*in.cols;
+			const float* dataPtr = in .ptr<float>(0);
+			      float* outPtr  = out.ptr<float>(0);
+
+			// SIMD
+			std::size_t nb_iters = size / 4;
+			const __m128* ptr = reinterpret_cast<const __m128*>(dataPtr);
+			for(std::size_t i = 0; i < nb_iters; ++i)
+			{
+				_mm_store_ps(outPtr, _mm_sqrt_ps(_mm_sqrt_ps(*ptr)));
+				++ptr;
+				outPtr  += 4;
+			}
+
+			// handel rest
+			outPtr = out.ptr<float>(0);
+
+			for(std::size_t pos = nb_iters*4; pos<size; ++pos)
+			{
+				outPtr[pos] = std::sqrt(std::sqrt(dataPtr[pos]));
+			}
+		}
+		else
+		{
+			cv::pow(in, 0.25, out);
+		}
+	}
 }
 
 
@@ -307,7 +342,8 @@ namespace OctData
 
 			if(op.fillEmptyPixelWhite)
 				cv::threshold(bscanImage, bscanImage, 1.0, 1.0, cv::THRESH_TRUNC); // schneide hohe werte ab, sonst: bei der konvertierung werden sie auf 0 gesetzt
-			cv::pow(bscanImage, 0.25, bscanImagePow);
+			// cv::pow(bscanImage, 0.25, bscanImagePow);
+			simdQuadRoot(bscanImage, bscanImagePow);
 			bscanImagePow.convertTo(bscanImageConv, CV_8U, 255, 0);
 
 			BScan::Data bscanData;
