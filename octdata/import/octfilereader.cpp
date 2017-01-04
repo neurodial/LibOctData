@@ -9,6 +9,7 @@
 #include "dicom/dicomread.h"
 #include "he_e2e/he_e2eread.h"
 #include "tiffstack/tiffstackread.h"
+#include "cvbin/cvbinread.h"
 
 namespace OctData
 {
@@ -52,6 +53,9 @@ namespace OctData
 #endif
 #ifdef TIFFSTACK_SUPPORT
 		TiffStackRead::getInstance();
+#endif
+#ifdef CVBIN_SUPPORT
+		CvBinRead::getInstance();
 #endif
 	}
 

@@ -17,6 +17,7 @@ option(BUILD_WITH_SUPPORT_HE_VOL    "build support for heidelberg spectralis vol
 option(BUILD_WITH_SUPPORT_HE_XML    "build support for heidelberg spectralis xml export" ON)
 option(BUILD_WITH_SUPPORT_DICOM     "build support for dicom format" OFF)
 option(BUILD_WITH_SUPPORT_TIFFSTACK "build support for tiffstack" ON)
+option(BUILD_WITH_SUPPORT_CVBIN     "build support for cvbin import" ON)
 option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
 
 
@@ -35,6 +36,13 @@ include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 
+if(BUILD_WITH_SUPPORT_CVBIN)
+	find_package(CppFramework REQUIRED)
+
+	list(APPEND import_srcs import/cvbin)
+	add_definitions(-DCVBIN_SUPPORT)
+	include_directories(${CppFramework_INCLUDE_DIRS})
+endif()
 
 if(BUILD_WITH_SUPPORT_DICOM)
 	find_package(DCMTK REQUIRED)
@@ -152,6 +160,7 @@ if(DEFINED DCMTK_FOUND)
 endif()
 # target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(octdata ${CppFramework_LIBRARIES})
 
 GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EXPORTS.h automatically
 	BASE_NAME octdata
