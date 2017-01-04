@@ -81,7 +81,7 @@ namespace OctData
 					const cv::Mat& segMat = seriesSegILMNode->getMat();
 
 					const double* p = segMat.ptr<double>(0);
-					std::vector<double> segVec(p, p + segMat.cols);
+					std::vector<double> segVec(p, p + segMat.rows*segMat.cols);
 
 					bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
 				}
