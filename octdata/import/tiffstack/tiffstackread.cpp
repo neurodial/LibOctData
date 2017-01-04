@@ -62,6 +62,10 @@ namespace OctData
 					for(uint32 row = 0; row < imageLength; row++)
 						TIFFReadScanline(tif, bscanImage.ptr<uint8_t>(row), row);
 
+					if(sampleperpixel != 1)
+						cv::cvtColor(bscanImage, bscanImage, CV_BGR2GRAY);
+
+
 					// std::cout << "Tiff-Result: " << result << std::endl;
 					BScan::Data bscanData;
 					BScan* bscan = new BScan(bscanImage, bscanData);
