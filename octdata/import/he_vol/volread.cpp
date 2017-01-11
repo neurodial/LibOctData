@@ -381,7 +381,8 @@ namespace OctData
 
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
-			bscan->setRawImage(bscanImage);
+			if(op.holdRawData)
+				bscan->setRawImage(bscanImage);
 			series.takeBScan(bscan);
 		}
 

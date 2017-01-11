@@ -365,7 +365,8 @@ namespace OctData
 			}
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
-			bscan->setRawImage(e2eImage);
+			if(op.holdRawData)
+				bscan->setRawImage(e2eImage);
 			series.takeBScan(bscan);
 		}
 	}

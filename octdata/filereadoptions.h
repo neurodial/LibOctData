@@ -11,6 +11,8 @@ namespace OctData
 		bool registerBScanns     = true;
 		bool rotateSlo           = false;
 
+		bool holdRawData         = false;
+
 		E2eGrayTransform e2eGray = E2eGrayTransform::xml;
 	};
 }
