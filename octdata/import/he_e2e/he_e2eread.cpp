@@ -301,6 +301,9 @@ namespace OctData
 				bscanData.numAverage      = e2eMeta->getNumAve();
 				bscanData.imageQuality    = e2eMeta->getImageQuality();
 				bscanData.acquisitionTime = Date::fromWindowsTicks(e2eMeta->getAcquisitionTime());
+
+				if(e2eMeta->getScanType() == E2E::BScanMetaDataElement::ScanType::Circle)
+					bscanData.center = CoordSLOmm(e2eMeta->getCenterX()*factor, e2eMeta->getCenterY()*factor);
 			}
 
 
