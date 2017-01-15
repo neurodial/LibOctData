@@ -22,6 +22,7 @@
 #include <E2E/dataelements/imageregistration.h>
 #include <E2E/dataelements/slodataelement.h>
 #include <E2E/dataelements/textelement.h>
+#include <E2E/dataelements/textelement16.h>
 
 #include <E2E/dataelements/studydata.h>
 
@@ -68,6 +69,10 @@ namespace OctData
 				pat.setTitle   (e2ePatData->getTitle   ());
 				pat.setBirthdate(Date::fromWindowsTimeFormat(e2ePatData->getWinBDate()));
 			}
+
+			const E2E::TextElement16* e2eDiagnose = e2ePat.getDiagnose();
+			if(e2eDiagnose)
+				pat.setDiagnose(e2eDiagnose->getText());
 		}
 		
 		void copyStudyData(Study& study, const E2E::Study& e2eStudy)
@@ -326,26 +331,36 @@ namespace OctData
 			addSegData(bscanData, BScan::SegmentlineType::I15T1, e2eSegMap, 15, 1, reg, e2eImage.cols);
 			addSegData(bscanData, BScan::SegmentlineType::I16T1, e2eSegMap, 16, 1, reg, e2eImage.cols);
 
-			// convert image
-			cv::Mat dest, bscanImageConv;
-			switch(op.e2eGray)
+			cv::Mat bscanImageConv;
+			if(e2eImage.type() == cv::DataType<float>::type)
 			{
-			case FileReadOptions::E2eGrayTransform::nativ:
-				e2eImage.convertTo(dest, CV_32FC1, 1/static_cast<double>(1 << 16), 0);
-				cv::pow(dest, 8, dest);
-				dest.convertTo(bscanImageConv, CV_8U, 255, 0);
-				break;
-			case FileReadOptions::E2eGrayTransform::xml:
-				useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
-				break;
-			case FileReadOptions::E2eGrayTransform::vol:
-				useLUTBScan<uint16_t, uint8_t, HeGrayTransformVol>(e2eImage, bscanImageConv);
-				break;
+				cv::Mat bscanImagePow;
+				cv::pow(e2eImage, 0.25, bscanImagePow);
+				bscanImagePow.convertTo(bscanImageConv, CV_8U, 255, 0);
 			}
-			if(bscanImageConv.empty())
+			else
 			{
-				std::cerr << "Error: Converted Matrix empty, valid options?\n";
-				useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
+				cv::Mat dest;
+				// convert image
+				switch(op.e2eGray)
+				{
+				case FileReadOptions::E2eGrayTransform::nativ:
+					e2eImage.convertTo(dest, CV_32FC1, 1/static_cast<double>(1 << 16), 0);
+					cv::pow(dest, 8, dest);
+					dest.convertTo(bscanImageConv, CV_8U, 255, 0);
+					break;
+				case FileReadOptions::E2eGrayTransform::xml:
+					useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
+					break;
+				case FileReadOptions::E2eGrayTransform::vol:
+					useLUTBScan<uint16_t, uint8_t, HeGrayTransformVol>(e2eImage, bscanImageConv);
+					break;
+				}
+				if(bscanImageConv.empty())
+				{
+					std::cerr << "Error: Converted Matrix empty, valid options?\n";
+					useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
+				}
 			}
 
 			if(!op.fillEmptyPixelWhite)

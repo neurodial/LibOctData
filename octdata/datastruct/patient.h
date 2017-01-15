@@ -20,6 +20,8 @@ namespace OctData
 		Sex                getSex      () const                  { return sex      ; }
 		const Date&        getBirthdate() const                  { return birthdate; }
 
+		const std::u16string& getDiagnose() const                { return diagnose;  }
+
 
 		void setForename (const std::string& v)                  { forename  = v ; }
 		void setSurname  (const std::string& v)                  { surname   = v ; }
@@ -27,6 +29,8 @@ namespace OctData
 		void setId       (const std::string& v)                  { id        = v ; }
 		void setSex      (const Sex          v)                  { sex       = v ; }
 		void setBirthdate(const Date&       bd)                  { birthdate = bd; }
+
+		void setDiagnose (const std::u16string& v)               { diagnose  = v ; }
 
 		const std::string& getPatientUID() const                 { return uid; }
 		void setPatientUID(const std::string& id)                { uid = id  ; }
@@ -43,6 +47,8 @@ namespace OctData
 		std::string title   ;
 		std::string id      ;
 		std::string uid     ;
+
+		std::u16string diagnose;
 
 		Date birthdate      ;
 
