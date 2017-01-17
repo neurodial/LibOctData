@@ -23,12 +23,15 @@
 #include <E2E/dataelements/slodataelement.h>
 #include <E2E/dataelements/textelement.h>
 #include <E2E/dataelements/textelement16.h>
+#include <E2E/dataelements/stringlistelement.h>
 
 #include <E2E/dataelements/studydata.h>
 
 #include "he_gray_transform.h"
 
 #include <boost/locale.hpp>
+#include <codecvt>
+
 
 
 namespace bfs = boost::filesystem;
@@ -40,6 +43,20 @@ namespace OctData
 
 	namespace
 	{
+		template <class Facet>
+		class UsableFacet : public Facet
+		{
+		public:
+			using Facet::Facet; // inherit constructors
+			~UsableFacet() {}
+
+			// workaround for compilers without inheriting constructors:
+			// template <class ...Args> UsableFacet(Args&& ...args) : Facet(std::forward<Args>(args)...) {}
+		};
+		template<typename internT, typename externT, typename stateT>
+		using codecvt = UsableFacet<std::codecvt<internT, externT, stateT>>;
+
+
 		Patient::Sex convertSex(E2E::PatientDataElement::Sex e2eSex)
 		{
 			switch(e2eSex)
@@ -92,7 +109,45 @@ namespace OctData
 		{
 			if(e2eSeries.getSeriesUID())
 				series.setSeriesUID(e2eSeries.getSeriesUID()->getText());
+
+// 			std::wstring_convert<std::codecvt<char16_t,char,std::mbstate_t>,char16_t> convert;
+			std::wstring_convert<codecvt<char16_t, char, std::mbstate_t>, char16_t> convert;
 			
+			if(e2eSeries.getExaminedStructure())
+			{
+				if(e2eSeries.getExaminedStructure()->size() > 0)
+				{
+					const std::u16string& examinedStructure = e2eSeries.getExaminedStructure()->getString(0);
+					if(examinedStructure == u"ONH")
+						series.setExaminedStructure(Series::ExaminedStructure::ONH);
+					else if(examinedStructure == u"Retina")
+						series.setExaminedStructure(Series::ExaminedStructure::Retina);
+					else
+					{
+						series.setExaminedStructure(Series::ExaminedStructure::Unknown);
+						series.setExaminedStructureText(convert.to_bytes(examinedStructure));
+					}
+
+				}
+			}
+
+			if(e2eSeries.getScanPattern())
+			{
+				if(e2eSeries.getScanPattern()->size() > 0)
+				{
+					const std::u16string& scanPattern = e2eSeries.getScanPattern()->getString(0);
+					if(scanPattern == u"OCT ART Volume")
+						series.setScanPattern(Series::ScanPattern::Volume);
+					else if(scanPattern == u"OCT Radial+Circles")
+						series.setScanPattern(Series::ScanPattern::RadialCircles);
+					else
+					{
+						series.setScanPattern(Series::ScanPattern::Unknown);
+						series.setScanPatternText(convert.to_bytes(scanPattern));
+					}
+
+				}
+			}
 			// e2eSeries.
 		}
 

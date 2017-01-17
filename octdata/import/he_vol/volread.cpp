@@ -21,6 +21,7 @@
 
 
 #include <boost/log/trivial.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <emmintrin.h>
 
@@ -206,8 +207,12 @@ namespace
 			case 5:
 				series.setScanPattern(OctData::Series::ScanPattern::Radial);
 				break;
+			case 6:
+				series.setScanPattern(OctData::Series::ScanPattern::RadialCircles);
+				break;
 			default:
 				series.setScanPattern(OctData::Series::ScanPattern::Unknown);
+				series.setScanPatternText(boost::lexical_cast<std::string>(header.data.scanPattern));
 				BOOST_LOG_TRIVIAL(warning) << "Unknown scan pattern" << header.data.scanPattern;
 				break;
 		}

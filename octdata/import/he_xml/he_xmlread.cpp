@@ -143,8 +143,23 @@ namespace OctData
 			else if(laterality == "L")
 				series.setLaterality(Series::Laterality::OS);
 
-			if(type == "Volume")
-				series.setScanPattern(Series::ScanPattern::Volume);
+			if(!type.empty())
+			{
+				if(type == "Volume")
+					series.setScanPattern(Series::ScanPattern::Volume);
+				else
+				{
+					series.setScanPattern(Series::ScanPattern::Text);
+					series.setScanPatternText(type);
+				}
+			}
+
+			if(!examinedStructure.empty())
+			{
+				// TODO: parse text
+				series.setExaminedStructure(Series::ExaminedStructure::Text);
+				series.setExaminedStructureText(examinedStructure);
+			}
 
 			series.setSeriesUID   (readOptinalNode<std::string>(seriesNode,                 "SeriesUID", std::string()));
 			series.setRefSeriesUID(readOptinalNode<std::string>(seriesNode, "ReferenceSeries.SeriesUID", std::string()));

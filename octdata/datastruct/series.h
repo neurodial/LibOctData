@@ -27,7 +27,8 @@ namespace OctData
 
 	public:
 		enum class Laterality { undef, OD, OS };
-		enum class ScanPattern { Unknown, SingleLine, Circular, Volume, FastVolume, Radial };
+		enum class ScanPattern { Unknown, Text, SingleLine, Circular, Volume, FastVolume, Radial, RadialCircles };
+		enum class ExaminedStructure { Unknown, Text, ONH, Retina };
 		typedef std::vector<BScan*> BScanList;
 
 		Octdata_EXPORTS explicit Series(int internalId);
@@ -43,8 +44,16 @@ namespace OctData
 		Octdata_EXPORTS Laterality getLaterality() const            { return laterality; }
 		void setLaterality(Laterality l)                            { laterality = l; }
 
-		Octdata_EXPORTS ScanPattern getScanPattern() const          { return scanPattern; }
-		void setScanPattern(ScanPattern p)                          { scanPattern = p;    }
+		Octdata_EXPORTS ScanPattern getScanPattern() const             { return scanPattern; }
+		void setScanPattern(ScanPattern p)                             { scanPattern = p;    }
+		Octdata_EXPORTS const std::string& getScanPatternText() const  { return scanPatternText; }
+		void setScanPatternText(const std::string& str)                { scanPatternText = str;  }
+
+		Octdata_EXPORTS ExaminedStructure getExaminedStructure() const { return examinedStructure; }
+		void setExaminedStructure(ExaminedStructure p)                 { examinedStructure = p;    }
+		Octdata_EXPORTS const std::string& getExaminedStructureText() const
+		                                                               { return examinedStructureText; }
+		void setExaminedStructureText(const std::string& str)          { examinedStructureText = str;  }
 		
 		void setScanDate(const Date& time)                          { scanDate = time; }
 		Octdata_EXPORTS const Date& getScanDate() const             { return scanDate; }
@@ -69,8 +78,13 @@ namespace OctData
 		std::string                             refSeriesID;
 		double                                  scanFocus;
 
-		Laterality                              laterality = Laterality::undef;
 		ScanPattern                             scanPattern = ScanPattern::Unknown;
+		std::string                             scanPatternText;
+
+		ExaminedStructure                       examinedStructure = ExaminedStructure::Unknown;
+		std::string                             examinedStructureText;
+
+		Laterality                              laterality = Laterality::undef;
 		Date                                    scanDate;
 
 		BScanList                               bscans;
