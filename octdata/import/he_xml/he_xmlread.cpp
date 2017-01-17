@@ -161,6 +161,7 @@ namespace OctData
 				series.setExaminedStructureText(examinedStructure);
 			}
 
+
 			series.setSeriesUID   (readOptinalNode<std::string>(seriesNode,                 "SeriesUID", std::string()));
 			series.setRefSeriesUID(readOptinalNode<std::string>(seriesNode, "ReferenceSeries.SeriesUID", std::string()));
 		}

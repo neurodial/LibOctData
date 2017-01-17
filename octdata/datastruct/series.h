@@ -44,16 +44,19 @@ namespace OctData
 		Octdata_EXPORTS Laterality getLaterality() const            { return laterality; }
 		void setLaterality(Laterality l)                            { laterality = l; }
 
-		Octdata_EXPORTS ScanPattern getScanPattern() const             { return scanPattern; }
-		void setScanPattern(ScanPattern p)                             { scanPattern = p;    }
-		Octdata_EXPORTS const std::string& getScanPatternText() const  { return scanPatternText; }
-		void setScanPatternText(const std::string& str)                { scanPatternText = str;  }
 
-		Octdata_EXPORTS ExaminedStructure getExaminedStructure() const { return examinedStructure; }
-		void setExaminedStructure(ExaminedStructure p)                 { examinedStructure = p;    }
+		Octdata_EXPORTS ExaminedStructure getExaminedStructure() const
+		                                                            { return examinedStructure; }
+		void setExaminedStructure(ExaminedStructure p)              { examinedStructure = p;    }
 		Octdata_EXPORTS const std::string& getExaminedStructureText() const
-		                                                               { return examinedStructureText; }
-		void setExaminedStructureText(const std::string& str)          { examinedStructureText = str;  }
+		                                                            { return examinedStructureText; }
+		void setExaminedStructureText(const std::string& str)       { examinedStructureText = str; }
+
+		Octdata_EXPORTS ScanPattern getScanPattern() const          { return scanPattern; }
+		void setScanPattern(ScanPattern p)                          { scanPattern = p;    }
+		Octdata_EXPORTS const std::string& getScanPatternText() const
+		                                                            { return scanPatternText; }
+		void setScanPatternText(const std::string& str)             { scanPatternText = str; }
 		
 		void setScanDate(const Date& time)                          { scanDate = time; }
 		Octdata_EXPORTS const Date& getScanDate() const             { return scanDate; }
