@@ -360,27 +360,36 @@ namespace OctData
 			// fseek( fid, 256+2048+(header.SizeXSlo*header.SizeYSlo)+(ii*(header.BScanHdrSize+header.SizeX*header.SizeZ*4)), -1 );
 
 
+			constexpr const BScan::SegmentlineType seglines[] =
+			{
+				BScan::SegmentlineType::ILM  ,
+				BScan::SegmentlineType::BM   ,
+				BScan::SegmentlineType::NFL  ,
+				BScan::SegmentlineType::I3T1 , // TODO: check order
+				BScan::SegmentlineType::I4T1 ,
+				BScan::SegmentlineType::I5T1 ,
+				BScan::SegmentlineType::I6T1 ,
+				BScan::SegmentlineType::I8T3 ,
+				BScan::SegmentlineType::I14T1,
+				BScan::SegmentlineType::I15T1,
+				BScan::SegmentlineType::I16T1
+			};
+
 			// TODO
 			stream.seekg(256+bscanPos);
 			for(int segNum = 0; segNum < bscanHeader.data.numSeg; ++segNum)
 			{
-				float value;
-				std::vector<double> segVec;
-				segVec.reserve(volHeader.data.sizeX);
-				for(std::size_t xpos = 0; xpos<volHeader.data.sizeX; ++xpos)
+				if(segNum < static_cast<int>(sizeof(seglines)/sizeof(seglines[0])))
 				{
-					stream.read(reinterpret_cast<char*>(&value), sizeof(value));
-					segVec.push_back(value);
-				}
-				switch(segNum)
-				{
-				case 0:
-					bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
-					break;
-				case 1:
-					bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::BM)) = segVec;
-					break;
-
+					float value;
+					std::vector<double> segVec;
+					segVec.reserve(volHeader.data.sizeX);
+					for(std::size_t xpos = 0; xpos<volHeader.data.sizeX; ++xpos)
+					{
+						stream.read(reinterpret_cast<char*>(&value), sizeof(value));
+						segVec.push_back(value);
+					}
+					bscanData.segmentlines.at(static_cast<std::size_t>(seglines[segNum])) = segVec;
 				}
 			}
 
