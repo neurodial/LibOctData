@@ -19,6 +19,7 @@ option(BUILD_WITH_SUPPORT_DICOM     "build support for dicom format" OFF)
 option(BUILD_WITH_SUPPORT_TIFFSTACK "build support for tiffstack" ON)
 option(BUILD_WITH_SUPPORT_CVBIN     "build support for cvbin import" ON)
 option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
+option(BUILD_WITH_SUPPORT_OCT_FILE  "build support for oct format" ON)
 
 
 # General build config
@@ -77,6 +78,11 @@ if(BUILD_WITH_SUPPORT_HE_VOL)
 	add_definitions(-DHE_VOL_SUPPORT)
 endif()
 
+if(BUILD_WITH_SUPPORT_OCT_FILE)
+	list(APPEND import_srcs import/oct)
+
+	add_definitions(-DOCT_FILE_SUPPORT)
+endif()
 
 if(BUILD_WITH_SUPPORT_HE_XML)
 	list(APPEND import_srcs import/he_xml)
