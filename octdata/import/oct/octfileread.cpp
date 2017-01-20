@@ -196,9 +196,11 @@ namespace
 			else if(name == "DOPPLERFLAG"   ) fillValue(stream, dopplerflag   , readedBytes, "DOPPLERFLAG"   );
 			else
 			{
-				std::cout << stream.tellg() << "\t" << readedBytes << '\t';
-				std::cout << name << " :\tUnhandeld" << std::endl;
-				readedBytes += readRaw(stream);
+				std::size_t absPos = stream.tellg();
+				std::size_t relPos = readedBytes;
+				std::size_t rawLength = readRaw(stream);
+				readedBytes += rawLength;
+				BOOST_LOG_TRIVIAL(warning) << name << "\tuntreated (" << rawLength << " bytes) AbsPos: " << absPos << " relPos: " << relPos;
 			}
 		}
 
@@ -292,10 +294,11 @@ namespace
 			}
 			else
 			{
-				std::cout << stream.tellg() << "\t" << readedBytes << '\t';
+				std::size_t absPos = stream.tellg();
+				std::size_t relPos = readedBytes;
 				std::size_t rawLength = readRaw(stream);
 				readedBytes += rawLength;
-				std::cout << name << " :\tUnhandeld (" << rawLength << " bytes)" << std::endl;
+				BOOST_LOG_TRIVIAL(warning) << name << "\tuntreated (" << rawLength << " bytes) AbsPos: " << absPos << " relPos: " << relPos;
 			}
 		}
 
@@ -325,16 +328,16 @@ namespace
 				readedBytes += readDict(stream, dictFrameHeader, dictLength);
 				dictFrameHeader.print(std::cout);
 			}
-			else
+			else if(name == "FRAMEDATA")
 			{
 				DictFrameData dictFrameData(series, dictFrameHeader);
 				readedBytes += readDict(stream, dictFrameData, dictLength);
-// 				std::cout << name << " :\tUnhandeld" << std::endl;
-// 				readedBytes += readRaw(stream);
+			}
+			else
+			{
+				BOOST_LOG_TRIVIAL(warning) << "Dict: " << name << " untreated (" << dictLength << " bytes)";
 			}
 			stream.seekg(dictBegin + dictLength);
-
-// 			std::cout << "next Dict: " << (dictBegin + dictLength) << std::endl;
 
 		}
 	};
