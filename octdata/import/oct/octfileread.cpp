@@ -1,21 +1,17 @@
 #include "octfileread.h"
+
 #include <datastruct/oct.h>
-#include <datastruct/coordslo.h>
-#include <datastruct/sloimage.h>
 #include <datastruct/bscan.h>
+#include <datastruct/date.h>
 
 #include <ostream>
 #include <fstream>
 #include <iomanip>
 
-#include <chrono>
-#include <ctime>
-
 #include <opencv2/opencv.hpp>
 
 #include <boost/filesystem.hpp>
 
-#include "../../octdata_packhelper.h"
 #include "../platform_helper.h"
 #include <filereadoptions.h>
 
@@ -23,7 +19,6 @@
 #include <boost/log/trivial.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <emmintrin.h>
 
 namespace bfs = boost::filesystem;
 
@@ -90,6 +85,27 @@ namespace
 		stream.seekg(length, std::ios_base::cur);
 
 		return length + 4;
+	}
+
+	std::size_t readRaw(std::istream& stream, void* dest, std::size_t maxLength, std::size_t& readedBytes)
+	{
+		std::size_t length = readDatafieldLength(stream);
+		std::size_t readLength = std::min(length, maxLength);
+
+		if(length != maxLength)
+		{
+			std::size_t absPos = stream.tellg();
+			std::size_t relPos = readedBytes;
+			BOOST_LOG_TRIVIAL(warning) << "wrong raw read size (" << length << " != " << maxLength << " bytes) AbsPos: " << absPos << " relPos: " << relPos;
+		}
+
+		stream.read(reinterpret_cast<char*>(dest), readLength);
+
+		if(length > readLength)
+			stream.seekg(length-readLength, std::ios_base::cur);
+
+		readedBytes += length + 4;
+		return length;
 	}
 
 
@@ -250,46 +266,75 @@ namespace
 			stream << "FRAMES        : " << frames         << '\n';
 			stream << "DOPPLERFLAG   : " << dopplerflag    << '\n';
 		}
+
+		void copyData(OctData::Series& series)
+		{
+			series.setScanPattern(OctData::Series::ScanPattern::Text);
+			series.setScanPatternText(std::string("Scantyp: ") + boost::lexical_cast<std::string>(scantype));
+
+			series.setDescription(description);
+		}
 	};
 
 	class DictFrameData
 	{
-// 		std::string framedatetime ; // TODO
-		uint64_t    frametimestamp;
-		uint32_t    framelines    ;
+		char     framedatetime[16];
+		uint64_t frametimestamp;
+		uint32_t framelines    ;
+
+		OctData::Date date;
+		OctData::BScan::Data bscanData;
 
 		OctData::Series& series;
 		const DictFrameHeader& dictFrameHeader;
+		const OctData::FileReadOptions& op;
 	public:
-		DictFrameData(OctData::Series& series, const DictFrameHeader& dictFrameHeader) : series(series), dictFrameHeader(dictFrameHeader) {}
+		DictFrameData(OctData::Series& series, const DictFrameHeader& dictFrameHeader, const OctData::FileReadOptions& op) : series(series), dictFrameHeader(dictFrameHeader), op(op) {}
 
 		void handelDictEntry(std::istream& stream, const std::string& name, std::size_t& readedBytes)
 		{
-// 			     if(name == "FRAMEDATETIME" ) fillValue(stream, framedatetime , readedBytes, "FRAMEDATETIME" );
-			     if(name == "FRAMETIMESTAMP") fillValue(stream, frametimestamp, readedBytes, "FRAMETIMESTAMP");
-			else if(name == "FRAMELINES"    ) fillValue(stream, framelines    , readedBytes, "FRAMELINES"    );
+			     if(name == "FRAMELINES"    ) fillValue(stream, framelines    , readedBytes, "FRAMELINES"    );
+			else if(name == "FRAMETIMESTAMP") fillValue(stream, frametimestamp, readedBytes, "FRAMETIMESTAMP");
+			else if(name == "FRAMEDATETIME" )
+			{
+				const std::size_t dateFieldLength = sizeof(framedatetime)/sizeof(framedatetime[0]);
+				std::size_t bytesRead = readRaw(stream, framedatetime, dateFieldLength, readedBytes);
+				if(bytesRead == dateFieldLength)
+				{
+					date.setYear (*reinterpret_cast<uint16_t*>(framedatetime  ));
+					date.setMonth(*reinterpret_cast<uint16_t*>(framedatetime+2));
+					date.setDay  (*reinterpret_cast<uint16_t*>(framedatetime+4)); // TODO timeelement 6 ?
+					date.setHour (*reinterpret_cast<uint16_t*>(framedatetime+8));
+					date.setMin  (*reinterpret_cast<uint16_t*>(framedatetime+10));
+					date.setSec  (*reinterpret_cast<uint16_t*>(framedatetime+12));
+					date.setMs   (*reinterpret_cast<uint16_t*>(framedatetime+14));
+					date.setDateAsValid();
+
+					bscanData.acquisitionTime = date;
+// 					std::cout << "date: " << date.timeDateStr() << std::endl;
+				}
+			}
  			else if(name == "FRAMESAMPLES"  )
 			{
-				OctData::BScan::Data bscanData;
-				cv::Mat image, bscanImageRaw;
+				cv::Mat rawImage, viewImage;
 
 				switch(dictFrameHeader.getSampleformat())
 				{
 					case 1:
-						readedBytes += readCVImage<uint8_t>(stream, image, dictFrameHeader.getLinecount(), dictFrameHeader.getLinelength());
+						readedBytes += readCVImage<uint8_t>(stream, viewImage, dictFrameHeader.getLinecount(), dictFrameHeader.getLinelength());
 						break;
 					case 2:
-						readedBytes += readCVImage<uint16_t>(stream, bscanImageRaw, dictFrameHeader.getLinecount(), dictFrameHeader.getLinelength());
-						bscanImageRaw.convertTo(image, CV_8U, 1/255., 0);
+						readedBytes += readCVImage<uint16_t>(stream, rawImage, dictFrameHeader.getLinecount(), dictFrameHeader.getLinelength());
+						rawImage.convertTo(viewImage, CV_8U, 1/255., 0);
 						break;
 					default:
 						readRaw(stream);
 						return;
 				}
 
-				OctData::BScan* bscan = new OctData::BScan(image.t(), bscanData);
-// 				if(op.holdRawData)
-// 					bscan->setRawImage(bscanImageRaw);
+				OctData::BScan* bscan = new OctData::BScan(viewImage.t(), bscanData);
+				if(op.holdRawData && !rawImage.empty())
+					bscan->setRawImage(rawImage);
 				series.takeBScan(bscan);
 			}
 			else
@@ -313,9 +358,10 @@ namespace
 	class MainDict
 	{
 		OctData::Series& series;
+		const OctData::FileReadOptions& op;
 		DictFrameHeader dictFrameHeader;
 	public:
-		MainDict(OctData::Series& series) : series(series) {}
+		MainDict(OctData::Series& series, const OctData::FileReadOptions& op) : series(series), op(op) {}
 
 		void handelDictEntry(std::istream& stream, const std::string& name, std::size_t& readedBytes)
 		{
@@ -327,10 +373,11 @@ namespace
 			{
 				readedBytes += readDict(stream, dictFrameHeader, dictLength);
 				dictFrameHeader.print(std::cout);
+				dictFrameHeader.copyData(series);
 			}
 			else if(name == "FRAMEDATA")
 			{
-				DictFrameData dictFrameData(series, dictFrameHeader);
+				DictFrameData dictFrameData(series, dictFrameHeader, op);
 				readedBytes += readDict(stream, dictFrameData, dictLength);
 			}
 			else
@@ -355,7 +402,7 @@ namespace OctData
 	{
 	}
 
-	bool OctFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/)
+	bool OctFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
 	{
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
@@ -402,7 +449,7 @@ namespace OctData
 
 
 
-		MainDict mainDict(series);
+		MainDict mainDict(series, op);
 
 		stream.seekg(0, std::ios_base::end);
 		std::size_t fielsize = stream.tellg();

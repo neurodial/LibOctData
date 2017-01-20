@@ -72,6 +72,9 @@ namespace OctData
 
 		void takeBScan(BScan* bscan);
 
+		void setDescription(const std::string& text)                   { description = text; }
+		Octdata_EXPORTS const std::string& getDescription() const      { return description; }
+
 		Octdata_EXPORTS int getInternalId() const                   { return internalId; }
 	private:
 		const int internalId;
@@ -89,6 +92,8 @@ namespace OctData
 
 		Laterality                              laterality = Laterality::undef;
 		Date                                    scanDate;
+
+		std::string                             description;
 
 		BScanList                               bscans;
 	};

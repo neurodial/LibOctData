@@ -47,10 +47,20 @@ namespace OctData
 		int day  ()                                        const { return timeinfo.tm_mday       ; }
 		int month()                                        const { return timeinfo.tm_mon  + 1   ; }
 		int year ()                                        const { return timeinfo.tm_year + 1900; }
-		int hour ()                                        const { return timeinfo.tm_hour; }
-		int min  ()                                        const { return timeinfo.tm_min ; }
-		int sec  ()                                        const { return timeinfo.tm_sec ; }
-		int ms   ()                                        const { return millisecunds    ; }
+		int hour ()                                        const { return timeinfo.tm_hour       ; }
+		int min  ()                                        const { return timeinfo.tm_min        ; }
+		int sec  ()                                        const { return timeinfo.tm_sec        ; }
+		int ms   ()                                        const { return millisecunds           ; }
+
+
+		void setDay  (int value)                                 { timeinfo.tm_mday  = value       ; }
+		void setMonth(int value)                                 { timeinfo.tm_mon   = value - 1   ; }
+		void setYear (int value)                                 { timeinfo.tm_year  = value - 1900; }
+		void setHour (int value)                                 { timeinfo.tm_hour  = value       ; }
+		void setMin  (int value)                                 { timeinfo.tm_min   = value       ; }
+		void setSec  (int value)                                 { timeinfo.tm_sec   = value       ; }
+		void setMs   (int value)                                 { millisecunds      = value       ; }
+		void setDateAsValid()                                    { decoded = true; }
 		
 		bool isEmpty()                                     const { return !decoded;         }
 
