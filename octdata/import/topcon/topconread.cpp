@@ -176,7 +176,7 @@ namespace
 		readFStream(stream, id, 20);
 		const uint16_t type   = readFStream<uint16_t>(stream);
 		const uint32_t width  = readFStream<uint32_t>(stream);
-		const uint32_t height = readFStream<uint32_t>(stream);
+		const uint32_t frames = readFStream<uint32_t>(stream);
 		const uint32_t size   = readFStream<uint32_t>(stream);
 
 		OctData::BScan::SegmentlineType lineType = OctData::BScan::SegmentlineType::I16T1;
@@ -211,27 +211,28 @@ namespace
 		BOOST_LOG_TRIVIAL(debug) << "id     : " << id    ;
 		BOOST_LOG_TRIVIAL(debug) << "type   : " << type  ;
 		BOOST_LOG_TRIVIAL(debug) << "width  : " << width ;
-		BOOST_LOG_TRIVIAL(debug) << "height : " << height;
+		BOOST_LOG_TRIVIAL(debug) << "frames : " << frames;
 		BOOST_LOG_TRIVIAL(debug) << "size   : " << size  ;
 		if(type == 0)
 		{
 			uint16_t* tmpVec = new uint16_t[width];
-			for(uint32_t frame = 0; frame < height; ++frame)
+			for(uint32_t frame = 0; frame < frames; ++frame)
 			{
-				if(frame < list.size())
+				uint32_t actFrame = frames-frame-1;
+				if(actFrame < list.size())
 				{
+					BScanPair& bscanPair = list.at(actFrame);
+					int imgHeight = bscanPair.image.rows;
+
 					OctData::BScan::Segmentline line;
 					readFStream(stream, tmpVec, width);
 					for(uint32_t ascan = 0; ascan < width; ++ascan)
 					{
 // 						std::cout << tmpVec[ascan] << std::endl;
-						line.push_back(static_cast<OctData::BScan::SegmentlineDataType>(tmpVec[ascan]));
+						line.push_back(imgHeight - static_cast<OctData::BScan::SegmentlineDataType>(tmpVec[ascan]));
 					}
-					BScanPair& bscanPair = list.at(frame);
 					bscanPair.data.getSegmentLine(lineType) = line;
 				}
-				else
-					break;
 			}
 			delete[] tmpVec;
 
