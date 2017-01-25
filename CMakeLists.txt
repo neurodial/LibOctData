@@ -20,6 +20,7 @@ option(BUILD_WITH_SUPPORT_TIFFSTACK "build support for tiffstack" ON)
 option(BUILD_WITH_SUPPORT_CVBIN     "build support for cvbin import" ON)
 option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
 option(BUILD_WITH_SUPPORT_OCT_FILE  "build support for oct format" ON)
+option(BUILD_WITH_SUPPORT_TOPCON    "build support for topcon format" ON)
 
 
 # General build config
@@ -82,6 +83,15 @@ if(BUILD_WITH_SUPPORT_OCT_FILE)
 	list(APPEND import_srcs import/oct)
 
 	add_definitions(-DOCT_FILE_SUPPORT)
+endif()
+
+if(BUILD_WITH_SUPPORT_TOPCON)
+	find_package(OpenJPEG)
+	if(DEFINED OpenJPEG_FOUND)
+		add_definitions(-DDICOM_JPEG2K_SUPPORT)
+		list(APPEND import_srcs import/topcon)
+		add_definitions(-DTOPCON_FILE_SUPPORT)
+	endif()
 endif()
 
 if(BUILD_WITH_SUPPORT_HE_XML)

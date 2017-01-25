@@ -23,7 +23,8 @@ namespace OctData
 	{
 	public:
 		enum class SegmentlineType{ ILM, NFL, I3T1, I4T1, I5T1, I6T1, I8T3, I14T1, I15T1, I16T1, BM, NR_OF_ELEMENTS };
-		typedef std::vector<double> Segmentline;
+		typedef double SegmentlineDataType;
+		typedef std::vector<SegmentlineDataType> Segmentline;
 		struct Data
 		{
 			std::string filename;
@@ -43,6 +44,8 @@ namespace OctData
 
 			static const std::size_t numSegmentlineType = static_cast<std::size_t>(SegmentlineType::NR_OF_ELEMENTS);
 			std::array<Segmentline, numSegmentlineType> segmentlines;
+
+			Segmentline& getSegmentLine(SegmentlineType i)  { return segmentlines.at(static_cast<std::size_t>(i)); }
 		};
 
 		// BScan();

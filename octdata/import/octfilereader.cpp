@@ -3,9 +3,10 @@
 #include "../octfileread.h"
 
 
-#include "import/he_vol/volread.h"
-#include "import/he_xml/he_xmlread.h"
-#include "import/oct/octfileread.h"
+#include "he_vol/volread.h"
+#include "he_xml/he_xmlread.h"
+#include "oct/octfileread.h"
+#include "topcon/topconread.h"
 #include "cirrus_raw/cirrus_rawread.h"
 #include "dicom/dicomread.h"
 #include "he_e2e/he_e2eread.h"
@@ -58,8 +59,11 @@ namespace OctData
 #ifdef CVBIN_SUPPORT
 		CvBinRead::getInstance();
 #endif
-#ifdef CVBIN_SUPPORT
+#ifdef OCT_FILE_SUPPORT
 		OctFileFormatRead::getInstance();
+#endif
+#ifdef TOPCON_FILE_SUPPORT
+		TopconFileFormatRead::getInstance();
 #endif
 	}
 
