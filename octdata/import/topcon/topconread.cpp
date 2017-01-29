@@ -66,7 +66,7 @@ namespace
 
 	typedef std::vector<BScanPair> BScanList;
 
-	void readImgJpeg(std::istream& stream, BScanList& bscanList)
+	void readImgJpeg(std::istream& stream, OctData::Series& series, BScanList& bscanList)
 	{
 		const uint8_t  type   = readFStream<uint8_t >(stream);
 		const uint32_t u1     = readFStream<uint32_t>(stream);
@@ -83,6 +83,25 @@ namespace
 		BOOST_LOG_TRIVIAL(debug) << "height: " << height;
 		BOOST_LOG_TRIVIAL(debug) << "frames: " << frames;
 		BOOST_LOG_TRIVIAL(debug) << "u3    : " << u3    ;
+
+		switch(type)
+		{
+			case 0:
+				series.setScanPattern(OctData::Series::ScanPattern::SingleLine);
+				break;
+			case 2:
+				series.setScanPattern(OctData::Series::ScanPattern::Volume);
+				break;
+			case 3:
+				series.setScanPattern(OctData::Series::ScanPattern::Circular);
+				break;
+// 			case 7:
+// 				series.setScanPattern(7 line scan (h or v));
+// 				break;
+// 			case 11:
+// 				series.setScanPattern(2x5scans > 10 slice volume);
+// 				break;
+		}
 
 		for(uint32_t frame = 0; frame < frames; ++frame)
 		{
@@ -158,6 +177,24 @@ namespace
 		pat.setForename (patForeName);
 		pat.setSurname  (patSureName);
 		pat.setBirthdate(birthDate  );
+	}
+
+	void readCaptureInfo02(std::istream& stream, OctData::Series& series)
+	{
+		readFStream<uint16_t>(stream);
+
+		stream.seekg(52*sizeof(uint16_t), std::ios_base::cur);
+
+		OctData::Date scanDate;
+		scanDate.setYear (readFStream<uint16_t>(stream));
+		scanDate.setMonth(readFStream<uint16_t>(stream));
+		scanDate.setDay  (readFStream<uint16_t>(stream));
+		scanDate.setHour (readFStream<uint16_t>(stream));
+		scanDate.setMin  (readFStream<uint16_t>(stream));
+		scanDate.setSec  (readFStream<uint16_t>(stream));
+		scanDate.setDateAsValid();
+
+		series.setScanDate(scanDate);
 	}
 
 	bool cmpString(const char* strA, const std::string& strB)
@@ -317,7 +354,10 @@ namespace OctData
 			std::string chunkName;
 			readFStream(stream, chunkName, chunkNameSize);
 			if(chunkName[0] != '@')
+			{
+				BOOST_LOG_TRIVIAL(debug) << "Break: chunkName "<< " (@" << stream.tellg() << ")";
 				break;
+			}
 			uint32_t chunkSize;
 			readFStream(stream, chunkSize);
 
@@ -327,11 +367,13 @@ namespace OctData
 			if(chunkName == "@IMG_TRC_02")
 				readImgTrc(stream, series);
 			else if(chunkName == "@IMG_JPEG")
-				readImgJpeg(stream, bscanList);
+				readImgJpeg(stream, series, bscanList);
 			else if(chunkName == "@PATIENT_INFO_02")
 				readPatientInfo02(stream, pat);
 			else if(chunkName == "@CONTOUR_INFO")
 				readConturInfo(stream, bscanList);
+			else if(chunkName == "@CAPTURE_INFO_02")
+				readCaptureInfo02(stream, series);
 
 			stream.seekg(chunkBegin + chunkSize);
 		}
