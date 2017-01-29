@@ -52,8 +52,11 @@ namespace
 
 	std::string& readFStream(std::istream& stream, std::string& dest, std::size_t nums)
 	{
-		dest.assign(nums, '\0');
-		stream.read(&dest[0], nums);
+		std::string tmp;
+		tmp.assign(nums, '\0');
+		stream.read(&tmp[0], nums);
+
+		dest = std::string(tmp.c_str()); // strip zero caracters
 		return dest;
 	}
 
