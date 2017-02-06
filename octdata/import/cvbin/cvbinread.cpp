@@ -14,6 +14,7 @@
 #include <boost/log/trivial.hpp>
 
 #include <cpp_framework/cvmat/cvmattreestruct.h>
+#include <cpp_framework/cvmat/cvmattreestructextra.h>
 #include <cpp_framework/cvmat/treestructbin.h>
 
 namespace OctData
@@ -52,10 +53,18 @@ namespace OctData
 		if(!seriesNode || seriesNode->type() != CppFW::CVMatTree::Type::List)
 			return false;
 
+		const CppFW::CVMatTree* patDataNode    = octtree.getDirNodeOpt("PatientData");
+		const CppFW::CVMatTree* studyDataNode  = octtree.getDirNodeOpt("StudyData"  );
+		const CppFW::CVMatTree* seriesDataNode = octtree.getDirNodeOpt("SeriesData" );
 
-		Patient& pat    = oct.getPatient(1);
-		Study&   study  = pat.getStudy(1);
-		Series&  series = study.getSeries(1);
+		int patId    = CppFW::CVMatTreeExtra::getCvScalar(patDataNode   , "ID", 1);
+		int studyId  = CppFW::CVMatTreeExtra::getCvScalar(studyDataNode , "ID", 1);
+		int seriesId = CppFW::CVMatTreeExtra::getCvScalar(seriesDataNode, "ID", 1);
+
+		Patient& pat    = oct  .getPatient(patId   );
+		Study&   study  = pat  .getStudy  (studyId );
+		Series&  series = study.getSeries (seriesId);
+
 
 		const CppFW::CVMatTree::NodeList& seriesList = seriesNode->getNodeList();
 
