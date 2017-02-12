@@ -21,6 +21,8 @@ namespace OctData
 		Octdata_EXPORTS SubstructureTemplate()                                       = default;
 		Octdata_EXPORTS SubstructureTemplate(SubstructureTemplate&& o)          { swapSubstructure(o); }
 
+		SubstructureTemplate& operator=(SubstructureTemplate&& o)               { swapSubstructure(o); return *this; }
+
 		typedef std::pair<const IndexType, Type*>        SubstructurePair;
 		typedef std::map<IndexType, Type*>               SubstructureMap;
 		typedef typename SubstructureMap::iterator       SubstructureIterator;

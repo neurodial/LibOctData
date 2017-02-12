@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/lexical_cast.hpp>
+#include <cpp_framework/callback.h>
 
 
 namespace bfs = boost::filesystem;
@@ -41,7 +42,7 @@ namespace OctData
 
 	}
 
-	bool CirrusRawRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/)
+	bool CirrusRawRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
 	{
 		if(file.extension() != ".img")
 			return false;
@@ -132,6 +133,12 @@ end
 
 		for(std::size_t i = 0; i<volSizeY; ++i)
 		{
+			if(callback)
+			{
+				if(!callback->callback(static_cast<double>(i)/static_cast<double>(volSizeY)))
+					break;
+			}
+
 			cv::Mat bscanImage;
 			int sloCvFormat = CV_8UC1;
 			int sloFactor   = 1;

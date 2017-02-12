@@ -13,6 +13,7 @@
 
 namespace boost { namespace filesystem { class path; } }
 
+namespace CppFW { class Callback; }
 
 namespace OctData
 {
@@ -28,8 +29,8 @@ namespace OctData
 		Octdata_EXPORTS static OctFileRead& getInstance()                        { static OctFileRead instance; return instance; }
 
 		Octdata_EXPORTS static const ExtensionsList& supportedExtensions();
-		Octdata_EXPORTS static OCT openFile(const std::string& filename, const FileReadOptions& op);
-		Octdata_EXPORTS static OCT openFile(const std::string& filename);
+		Octdata_EXPORTS static OCT openFile(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback = nullptr);
+		Octdata_EXPORTS static OCT openFile(const std::string& filename, CppFW::Callback* callback = nullptr);
 
 		Octdata_EXPORTS static bool isLoadable(const std::string& filename);
 
@@ -38,7 +39,7 @@ namespace OctData
 		~OctFileRead();
 
 		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
-		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op);
+		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback);
 
 		ExtensionsList extensions;
 

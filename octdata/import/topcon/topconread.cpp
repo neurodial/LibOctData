@@ -1,5 +1,7 @@
 #include "topconread.h"
 
+#include <cpp_framework/callback.h>
+
 #include <datastruct/oct.h>
 #include <datastruct/bscan.h>
 #include <datastruct/date.h>
@@ -69,7 +71,7 @@ namespace
 
 	typedef std::vector<BScanPair> BScanList;
 
-	void readImgJpeg(std::istream& stream, OctData::Series& series, BScanList& bscanList)
+	void readImgJpeg(std::istream& stream, OctData::Series& series, BScanList& bscanList, CppFW::Callback* callback)
 	{
 		const uint8_t  type   = readFStream<uint8_t >(stream);
 		const uint32_t u1     = readFStream<uint32_t>(stream);
@@ -108,6 +110,11 @@ namespace
 
 		for(uint32_t frame = 0; frame < frames; ++frame)
 		{
+			if(callback)
+			{
+				if(!callback->callback(static_cast<double>(frame)/static_cast<double>(frames)))
+					break;
+			}
 			const uint32_t size = readFStream<uint32_t>(stream);
 			char* encodedData = new char[size];
 
@@ -292,7 +299,7 @@ namespace OctData
 	{
 	}
 
-	bool TopconFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/)
+	bool TopconFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
 	{
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
@@ -370,7 +377,7 @@ namespace OctData
 			if(chunkName == "@IMG_TRC_02")
 				readImgTrc(stream, series);
 			else if(chunkName == "@IMG_JPEG")
-				readImgJpeg(stream, series, bscanList);
+				readImgJpeg(stream, series, bscanList, callback);
 			else if(chunkName == "@PATIENT_INFO_02")
 				readPatientInfo02(stream, pat);
 			else if(chunkName == "@CONTOUR_INFO")

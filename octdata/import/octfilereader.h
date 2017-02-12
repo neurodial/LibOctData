@@ -4,6 +4,8 @@
 
 namespace boost { namespace filesystem { class path; } }
 
+namespace CppFW { class Callback; }
+
 namespace OctData
 {
 	class FileReadOptions;
@@ -17,7 +19,7 @@ namespace OctData
 		explicit OctFileReader(const std::vector<OctExtension>& ext);
 
 		virtual ~OctFileReader();
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op) = 0;
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) = 0;
 
 		static void registerReaders();
 	};

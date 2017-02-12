@@ -53,7 +53,7 @@ namespace OctData
 	{
 	}
 
-	bool TiffStackRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
+	bool TiffStackRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* /*callback*/)
 	{
 		if(file.extension() != ".tiff" && file.extension() != ".tif")
 			return false;

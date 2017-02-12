@@ -32,19 +32,19 @@ namespace OctData
 	}
 
 
-	OCT OctFileRead::openFile(const std::string& filename)
+	OCT OctFileRead::openFile(const std::string& filename, CppFW::Callback* callback)
 	{
-		return getInstance().openFilePrivat(filename, FileReadOptions());
+		return getInstance().openFilePrivat(filename, FileReadOptions(), callback);
 	}
 
-	OCT OctFileRead::openFile(const std::string& filename, const FileReadOptions& op)
+	OCT OctFileRead::openFile(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback)
 	{
-		return getInstance().openFilePrivat(filename, op);
+		return getInstance().openFilePrivat(filename, op, callback);
 	}
 
 
 
-	OCT OctFileRead::openFilePrivat(const std::string& filename, const FileReadOptions& op)
+	OCT OctFileRead::openFilePrivat(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 		OctFileReader::registerReaders(); // TODO: serch better implementation to prevent remove by linker
 
@@ -56,7 +56,7 @@ namespace OctData
 		{
 			for(OctFileReader* reader : fileReaders)
 			{
-				if(reader->readFile(file, oct, op))
+				if(reader->readFile(file, oct, op, callback))
 					break;
 				oct.clear();
 			}

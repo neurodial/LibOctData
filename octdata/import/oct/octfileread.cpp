@@ -402,7 +402,7 @@ namespace OctData
 	{
 	}
 
-	bool OctFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
+	bool OctFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* /*callback*/)
 	{
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";

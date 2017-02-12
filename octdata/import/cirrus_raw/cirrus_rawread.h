@@ -19,7 +19,7 @@ namespace OctData
 
 		static CirrusRawRead* getInstance();
 
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op);
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
 	};
 
 }

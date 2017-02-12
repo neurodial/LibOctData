@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <emmintrin.h>
+#include <cpp_framework/callback.h>
 
 namespace bfs = boost::filesystem;
 
@@ -266,7 +267,7 @@ namespace OctData
 	{
 	}
 
-	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
+	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
@@ -327,9 +328,16 @@ namespace OctData
 		slo->setScaleFactor(ScaleFactor(volHeader.data.scaleXSlo, volHeader.data.scaleYSlo));
 		series.takeSloImage(slo);
 
+		const std::size_t numBScans = volHeader.data.numBScans;
 		// Read BScann
-		for(std::size_t numBscan = 0; numBscan<volHeader.data.numBScans; ++numBscan)
+		for(std::size_t numBscan = 0; numBscan<numBScans; ++numBscan)
 		{
+			if(callback)
+			{
+				if(!callback->callback(static_cast<double>(numBscan)/static_cast<double>(numBScans)))
+					break;
+			}
+
 			BScanHeader bscanHeader;
 
 			std::size_t bscanPos = VolHeader::getHeaderSize() + volHeader.getSLOPixelSize() + numBscan*volHeader.getBScanSize();

@@ -16,6 +16,7 @@
 #include <cpp_framework/cvmat/cvmattreestruct.h>
 #include <cpp_framework/cvmat/cvmattreestructextra.h>
 #include <cpp_framework/cvmat/treestructbin.h>
+#include <cpp_framework/callback.h>
 
 namespace OctData
 {
@@ -25,7 +26,7 @@ namespace OctData
 	{
 	}
 
-	bool CvBinRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/)
+	bool CvBinRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
 	{
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
@@ -68,8 +69,18 @@ namespace OctData
 
 		const CppFW::CVMatTree::NodeList& seriesList = seriesNode->getNodeList();
 
+		std::size_t bscanNr = 0;
+
 		for(const CppFW::CVMatTree* bscanNode : seriesList)
 		{
+			if(callback)
+			{
+				if(!callback->callback(static_cast<double>(bscanNr)/static_cast<double>(seriesList.size())))
+					break;
+			}
+
+			++bscanNr;
+
 			if(!bscanNode)
 				continue;
 

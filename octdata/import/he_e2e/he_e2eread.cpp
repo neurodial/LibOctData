@@ -450,7 +450,7 @@ namespace OctData
 	{
 	}
 
-	bool HeE2ERead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op)
+	bool HeE2ERead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* /*callback*/)
 	{
 		if(file.extension() != ".E2E" && file.extension() != ".sdb")
 			return false;
