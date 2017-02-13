@@ -469,27 +469,12 @@ namespace OctData
 		}
 
 		E2E::E2EData e2eData;
-		e2eData.readE2EFile(file.generic_string());
+		e2eData.readE2EFile(file.generic_string(), &loadCallback);
 
 		const E2E::DataRoot& e2eRoot = e2eData.getDataRoot();
 
+		std::size_t basisFileId = e2eRoot.getCreateFromLoadedFileNum();
 
-		// std::vector<int> loadedPatients;
-		std::vector<int> loadedStudies;
-		std::vector<int> loadedSeries;
-
-		for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
-		{
-			for(const E2E::Patient::SubstructurePair& e2eStudyPair : *(e2ePatPair.second))
-			{
-				loadedStudies.push_back(e2eStudyPair.first);
-
-				for(const E2E::Study::SubstructurePair& e2eSeriesPair : *(e2eStudyPair.second))
-				{
-					loadedSeries.push_back(e2eSeriesPair.first);
-				}
-			}
-		}
 
 		// load extra Data from patient file (pdb) and study file (edb)
 		if(file.extension() == ".sdb")
@@ -520,37 +505,49 @@ namespace OctData
 		for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
 		{
 			CppFW::Callback callbackPatient = callbackCreatorPatients.getSubTaskCallback();
-			CppFW::CallbackSubTaskCreator callbackCreatorStudys(&callbackPatient, loadedStudies.size());
+			CppFW::CallbackSubTaskCreator callbackCreatorStudys(&callbackPatient, e2eRoot.size());
+
+			const E2E::Patient& e2ePat = *(e2ePatPair.second);
+			if(e2ePat.getCreateFromLoadedFileNum() != basisFileId)
+				continue;
 
 			Patient& pat = oct.getPatient(e2ePatPair.first);
-			const E2E::Patient& e2ePat = *(e2ePatPair.second);
 			copyPatData(pat, e2ePat);
 			
-			for(int studyID : loadedStudies)
+			for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
 			{
-				CppFW::Callback callbackPatient = callbackCreatorPatients.getSubTaskCallback();
-				CppFW::CallbackSubTaskCreator callbackCreatorStudys(&callbackPatient, loadedStudies.size());
+				CppFW::Callback callbackStudy = callbackCreatorStudys.getSubTaskCallback();
+				CppFW::CallbackSubTaskCreator callbackCreatorSeries(&callbackPatient, e2ePat.size());
+
+				const E2E::Study& e2eStudy = *(e2eStudyPair.second);
+				if(e2eStudy.getCreateFromLoadedFileNum() != basisFileId)
+					continue;
 
 // 				std::cout << "studyID: " << studyID << std::endl;
-				Study& study = pat.getStudy(studyID);
-				const E2E::Study& e2eStudy = e2ePat.getStudy(studyID);
+				Study& study = pat.getStudy(e2eStudyPair.first);
 
 				copyStudyData(study, e2eStudy);
 
 				
-				for(int seriesID : loadedSeries)
+				for(const E2E::Study::SubstructurePair& e2eSeriesPair : e2eStudy)
 				{
-					std::cout << "seriesID: " << seriesID << std::endl;
-					Series& series = study.getSeries(seriesID);
-					const E2E::Series& e2eSeries = e2eStudy.getSeries(seriesID);
+					CppFW::Callback callbackSeries = callbackCreatorSeries.getSubTaskCallback();
+
+					const E2E::Series& e2eSeries = *(e2eSeriesPair.second);
+					if(e2eSeries.getCreateFromLoadedFileNum() != basisFileId)
+						continue;
+
+// 					std::cout << "seriesID: " << seriesID << std::endl;
+					Series& series = study.getSeries(e2eSeriesPair.first);
 					copySlo(series, e2eSeries, op);
 					
 					copySeriesData(series, e2eSeries);
 
-
+					CppFW::CallbackStepper bscanCallbackStepper(&callbackSeries, e2eSeries.size());
 					for(const E2E::Series::SubstructurePair& e2eBScanPair : e2eSeries)
 					{
 						copyBScan(series, *(e2eBScanPair.second), op);
+						++bscanCallbackStepper;
 					}
 				}
 			}

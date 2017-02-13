@@ -69,17 +69,13 @@ namespace OctData
 
 		const CppFW::CVMatTree::NodeList& seriesList = seriesNode->getNodeList();
 
-		std::size_t bscanNr = 0;
+
+		CppFW::CallbackStepper bscanCallbackStepper(callback, seriesList.size());
 
 		for(const CppFW::CVMatTree* bscanNode : seriesList)
 		{
-			if(callback)
-			{
-				if(!callback->callback(static_cast<double>(bscanNr)/static_cast<double>(seriesList.size())))
-					break;
-			}
-
-			++bscanNr;
+			if(++bscanCallbackStepper == false)
+				return false;
 
 			if(!bscanNode)
 				continue;
