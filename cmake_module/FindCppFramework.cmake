@@ -16,9 +16,9 @@ find_path(CppFramework_INCLUDE_DIR NAMES cpp_framework PATHS ../
 
 message(${CppFramework_INCLUDE_DIR})
 
-find_library(CppFramework_LIBRARY NAMES libcpp_framework.a
+find_library(CppFramework_LIBRARY NAMES libcpp_framework.a cpp_framework.lib
 			PATHS ${CppFramework_INCLUDE_DIR}
-			PATH_SUFFIXES build release
+			PATH_SUFFIXES build release Release Debug
              # HINTS ${PC_LIBXML_LIBDIR} ${PC_LIBXML_LIBRARY_DIRS}
              )
 

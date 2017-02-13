@@ -166,13 +166,13 @@ namespace OctData
 			series.setRefSeriesUID(readOptinalNode<std::string>(seriesNode, "ReferenceSeries.SeriesUID", std::string()));
 		}
 
-		void fillBScann(const bpt::ptree& imageNode, const bpt::ptree& studyNode, Series& series, const FileString& xmlPath)
+		void fillBScann(const bpt::ptree& imageNode, const bpt::ptree& studyNode, Series& series, const std::string& xmlPath)
 		{
 			BScan::Data bscanData;
 
 
 			std::string filename = getFilename(imageNode);
-			FileString filepath = xmlPath + '/' + filename;
+			std::string filepath = xmlPath + "/" + filename;
 			cv::Mat image = cv::imread(filepath, true); // TODO imdecode
 
 			/// Separate the image in 3 places (B, Gand R)
@@ -229,7 +229,7 @@ namespace OctData
 
 		BOOST_LOG_TRIVIAL(trace) << "Try to open Heidelberg Engineering Xml file as vol";
 
-		FileString xmlPath     = filepathConv(file.branch_path());
+		std::string xmlPath     = file.branch_path().generic_string();
 		// std::string xmlFilename = file.filename().generic_string();
 
 		// Create an empty property tree object

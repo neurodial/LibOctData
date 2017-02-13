@@ -44,6 +44,7 @@ namespace OctData
 
 	namespace
 	{
+		/*
 		template <class Facet>
 		class UsableFacet : public Facet
 		{
@@ -55,8 +56,8 @@ namespace OctData
 			// template <class ...Args> UsableFacet(Args&& ...args) : Facet(std::forward<Args>(args)...) {}
 		};
 		template<typename internT, typename externT, typename stateT>
-		using codecvt = UsableFacet<std::codecvt<internT, externT, stateT>>;
-
+		using codecvtLocal = UsableFacet<std::codecvt<internT, externT, stateT>>;
+*/
 
 		Patient::Sex convertSex(E2E::PatientDataElement::Sex e2eSex)
 		{
@@ -112,7 +113,7 @@ namespace OctData
 				series.setSeriesUID(e2eSeries.getSeriesUID()->getText());
 
 // 			std::wstring_convert<std::codecvt<char16_t,char,std::mbstate_t>,char16_t> convert;
-			std::wstring_convert<codecvt<char16_t, char, std::mbstate_t>, char16_t> convert;
+//			std::wstring_convert<codecvtLocal<unsigned int, char, std::mbstate_t>, char16_t> convert;
 			
 			if(e2eSeries.getExaminedStructure())
 			{
@@ -123,12 +124,19 @@ namespace OctData
 						series.setExaminedStructure(Series::ExaminedStructure::ONH);
 					else if(examinedStructure == u"Retina")
 						series.setExaminedStructure(Series::ExaminedStructure::Retina);
+					
+// https://connect.microsoft.com/VisualStudio/feedback/details/1403302/unresolved-external-when-using-codecvt-utf8
+// > I have fixed this issue, and the fix will be available in the next major version of Visual Studio.
+#if BOOST_COMP_MSVC == false
 					else
 					{
+						std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+						series.setExaminedStructureText(converter.to_bytes(examinedStructure));
+//						return converter.from_bytes(utf_str);
 						series.setExaminedStructure(Series::ExaminedStructure::Unknown);
-						series.setExaminedStructureText(convert.to_bytes(examinedStructure));
+//						series.setExaminedStructureText(convert.to_bytes(examinedStructure));
 					}
-
+#endif
 				}
 			}
 
@@ -141,12 +149,15 @@ namespace OctData
 						series.setScanPattern(Series::ScanPattern::Volume);
 					else if(scanPattern == u"OCT Radial+Circles")
 						series.setScanPattern(Series::ScanPattern::RadialCircles);
+#if BOOST_COMP_MSVC == false
 					else
 					{
+						std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+						series.setScanPatternText(converter.to_bytes(scanPattern));
 						series.setScanPattern(Series::ScanPattern::Unknown);
-						series.setScanPatternText(convert.to_bytes(scanPattern));
+//						series.setScanPatternText(convert.to_bytes(scanPattern));
 					}
-
+#endif
 				}
 			}
 			// e2eSeries.

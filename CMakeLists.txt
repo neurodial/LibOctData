@@ -31,7 +31,14 @@ find_package(CppFramework REQUIRED)
 include_directories(${CppFramework_INCLUDE_DIRS})
 
 
-ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+if(${WIN32})
+	# ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+	# set(Boost_DEBUG ON)
+	# set(Boost_LIB_PREFIX "libboost")
+	# message("Win32 build")
+endif()
+
+
 find_package(Boost 1.40 COMPONENTS filesystem system locale log REQUIRED)
 find_package(OpenCV REQUIRED)
 string(TIMESTAMP CMAKE_CONFIGURE_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
@@ -92,6 +99,8 @@ if(BUILD_WITH_SUPPORT_TOPCON)
 		add_definitions(-DDICOM_JPEG2K_SUPPORT)
 		list(APPEND import_srcs import/topcon)
 		add_definitions(-DTOPCON_FILE_SUPPORT)
+		include_directories(SYSTEM ${OPENJPEG_INCLUDE_DIRS})
+		message(${OPENJPEG_INCLUDE_DIRS})
 	endif()
 endif()
 

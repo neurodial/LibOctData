@@ -9,7 +9,7 @@
 #include <cassert>
 
 
-#include <openjpeg-2.1/openjpeg.h>
+#include <openjpeg.h>
 #include <opencv/cv.h>
 
 // TODO
