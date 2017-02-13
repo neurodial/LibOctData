@@ -5,7 +5,6 @@ include(GenerateExportHeader)
 set_property(GLOBAL PROPERTY CXX_STANDARD 11)
 set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
 
-
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -28,6 +27,10 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options a
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_module/)
 
+find_package(CppFramework REQUIRED)
+include_directories(${CppFramework_INCLUDE_DIRS})
+
+
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 find_package(Boost 1.40 COMPONENTS filesystem system locale log REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -39,11 +42,9 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 
 if(BUILD_WITH_SUPPORT_CVBIN)
-	find_package(CppFramework REQUIRED)
 
 	list(APPEND import_srcs import/cvbin)
 	add_definitions(-DCVBIN_SUPPORT)
-	include_directories(${CppFramework_INCLUDE_DIRS})
 endif()
 
 if(BUILD_WITH_SUPPORT_DICOM)

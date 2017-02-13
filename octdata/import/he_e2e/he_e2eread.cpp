@@ -31,6 +31,7 @@
 
 #include <boost/locale.hpp>
 #include <codecvt>
+#include <cpp_framework/callback.h>
 
 
 
@@ -450,13 +451,22 @@ namespace OctData
 	{
 	}
 
-	bool HeE2ERead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* /*callback*/)
+	bool HeE2ERead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 		if(file.extension() != ".E2E" && file.extension() != ".sdb")
 			return false;
 
 		if(!bfs::exists(file))
 			return false;
+
+		CppFW::Callback loadCallback   ;
+		CppFW::Callback convertCallback;
+
+		if(callback)
+		{
+			loadCallback    = callback->createSubTask(0.5, 0.0);
+			convertCallback = callback->createSubTask(0.5, 0.5);
+		}
 
 		E2E::E2EData e2eData;
 		e2eData.readE2EFile(file.generic_string());
@@ -505,16 +515,23 @@ namespace OctData
 			}
 		}
 
+		CppFW::CallbackSubTaskCreator callbackCreatorPatients(&convertCallback, e2eRoot.size());
 		// convert e2e structure in octdata structure
 		for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
 		{
+			CppFW::Callback callbackPatient = callbackCreatorPatients.getSubTaskCallback();
+			CppFW::CallbackSubTaskCreator callbackCreatorStudys(&callbackPatient, loadedStudies.size());
+
 			Patient& pat = oct.getPatient(e2ePatPair.first);
 			const E2E::Patient& e2ePat = *(e2ePatPair.second);
 			copyPatData(pat, e2ePat);
 			
 			for(int studyID : loadedStudies)
 			{
-				std::cout << "studyID: " << studyID << std::endl;
+				CppFW::Callback callbackPatient = callbackCreatorPatients.getSubTaskCallback();
+				CppFW::CallbackSubTaskCreator callbackCreatorStudys(&callbackPatient, loadedStudies.size());
+
+// 				std::cout << "studyID: " << studyID << std::endl;
 				Study& study = pat.getStudy(studyID);
 				const E2E::Study& e2eStudy = e2ePat.getStudy(studyID);
 
