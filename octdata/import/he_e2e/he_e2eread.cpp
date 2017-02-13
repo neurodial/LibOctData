@@ -504,10 +504,11 @@ namespace OctData
 		// convert e2e structure in octdata structure
 		for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
 		{
-			CppFW::Callback callbackPatient = callbackCreatorPatients.getSubTaskCallback();
-			CppFW::CallbackSubTaskCreator callbackCreatorStudys(&callbackPatient, e2eRoot.size());
-
 			const E2E::Patient& e2ePat = *(e2ePatPair.second);
+
+			CppFW::Callback callbackPatient = callbackCreatorPatients.getSubTaskCallback();
+			CppFW::CallbackSubTaskCreator callbackCreatorStudys(&callbackPatient, e2ePat.size());
+
 			if(e2ePat.getCreateFromLoadedFileNum() != basisFileId)
 				continue;
 
@@ -516,10 +517,11 @@ namespace OctData
 			
 			for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
 			{
-				CppFW::Callback callbackStudy = callbackCreatorStudys.getSubTaskCallback();
-				CppFW::CallbackSubTaskCreator callbackCreatorSeries(&callbackPatient, e2ePat.size());
-
 				const E2E::Study& e2eStudy = *(e2eStudyPair.second);
+
+				CppFW::Callback callbackStudy = callbackCreatorStudys.getSubTaskCallback();
+				CppFW::CallbackSubTaskCreator callbackCreatorSeries(&callbackPatient, e2eStudy.size());
+
 				if(e2eStudy.getCreateFromLoadedFileNum() != basisFileId)
 					continue;
 
