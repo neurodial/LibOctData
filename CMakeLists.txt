@@ -32,11 +32,12 @@ include_directories(${CppFramework_INCLUDE_DIRS})
 
 
 if(${WIN32})
-	# ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 	# set(Boost_DEBUG ON)
 	# set(Boost_LIB_PREFIX "libboost")
-	# message("Win32 build")
+else()
+	ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 endif()
+
 
 
 find_package(Boost 1.40 COMPONENTS filesystem system locale log REQUIRED)
