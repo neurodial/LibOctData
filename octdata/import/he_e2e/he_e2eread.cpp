@@ -30,6 +30,8 @@
 #include "he_gray_transform.h"
 
 #include <boost/locale.hpp>
+#include <boost/log/trivial.hpp>
+
 #include <codecvt>
 #include <cpp_framework/callback.h>
 
@@ -44,21 +46,6 @@ namespace OctData
 
 	namespace
 	{
-		/*
-		template <class Facet>
-		class UsableFacet : public Facet
-		{
-		public:
-			using Facet::Facet; // inherit constructors
-			~UsableFacet() {}
-
-			// workaround for compilers without inheriting constructors:
-			// template <class ...Args> UsableFacet(Args&& ...args) : Facet(std::forward<Args>(args)...) {}
-		};
-		template<typename internT, typename externT, typename stateT>
-		using codecvtLocal = UsableFacet<std::codecvt<internT, externT, stateT>>;
-*/
-
 		Patient::Sex convertSex(E2E::PatientDataElement::Sex e2eSex)
 		{
 			switch(e2eSex)
@@ -425,7 +412,7 @@ namespace OctData
 				}
 				if(bscanImageConv.empty())
 				{
-					std::cerr << "Error: Converted Matrix empty, valid options?\n";
+					BOOST_LOG_TRIVIAL(error) << "E2E::copyBScan: Error: Converted Matrix empty, valid options?";
 					useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
 				}
 			}
@@ -470,6 +457,8 @@ namespace OctData
 		if(!bfs::exists(file))
 			return false;
 
+		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as HEYEX file";
+
 		CppFW::Callback loadCallback   ;
 		CppFW::Callback convertCallback;
 
@@ -490,12 +479,15 @@ namespace OctData
 		// load extra Data from patient file (pdb) and study file (edb)
 		if(file.extension() == ".sdb")
 		{
+			BOOST_LOG_TRIVIAL(trace) << "Try to load extra files";
 			for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
 			{
 				const std::size_t bufferSize = 100;
 				char buffer[bufferSize];
 				const E2E::Patient& e2ePat = *(e2ePatPair.second);
 				std::snprintf(buffer, bufferSize, "%08d.pdb", e2ePatPair.first);
+
+				BOOST_LOG_TRIVIAL(debug) << "try to open patient informations file: " << buffer;
 				// std::string filenname =
 				bfs::path patientDataFile(file.branch_path() / buffer);
 				if(bfs::exists(patientDataFile))
@@ -504,6 +496,7 @@ namespace OctData
 				for(const E2E::Patient::SubstructurePair& e2eStudyPair : e2ePat)
 				{
 					std::snprintf(buffer, bufferSize, "%08d.edb", e2eStudyPair.first);
+					BOOST_LOG_TRIVIAL(debug) << "try to open series informations file: " << buffer;
 					bfs::path studyDataFile(file.branch_path() / buffer);
 					if(bfs::exists(studyDataFile))
 						e2eData.readE2EFile(studyDataFile.generic_string());
@@ -511,6 +504,8 @@ namespace OctData
 			}
 		}
 
+
+		BOOST_LOG_TRIVIAL(debug) << "convert HEYEX data to own data structure";
 		CppFW::CallbackSubTaskCreator callbackCreatorPatients(&convertCallback, e2eRoot.size());
 		// convert e2e structure in octdata structure
 		for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
@@ -565,6 +560,8 @@ namespace OctData
 				}
 			}
 		}
+
+		BOOST_LOG_TRIVIAL(debug) << "read HEYEX file \"" << file.generic_string() << "\" finished";
 
 		return true;
 	}
