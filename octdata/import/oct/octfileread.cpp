@@ -1,5 +1,7 @@
 #include "octfileread.h"
 
+#include <cpp_framework/callback.h>
+
 #include <datastruct/oct.h>
 #include <datastruct/bscan.h>
 #include <datastruct/date.h>
@@ -359,26 +361,29 @@ namespace
 	{
 		OctData::Series& series;
 		const OctData::FileReadOptions& op;
+		CppFW::CallbackStepper& callbackStepper;
 		DictFrameHeader dictFrameHeader;
 	public:
-		MainDict(OctData::Series& series, const OctData::FileReadOptions& op) : series(series), op(op) {}
+		MainDict(OctData::Series& series, const OctData::FileReadOptions& op, CppFW::CallbackStepper& callbackStepper) : series(series), op(op), callbackStepper(callbackStepper) {}
 
 		void handelDictEntry(std::istream& stream, const std::string& name, std::size_t& readedBytes)
 		{
 			const uint32_t    dictLength = readDatafieldLength(stream);
 			const std::size_t dictBegin  = stream.tellg();
 
+			callbackStepper.setStep(dictBegin);
+
 // 			std::cout << "Dict: \t" << name << std::endl;
-			if(name == "FRAMEHEADER")
+			if(name == "FRAMEDATA")
+			{
+				DictFrameData dictFrameData(series, dictFrameHeader, op);
+				readedBytes += readDict(stream, dictFrameData, dictLength);
+			}
+			else if(name == "FRAMEHEADER")
 			{
 				readedBytes += readDict(stream, dictFrameHeader, dictLength);
 				dictFrameHeader.print(std::cout);
 				dictFrameHeader.copyData(series);
-			}
-			else if(name == "FRAMEDATA")
-			{
-				DictFrameData dictFrameData(series, dictFrameHeader, op);
-				readedBytes += readDict(stream, dictFrameData, dictLength);
 			}
 			else
 			{
@@ -402,7 +407,7 @@ namespace OctData
 	{
 	}
 
-	bool OctFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* /*callback*/)
+	bool OctFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
@@ -416,6 +421,15 @@ namespace OctData
 			return false;
 
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as oct file";
+
+		boost::system::error_code ec;
+		boost::uintmax_t filesize = file_size(file, ec);
+		if(ec)
+		{
+			BOOST_LOG_TRIVIAL(error) << "An error severity message";
+			filesize = 1;
+		}
+		CppFW::CallbackStepper callbackStepper(callback, filesize);
 
 
 		std::fstream stream(filepathConv(file), std::ios::binary | std::ios::in);
@@ -449,7 +463,7 @@ namespace OctData
 
 
 
-		MainDict mainDict(series, op);
+		MainDict mainDict(series, op, callbackStepper);
 
 		stream.seekg(0, std::ios_base::end);
 		std::size_t fielsize = stream.tellg();
@@ -457,6 +471,8 @@ namespace OctData
 
 		readDict(stream, mainDict, fielsize);
 
+		if(callback)
+			callback->callback(1); // set to 100% ( = 1 frac)
 
 
 		BOOST_LOG_TRIVIAL(debug) << "read oct file \"" << file.generic_string() << "\" finished";

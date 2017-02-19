@@ -6,7 +6,10 @@
 
 #include <opencv2/opencv.hpp>
 
+// #include <cpp_framework/callback.h>
+
 #include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <filereadoptions.h>
 
@@ -31,6 +34,8 @@ namespace OctData
 		
 		if(!bfs::exists(file))
 			return false;
+
+		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as tiff stack";
 
 		int dircount = 0;
 
@@ -67,6 +72,7 @@ namespace OctData
 			TIFFClose(tif);
 		}
 
+		BOOST_LOG_TRIVIAL(debug) << "read tiff stack \"" << file.generic_string() << "\" finished";
 		return dircount>0;
 	}
 
