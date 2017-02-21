@@ -412,7 +412,7 @@ namespace OctData
 				}
 				if(bscanImageConv.empty())
 				{
-					BOOST_LOG_TRIVIAL(error) << "E2E::copyBScan: Error: Converted Matrix empty, valid options?";
+					BOOST_LOG_TRIVIAL(error) << "E2E::copyBScan: Error: Converted Matrix empty, valid E2eGrayTransform option?";
 					useLUTBScan<uint16_t, uint8_t, HeGrayTransformXml>(e2eImage, bscanImageConv);
 				}
 			}

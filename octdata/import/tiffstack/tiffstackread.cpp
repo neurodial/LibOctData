@@ -58,7 +58,7 @@ namespace OctData
 				BScan::Data bscanData;
 
 				cv::Mat bscanImage(imageLength, imageWidth, CV_MAKETYPE(cv::DataType<uint8_t>::type, 4));
-				if(TIFFReadRGBAImage(tif, imageWidth, imageLength, bscanImage.ptr<uint32_t>(0), 0) != 0)
+				if(TIFFReadRGBAImageOriented(tif, imageWidth, imageLength, bscanImage.ptr<uint32_t>(0), ORIENTATION_TOPLEFT, 0) != 0)
 					cv::cvtColor(bscanImage, bscanImage, CV_BGR2GRAY);
 				else
 					bscanImage = cv::Mat();
