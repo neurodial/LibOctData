@@ -13,6 +13,8 @@ namespace OctData
 
 		bool holdRawData         = false;
 
+		bool loadRefFiles        = true;
+
 		E2eGrayTransform e2eGray = E2eGrayTransform::xml;
 	};
 }
