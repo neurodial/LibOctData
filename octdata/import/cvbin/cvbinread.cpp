@@ -90,14 +90,13 @@ namespace OctData
 					if(seriesSegILMNode && seriesSegILMNode->type() == CppFW::CVMatTree::Type::Mat)
 					{
 						const cv::Mat& segMat = seriesSegILMNode->getMat();
+						cv::Mat convertedSegMat;
+						segMat.convertTo(convertedSegMat, cv::DataType<double>::type);
 
-						if(segMat.type() == cv::DataType<double>::type)
-						{
-							const double* p = segMat.ptr<double>(0);
-							std::vector<double> segVec(p, p + segMat.rows*segMat.cols);
+						const double* p = convertedSegMat.ptr<double>(0);
+						std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
 
-							bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
-						}
+						bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
 					}
 				}
 
