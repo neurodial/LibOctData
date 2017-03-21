@@ -106,25 +106,32 @@ namespace OctData
 			return true;
 		}
 
+		OCT openIfExists(const bfs::path& file, const FileReadOptions& op, CppFW::Callback& callback)
+		{
+			if(bfs::exists(file))
+				return OctFileRead::openFile(file.generic_string(), op, &callback);
+			return OCT();
+		}
+
 		OCT tryOpenFile(const bfs::path& baseFile, const std::string& refFilename, const FileReadOptions& op, CppFW::Callback& callback)
 		{
 			bfs::path refFile(refFilename);
 			bfs::path baseFilePath(baseFile.branch_path());
 
 			// direkt path
-			OCT octData = OctFileRead::openFile(refFilename, op, &callback);
+			OCT octData = openIfExists(refFilename, op, callback);
 			if(octData.size() > 0)
 				return octData;
 
 			// as rel path from base file
 			bfs::path relPath = baseFilePath / refFile;
-			octData = OctFileRead::openFile(relPath.generic_string(), op, &callback);
+			octData = openIfExists(relPath, op, callback);
 			if(octData.size() > 0)
 				return octData;
 
 			// only filename
 			bfs::path filenamePath = baseFilePath / refFile.filename();
-			octData = OctFileRead::openFile(filenamePath.generic_string(), op, &callback);
+			octData = openIfExists(filenamePath, op, callback);
 
 			return octData;
 		}
