@@ -308,7 +308,7 @@ namespace OctData
 		VolHeader volHeader;
 
 		readFStream(stream, &(volHeader.data));
-		// volHeader.printData(std::cout);
+// 		volHeader.printData(std::cout);
 		stream.seekg(VolHeader::getHeaderSize());
 
 		Patient& pat    = oct.getPatient(volHeader.data.pid);
@@ -342,6 +342,8 @@ namespace OctData
 
 			std::size_t bscanPos = VolHeader::getHeaderSize() + volHeader.getSLOPixelSize() + numBscan*volHeader.getBScanSize();
 
+// 			std::cout << "bscanPos: " << bscanPos << std::endl;
+
 			stream.seekg(16+bscanPos);
 			readFStream(stream, &(bscanHeader.data));
 
@@ -361,7 +363,13 @@ namespace OctData
 
 			BScan::Data bscanData;
 			bscanData.start       = CoordSLOmm(bscanHeader.data.startX, bscanHeader.data.startY);
-			bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
+
+			if(series.getScanPattern() == OctData::Series::ScanPattern::Circular
+			|| (series.getScanPattern() == OctData::Series::ScanPattern::RadialCircles && numBscan >= numBScans-3)) // specific to the ScanPattern
+				bscanData.center      = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
+			else
+				bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
+
 			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleZ, volHeader.data.scaleX);
 
 			bscanData.imageQuality = bscanHeader.data.quality;

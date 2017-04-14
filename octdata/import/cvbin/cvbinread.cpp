@@ -129,7 +129,7 @@ namespace OctData
 			if(octData.size() > 0)
 				return octData;
 
-			// only filename
+			// only filename in base file path
 			bfs::path filenamePath = baseFilePath / refFile.filename();
 			octData = openIfExists(filenamePath, op, callback);
 
