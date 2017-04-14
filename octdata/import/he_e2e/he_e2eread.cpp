@@ -362,7 +362,10 @@ namespace OctData
 				bscanData.acquisitionTime = Date::fromWindowsTicks(e2eMeta->getAcquisitionTime());
 
 				if(e2eMeta->getScanType() == E2E::BScanMetaDataElement::ScanType::Circle)
-					bscanData.center = CoordSLOmm(e2eMeta->getCenterX()*factor, e2eMeta->getCenterY()*factor);
+				{
+					bscanData.clockwiseRotation = series.getLaterality() == OctData::Series::Laterality::OD; // TODO: inoperable because not read Laterality from e2e
+					bscanData.center            = CoordSLOmm(e2eMeta->getCenterX()*factor, e2eMeta->getCenterY()*factor);
+				}
 			}
 
 

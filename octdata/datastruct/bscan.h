@@ -41,6 +41,7 @@ namespace OctData
 			CoordSLOmm start;
 			CoordSLOmm end;
 			CoordSLOmm center;
+			bool clockwiseRotation = false;
 
 			static const std::size_t numSegmentlineType = static_cast<std::size_t>(SegmentlineType::NR_OF_ELEMENTS);
 			std::array<Segmentline, numSegmentlineType> segmentlines;
@@ -73,6 +74,8 @@ namespace OctData
 		const CoordSLOmm& getStart()        const                   { return data.start                  ; }
 		const CoordSLOmm& getEnd()          const                   { return data.end                    ; }
 		const CoordSLOmm& getCenter()       const                   { return data.center                 ; }
+		      bool        getClockwiseRot() const                   { return data.clockwiseRotation      ; }
+
 
 		constexpr static std::size_t getNumSegmentLine()            { return Data::numSegmentlineType; }
 		const Segmentline& getSegmentLine(SegmentlineType i) const  { return data.segmentlines.at(static_cast<std::size_t>(i)); }
