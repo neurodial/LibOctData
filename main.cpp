@@ -4,6 +4,11 @@
 
 int main()
 {
-	OctData::OCT oct = OctData::OctFileRead::openFile("test_oct.vol");
+	const char* filename = "test_stack.tif";
+
+	std::cout << "open: " << filename << std::endl;
+
+	OctData::OCT oct = OctData::OctFileRead::openFile(filename);
+
 	return 0;
 }

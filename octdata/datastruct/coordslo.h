@@ -41,6 +41,10 @@ namespace OctData
 
 		CoordSLOpx operator+(const CoordSLOpx& o) const             { return CoordSLOpx(x+o.x   , y+o.y   ); }
 		CoordSLOpx operator*(double factor)       const             { return CoordSLOpx(x*factor, y*factor); }
+		CoordSLOpx operator-(const CoordSLOpx& v) const             { return CoordSLOpx(x-v.x   , y-v.y   ); }
+
+		double operator*(const CoordSLOpx& v) const                 { return x*v.x + y*v.y; }
+		double normquadrat()                  const                 { return x*x + y*y; }
 
 		double abs(const CoordSLOpx& o) const                       { return std::sqrt((x-o.x)*(x-o.x) + (y-o.y)*(y-o.y)); }
 
