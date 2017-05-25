@@ -17,6 +17,7 @@
 #include <boost/filesystem.hpp>
 
 #include "../platform_helper.h"
+#include <cpp_framework/callback.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -221,7 +222,7 @@ namespace OctData
 		static HeXmlRead instance; return &instance;
 	}
 
-	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* /*callback*/)
+	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
 	{
 		if(file.extension() != ".xml")
 			return false;
@@ -284,9 +285,6 @@ namespace OctData
 		else if(sex == "M")
 			pat.setSex(Patient::Sex::Male  );
 
-		// copyPTree(pt, dest, "Series");
-
-
 		bpt::ptree& studyNode = patientNode.get_child("Study");
 		int         studyID   = studyNode  .get_child("ID"   ).get_value<int>(0);
 
@@ -306,12 +304,19 @@ namespace OctData
 			
 			fillSeries(seriesStudyNode, series);
 
-			
+			const std::size_t numberOfSeriesNodes = seriesStudyNode.size();
+			      std::size_t actSeriesNodeNum    = 0;
 			for(const std::pair<const std::string, bpt::ptree>& imageNode : seriesStudyNode)
 			{
+				++actSeriesNodeNum;
 				if(imageNode.first != "Image")
 					continue;
 
+				if(callback)
+				{
+					if(!callback->callback(static_cast<double>(actSeriesNodeNum)/static_cast<double>(numberOfSeriesNodes)))
+						break;
+				}
 
 				boost::optional<const bpt::ptree&> type = imageNode.second.get_child_optional("ImageType.Type");
 
@@ -332,26 +337,7 @@ namespace OctData
 				if(typeStr == "OCT")
 					fillBScann(imageNode.second, studyNode, series, xmlPath);
 
-				/*
-				boost::optional<const bpt::ptree&> urlNode = t.second.get_child_optional("ImageData.ExamURL");
 
-				if(urlNode)
-				{
-					std::string urlFull   = urlNode.get().get_value<std::string>();
-					std::size_t filePos   = urlFull.rfind('\\') + 1;
-					bfs::path   imageName = urlFull.substr(filePos);
-
-					bfs::path imageFile = xmlPath / imageName;
-					if(bfs::exists(imageFile))
-					{
-
-					}
-					else
-						std::cout << "missing: " << imageFile.generic_string() << std::endl;
-				}
-				else
-					std::cerr << "Image URL not found in XML\n";
-				*/
 			}
 		}
 		return true;

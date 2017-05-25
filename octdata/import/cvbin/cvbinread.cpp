@@ -22,20 +22,142 @@
 
 namespace bfs = boost::filesystem;
 
+namespace
+{
+	template<typename T>
+	T getCVMatScalar(const CppFW::CVMatTree* node, T defaultValue)
+	{
+		if(!node || node  ->type() != CppFW::CVMatTree::Type::Mat)
+			return defaultValue;
+		const cv::Mat& mat = node->getMat();
+		if(mat.rows < 1 || mat.cols < 1)
+			return defaultValue;
+
+		if(cv::DataType<T>::type == mat.type())
+			return mat.at<T>(0);
+
+		return 0;
+	}
+}
+
 
 namespace OctData
 {
 
 	namespace
 	{
-		struct TreeImgGetter
+		class TreeImgGetter
 		{
+			cv::Mat createdImage;
+			bool extractRLE(const CppFW::CVMatTree* imgCompressNode)
+			{
+				int height = createdImage.rows;
+				int width  = createdImage.cols;
+				const std::size_t imageSize = static_cast<std::size_t>(height * width);
+
+
+				const cv::Mat& compressSymbols   = imgCompressNode->getDirNode("compressSymbols")  .getMat();
+				const cv::Mat& compressRunLength = imgCompressNode->getDirNode("compressRunLength").getMat();
+
+
+				if(cv::DataType<uint8_t> ::type != compressSymbols  .type()
+				|| cv::DataType<uint32_t>::type != compressRunLength.type())
+					return false;
+
+				if(compressSymbols.rows*compressSymbols.cols != compressRunLength.rows*compressRunLength.cols)
+					return false;
+
+				const int compDataLength = compressSymbols.rows*compressSymbols.cols;
+
+				      uint8_t * imgPtr        = createdImage     .ptr<uint8_t >();
+				const uint8_t * compSymbolPtr = compressSymbols  .ptr<uint8_t >();
+				const uint32_t* compRunLenPtr = compressRunLength.ptr<uint32_t>();
+
+				std::size_t imagePos = 0;
+				for(int i = 0; i < compDataLength; ++i)
+				{
+					uint8_t  symbol = *compSymbolPtr;
+					uint32_t number = *compRunLenPtr;
+
+					if(imagePos >= imageSize - number)
+						number = static_cast<uint32_t>(imageSize - imagePos - 1);
+
+					std::memset(imgPtr, symbol, number);
+
+					imagePos    += number;
+					imgPtr      += number;
+					++compSymbolPtr;
+					++compRunLenPtr;
+				}
+				return true;
+			}
+
+			bool extractRLEErrorHandling(const CppFW::CVMatTree* imgCompressNode)
+			{
+				try
+				{
+					return extractRLE(imgCompressNode);
+				}
+				catch(CppFW::CVMatTree::WrongType& e)
+				{
+					BOOST_LOG_TRIVIAL(error) << "extractRLE: Wrong type : " << e.what();
+				}
+				catch(std::out_of_range& e)
+				{
+					BOOST_LOG_TRIVIAL(error) << "extractRLE: 0ut of range : " << e.what();
+				}
+				return false;
+			}
+
+		public:
+
+			const cv::Mat* getCompreessMat(const CppFW::CVMatTree* bscanNode)
+			{
+				const CppFW::CVMatTree* imgCompressNode = bscanNode->getDirNodeOpt("imgCompress");
+
+				if(!imgCompressNode || imgCompressNode->type() != CppFW::CVMatTree::Type::Dir)
+					return nullptr;
+
+				const CppFW::CVMatTree* compressMethodNode = imgCompressNode->getDirNodeOpt("compressMethod");
+				const CppFW::CVMatTree* imageHeightNode    = imgCompressNode->getDirNodeOpt("height");
+				const CppFW::CVMatTree* imageWidthNode     = imgCompressNode->getDirNodeOpt("width");
+
+				if(!compressMethodNode
+				&& !imageHeightNode
+				&& !imageWidthNode    )
+					return nullptr;
+
+				if(compressMethodNode->type() != CppFW::CVMatTree::Type::String
+				&& imageHeightNode   ->type() != CppFW::CVMatTree::Type::Mat
+				&& imageWidthNode    ->type() != CppFW::CVMatTree::Type::Mat  )
+					return nullptr;
+
+
+				if(compressMethodNode->getString() != "RLE") // Lauflängenkodierung / run-length encoding
+				{
+					BOOST_LOG_TRIVIAL(error) << "Unknown compress method " << compressMethodNode->getString();
+					return nullptr;
+				}
+
+				int imageHeight = getCVMatScalar<uint32_t>(imageHeightNode, 0);
+				int imageWidth  = getCVMatScalar<uint32_t>(imageWidthNode , 0);
+				if(imageHeight == 0 || imageWidth == 0)
+					return nullptr;
+
+				createdImage = cv::Mat(imageHeight, imageWidth, cv::DataType<uint8_t>::type);
+
+				if(!extractRLEErrorHandling(imgCompressNode))
+					return nullptr;
+
+				return &createdImage;
+			}
+
 			const cv::Mat* get(const CppFW::CVMatTree* bscanNode)
 			{
 				const CppFW::CVMatTree* seriesImgNode = bscanNode->getDirNodeOpt("img");
 
 				if(!seriesImgNode || seriesImgNode->type() != CppFW::CVMatTree::Type::Mat)
-					return nullptr;
+					return getCompreessMat(bscanNode);
 
 				return &(seriesImgNode->getMat());
 			}
@@ -79,9 +201,6 @@ namespace OctData
 				const CppFW::CVMatTree* seriesSegNode = bscanNode->getDirNodeOpt("Segmentations");
 
 				const cv::Mat* image = imgGetter.get(bscanNode);
-				if(!image)
-					continue;
-
 
 				BScan::Data bscanData;
 				if(seriesSegNode)
@@ -169,7 +288,10 @@ namespace OctData
 
 		const CppFW::CVMatTree* seriesNode = octtree.getDirNodeOpt("Serie");
 		if(!seriesNode || seriesNode->type() != CppFW::CVMatTree::Type::List)
+		{
+			BOOST_LOG_TRIVIAL(trace) << "Serie node not found or false datatype";
 			return false;
+		}
 
 		const CppFW::CVMatTree* patDataNode    = octtree.getDirNodeOpt("PatientData");
 		const CppFW::CVMatTree* studyDataNode  = octtree.getDirNodeOpt("StudyData"  );
@@ -236,6 +358,8 @@ namespace OctData
 
 		if(fillStatus)
 			BOOST_LOG_TRIVIAL(debug) << "read bin file \"" << file.generic_string() << "\" finished";
+		else
+			BOOST_LOG_TRIVIAL(debug) << "read bin file \"" << file.generic_string() << "\" failed";
 
 		return fillStatus;
 	}
