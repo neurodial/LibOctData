@@ -22,24 +22,6 @@
 
 namespace bfs = boost::filesystem;
 
-namespace
-{
-	template<typename T>
-	T getCVMatScalar(const CppFW::CVMatTree* node, T defaultValue)
-	{
-		if(!node || node  ->type() != CppFW::CVMatTree::Type::Mat)
-			return defaultValue;
-		const cv::Mat& mat = node->getMat();
-		if(mat.rows < 1 || mat.cols < 1)
-			return defaultValue;
-
-		if(cv::DataType<T>::type == mat.type())
-			return mat.at<T>(0);
-
-		return 0;
-	}
-}
-
 
 namespace OctData
 {
@@ -119,17 +101,8 @@ namespace OctData
 					return nullptr;
 
 				const CppFW::CVMatTree* compressMethodNode = imgCompressNode->getDirNodeOpt("compressMethod");
-				const CppFW::CVMatTree* imageHeightNode    = imgCompressNode->getDirNodeOpt("height");
-				const CppFW::CVMatTree* imageWidthNode     = imgCompressNode->getDirNodeOpt("width");
 
-				if(!compressMethodNode
-				&& !imageHeightNode
-				&& !imageWidthNode    )
-					return nullptr;
-
-				if(compressMethodNode->type() != CppFW::CVMatTree::Type::String
-				&& imageHeightNode   ->type() != CppFW::CVMatTree::Type::Mat
-				&& imageWidthNode    ->type() != CppFW::CVMatTree::Type::Mat  )
+				if(!compressMethodNode || compressMethodNode->type() != CppFW::CVMatTree::Type::String)
 					return nullptr;
 
 
@@ -139,8 +112,8 @@ namespace OctData
 					return nullptr;
 				}
 
-				int imageHeight = getCVMatScalar<uint32_t>(imageHeightNode, 0);
-				int imageWidth  = getCVMatScalar<uint32_t>(imageWidthNode , 0);
+				int imageHeight = CppFW::CVMatTreeExtra::getCvScalar(imgCompressNode, "height", uint32_t());
+				int imageWidth  = CppFW::CVMatTreeExtra::getCvScalar(imgCompressNode, "width" , uint32_t());
 				if(imageHeight == 0 || imageWidth == 0)
 					return nullptr;
 
@@ -216,6 +189,24 @@ namespace OctData
 						std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
 
 						bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
+					}
+				}
+
+
+				const CppFW::CVMatTree* bscanCoordNode = bscanNode->getDirNodeOpt("Coords");
+				if(bscanCoordNode)
+				{
+					const CppFW::CVMatTree* bscanCoordStartNode = bscanCoordNode->getDirNodeOpt("Start");
+					const CppFW::CVMatTree* bscanCoordEndNode   = bscanCoordNode->getDirNodeOpt("End");
+					if(bscanCoordStartNode)
+					{
+						bscanData.start = CoordSLOmm(CppFW::CVMatTreeExtra::getCvScalar(bscanCoordStartNode, double(), 0)
+						                           , CppFW::CVMatTreeExtra::getCvScalar(bscanCoordStartNode, double(), 1));
+					}
+					if(bscanCoordEndNode)
+					{
+						bscanData.end = CoordSLOmm(CppFW::CVMatTreeExtra::getCvScalar(bscanCoordEndNode, double(), 0)
+						                         , CppFW::CVMatTreeExtra::getCvScalar(bscanCoordEndNode, double(), 1));
 					}
 				}
 
@@ -352,7 +343,15 @@ namespace OctData
 					}
 				}
 			}
+		}
 
+
+		const CppFW::CVMatTree* sloNode = octtree.getDirNodeOpt("slo");
+		if(sloNode && sloNode->type() == CppFW::CVMatTree::Type::Mat)
+		{
+			SloImage* sloImage = new SloImage();
+			sloImage->setImage(sloNode->getMat());
+			series.takeSloImage(sloImage);
 		}
 
 
