@@ -134,12 +134,33 @@ namespace OctData
 
 				return &(seriesImgNode->getMat());
 			}
+
+			void setBScanCoords(BScan::Data& bscanData, const CppFW::CVMatTree* bscanNode)
+			{
+				const CppFW::CVMatTree* bscanCoordNode = bscanNode->getDirNodeOpt("Coords");
+				if(bscanCoordNode)
+				{
+					const CppFW::CVMatTree* bscanCoordStartNode = bscanCoordNode->getDirNodeOpt("Start");
+					const CppFW::CVMatTree* bscanCoordEndNode   = bscanCoordNode->getDirNodeOpt("End");
+					if(bscanCoordStartNode)
+					{
+						bscanData.start = CoordSLOmm(CppFW::CVMatTreeExtra::getCvScalar(bscanCoordStartNode, double(), 0)
+						                           , CppFW::CVMatTreeExtra::getCvScalar(bscanCoordStartNode, double(), 1));
+					}
+					if(bscanCoordEndNode)
+					{
+						bscanData.end = CoordSLOmm(CppFW::CVMatTreeExtra::getCvScalar(bscanCoordEndNode, double(), 0)
+						                         , CppFW::CVMatTreeExtra::getCvScalar(bscanCoordEndNode, double(), 1));
+					}
+				}
+			}
 		};
 
 		class OctDataImgGetter
 		{
 			const Series& refSeries;
 			std::size_t pos = 0;
+			const BScan* actBscan;
 
 		public:
 			OctDataImgGetter(const Series& refSeries) : refSeries(refSeries) {}
@@ -151,12 +172,23 @@ namespace OctData
 					BOOST_LOG_TRIVIAL(warning) << "to less BScans in refFile: " << pos << " / " << refSeries.bscanCount();
 					return nullptr;
 				}
-				const BScan* bscan = refSeries.getBScan(pos);
+				actBscan = refSeries.getBScan(pos);
 				++pos;
-				if(!bscan)
+				if(!actBscan)
 					return nullptr;
-				return &(bscan->getImage());
+				return &(actBscan->getImage());
 			}
+
+			void setBScanCoords(BScan::Data& bscanData, const CppFW::CVMatTree* /*bscanNode*/)
+			{
+				if(actBscan)
+				{
+					bscanData.start  = actBscan->getStart ();
+					bscanData.end    = actBscan->getEnd   ();
+					bscanData.center = actBscan->getCenter();
+				}
+			}
+
 		};
 
 		template<typename ImgGetter>
@@ -192,23 +224,7 @@ namespace OctData
 					}
 				}
 
-
-				const CppFW::CVMatTree* bscanCoordNode = bscanNode->getDirNodeOpt("Coords");
-				if(bscanCoordNode)
-				{
-					const CppFW::CVMatTree* bscanCoordStartNode = bscanCoordNode->getDirNodeOpt("Start");
-					const CppFW::CVMatTree* bscanCoordEndNode   = bscanCoordNode->getDirNodeOpt("End");
-					if(bscanCoordStartNode)
-					{
-						bscanData.start = CoordSLOmm(CppFW::CVMatTreeExtra::getCvScalar(bscanCoordStartNode, double(), 0)
-						                           , CppFW::CVMatTreeExtra::getCvScalar(bscanCoordStartNode, double(), 1));
-					}
-					if(bscanCoordEndNode)
-					{
-						bscanData.end = CoordSLOmm(CppFW::CVMatTreeExtra::getCvScalar(bscanCoordEndNode, double(), 0)
-						                         , CppFW::CVMatTreeExtra::getCvScalar(bscanCoordEndNode, double(), 1));
-					}
-				}
+				imgGetter.setBScanCoords(bscanData, bscanNode);
 
 				BScan* bscan = new BScan(*image, bscanData);
 				series.takeBScan(bscan);
@@ -296,6 +312,11 @@ namespace OctData
 		Study&   study  = pat  .getStudy  (studyId );
 		Series&  series = study.getSeries (seriesId);
 
+		series.setRefSeriesUID(CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "RefUID"));
+		series.setSeriesUID   (CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "UID"   ));
+		pat   .setId          (CppFW::CVMatTreeExtra::getStringOrEmpty(patDataNode   , "PatID" ));
+
+
 		bool fillStatus = false;
 
 		const CppFW::CVMatTree::NodeList& seriesList = seriesNode->getNodeList();
@@ -304,6 +325,16 @@ namespace OctData
 		const CppFW::CVMatTree* imgFileNameNode = octtree.getDirNodeOpt("imgFileName" );
 		if(imgFileNameNode)
 			internalImgData = (imgFileNameNode->type() != CppFW::CVMatTree::Type::String);
+
+		bool sloIsSet = false;
+		const CppFW::CVMatTree* sloNode = octtree.getDirNodeOpt("slo");
+		if(sloNode && sloNode->type() == CppFW::CVMatTree::Type::Mat)
+		{
+			SloImage* sloImage = new SloImage();
+			sloImage->setImage(sloNode->getMat());
+			series.takeSloImage(sloImage);
+			sloIsSet = true;
+		}
 
 
 		if(internalImgData || !op.loadRefFiles)
@@ -339,20 +370,19 @@ namespace OctData
 						{
 							OctDataImgGetter imgGetter(*refSeries);
 							fillStatus = fillSeries(seriesList, series, imgGetter, &callbackFillSeries);
+
+							if(!sloIsSet)
+							{
+								SloImage* sloImage = new SloImage();
+								sloImage->setImage(refSeries->getSloImage().getImage());
+								series.takeSloImage(sloImage);
+							}
 						}
 					}
 				}
 			}
 		}
 
-
-		const CppFW::CVMatTree* sloNode = octtree.getDirNodeOpt("slo");
-		if(sloNode && sloNode->type() == CppFW::CVMatTree::Type::Mat)
-		{
-			SloImage* sloImage = new SloImage();
-			sloImage->setImage(sloNode->getMat());
-			series.takeSloImage(sloImage);
-		}
 
 
 		if(fillStatus)
