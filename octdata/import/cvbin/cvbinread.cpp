@@ -220,7 +220,7 @@ namespace OctData
 						const double* p = convertedSegMat.ptr<double>(0);
 						std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
 
-						bscanData.segmentlines.at(static_cast<std::size_t>(BScan::SegmentlineType::ILM)) = segVec;
+						bscanData.getSegmentLine(Segmentationlines::SegmentlineType::ILM) = std::move(segVec);
 					}
 				}
 

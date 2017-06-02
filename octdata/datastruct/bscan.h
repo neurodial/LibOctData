@@ -4,6 +4,7 @@
 #include <array>
 #include "coordslo.h"
 #include "date.h"
+#include "segmentationlines.h"
 
 namespace cv { class Mat; }
 
@@ -22,9 +23,6 @@ namespace OctData
 	class Octdata_EXPORTS BScan
 	{
 	public:
-		enum class SegmentlineType{ ILM, NFL, I3T1, I4T1, I5T1, I6T1, I8T3, I14T1, I15T1, I16T1, BM, NR_OF_ELEMENTS };
-		typedef double SegmentlineDataType;
-		typedef std::vector<SegmentlineDataType> Segmentline;
 		struct Data
 		{
 			std::string filename;
@@ -43,10 +41,11 @@ namespace OctData
 			CoordSLOmm center;
 			bool clockwiseRotation = false;
 
-			static const std::size_t numSegmentlineType = static_cast<std::size_t>(SegmentlineType::NR_OF_ELEMENTS);
-			std::array<Segmentline, numSegmentlineType> segmentlines;
-
-			Segmentline& getSegmentLine(SegmentlineType i)  { return segmentlines.at(static_cast<std::size_t>(i)); }
+			Segmentationlines segmentationslines;
+			Segmentationlines::Segmentline& getSegmentLine(Segmentationlines::SegmentlineType i)
+			                                                              { return segmentationslines.getSegmentLine(i); }
+			const Segmentationlines::Segmentline& getSegmentLine(Segmentationlines::SegmentlineType i) const
+			                                                              { return segmentationslines.getSegmentLine(i); }
 		};
 
 		// BScan();
@@ -77,10 +76,9 @@ namespace OctData
 		      bool        getClockwiseRot() const                   { return data.clockwiseRotation      ; }
 
 
-		constexpr static std::size_t getNumSegmentLine()            { return Data::numSegmentlineType; }
-		const Segmentline& getSegmentLine(SegmentlineType i) const  { return data.segmentlines.at(static_cast<std::size_t>(i)); }
-
-//		void addSegLine(SegmentLine segLine)                        { seg.push_back(std::move(segLine)); }
+		constexpr static std::size_t getNumSegmentLine()            { return Segmentationlines::numSegmentlineType; }
+		const Segmentationlines::Segmentline& getSegmentLine(Segmentationlines::SegmentlineType i) const
+		                                                            { return data.getSegmentLine(i); }
 
 		int   getWidth()                    const;
 		int   getHeight()                   const;
@@ -89,7 +87,5 @@ namespace OctData
 		cv::Mat*                                image    = nullptr;
 		cv::Mat*                                rawImage = nullptr;
 		Data                                    data;
-
-//		std::vector<SegmentLine>        seg;
 	};
 }

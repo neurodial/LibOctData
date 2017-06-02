@@ -203,7 +203,7 @@ namespace OctData
 			series.takeSloImage(slo);
 		}
 
-		void addSegData(BScan::Data& bscanData, BScan::SegmentlineType segType, const E2E::BScan::SegmentationMap& e2eSegMap, int index, int type, const E2E::ImageRegistration* reg, std::size_t imagecols)
+		void addSegData(BScan::Data& bscanData, Segmentationlines::SegmentlineType segType, const E2E::BScan::SegmentationMap& e2eSegMap, int index, int type, const E2E::ImageRegistration* reg, std::size_t imagecols)
 		{
 			const E2E::BScan::SegmentationMap::const_iterator segPair = e2eSegMap.find(E2E::BScan::SegPair(index, type));
 			if(segPair != e2eSegMap.end())
@@ -211,9 +211,8 @@ namespace OctData
 				E2E::SegmentationData* segData = segPair->second;
 				if(segData)
 				{
-					typedef std::vector<double> SegDataVec;
 					std::size_t numSegData = segData->size();
-					SegDataVec segVec(numSegData);
+					Segmentationlines::Segmentline segVec(numSegData);
 					if(reg)
 					{
 						double shiftY = -reg->values[3];
@@ -222,7 +221,7 @@ namespace OctData
 						int    shiftXVec = static_cast<int>(std::round(shiftY));
 						double pos    = shiftXVec;
 
-						SegDataVec::iterator segVecBegin = segVec.begin();
+						Segmentationlines::Segmentline::iterator segVecBegin = segVec.begin();
 						E2E::SegmentationData::pointer segDataBegin = segData->begin();
 
 						std::size_t absShiftX = static_cast<std::size_t>(abs(shiftXVec));
@@ -241,7 +240,7 @@ namespace OctData
 					else
 						segVec.assign(segData->begin(), segData->end());
 
-					bscanData.segmentlines.at(static_cast<std::size_t>(segType)) = std::move(segVec);
+					bscanData.getSegmentLine(segType) = std::move(segVec);
 				}
 			}
 		}
@@ -375,18 +374,18 @@ namespace OctData
 
 			// segmenation lines
 			const E2E::BScan::SegmentationMap& e2eSegMap = e2eBScan.getSegmentationMap();
-			addSegData(bscanData, BScan::SegmentlineType::ILM, e2eSegMap, 0, 5, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::BM , e2eSegMap, 1, 2, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::NFL, e2eSegMap, 2, 7, reg, e2eImage.cols);
-			
-			addSegData(bscanData, BScan::SegmentlineType::I3T1 , e2eSegMap,  3, 1, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::I4T1 , e2eSegMap,  4, 1, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::I5T1 , e2eSegMap,  5, 1, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::I6T1 , e2eSegMap,  6, 1, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::I8T3 , e2eSegMap,  8, 3, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::I14T1, e2eSegMap, 14, 1, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::I15T1, e2eSegMap, 15, 1, reg, e2eImage.cols);
-			addSegData(bscanData, BScan::SegmentlineType::I16T1, e2eSegMap, 16, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::ILM  , e2eSegMap, 0, 5, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::BM   , e2eSegMap, 1, 2, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::NFL  , e2eSegMap, 2, 7, reg, e2eImage.cols);
+
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I3T1 , e2eSegMap,  3, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I4T1 , e2eSegMap,  4, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I5T1 , e2eSegMap,  5, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I6T1 , e2eSegMap,  6, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I8T3 , e2eSegMap,  8, 3, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I14T1, e2eSegMap, 14, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I15T1, e2eSegMap, 15, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::I16T1, e2eSegMap, 16, 1, reg, e2eImage.cols);
 
 			cv::Mat bscanImageConv;
 			if(e2eImage.type() == cv::DataType<float>::type)

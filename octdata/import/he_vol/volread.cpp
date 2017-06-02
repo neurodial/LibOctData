@@ -379,19 +379,19 @@ namespace OctData
 			// fseek( fid, 256+2048+(header.SizeXSlo*header.SizeYSlo)+(ii*(header.BScanHdrSize+header.SizeX*header.SizeZ*4)), -1 );
 
 
-			constexpr const BScan::SegmentlineType seglines[] =
+			constexpr const Segmentationlines::SegmentlineType seglines[] =
 			{
-				BScan::SegmentlineType::ILM  ,
-				BScan::SegmentlineType::BM   ,
-				BScan::SegmentlineType::NFL  ,
-				BScan::SegmentlineType::I3T1 , // TODO: check order
-				BScan::SegmentlineType::I4T1 ,
-				BScan::SegmentlineType::I5T1 ,
-				BScan::SegmentlineType::I6T1 ,
-				BScan::SegmentlineType::I8T3 ,
-				BScan::SegmentlineType::I14T1,
-				BScan::SegmentlineType::I15T1,
-				BScan::SegmentlineType::I16T1
+				Segmentationlines::SegmentlineType::ILM  ,
+				Segmentationlines::SegmentlineType::BM   ,
+				Segmentationlines::SegmentlineType::NFL  ,
+				Segmentationlines::SegmentlineType::I3T1 , // TODO: check order
+				Segmentationlines::SegmentlineType::I4T1 ,
+				Segmentationlines::SegmentlineType::I5T1 ,
+				Segmentationlines::SegmentlineType::I6T1 ,
+				Segmentationlines::SegmentlineType::I8T3 ,
+				Segmentationlines::SegmentlineType::I14T1,
+				Segmentationlines::SegmentlineType::I15T1,
+				Segmentationlines::SegmentlineType::I16T1
 			};
 
 			// TODO
@@ -401,14 +401,14 @@ namespace OctData
 				if(segNum < static_cast<int>(sizeof(seglines)/sizeof(seglines[0])))
 				{
 					float value;
-					std::vector<double> segVec;
+					Segmentationlines::Segmentline segVec;
 					segVec.reserve(volHeader.data.sizeX);
 					for(std::size_t xpos = 0; xpos<volHeader.data.sizeX; ++xpos)
 					{
 						stream.read(reinterpret_cast<char*>(&value), sizeof(value));
 						segVec.push_back(value);
 					}
-					bscanData.segmentlines.at(static_cast<std::size_t>(seglines[segNum])) = segVec;
+					bscanData.getSegmentLine(seglines[segNum]) = std::move(segVec);
 				}
 			}
 

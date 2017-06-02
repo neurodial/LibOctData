@@ -226,28 +226,19 @@ namespace
 		const uint32_t frames = readFStream<uint32_t>(stream);
 		const uint32_t size   = readFStream<uint32_t>(stream);
 
-		OctData::BScan::SegmentlineType lineType = OctData::BScan::SegmentlineType::I16T1;
+		OctData::Segmentationlines::SegmentlineType lineType = OctData::Segmentationlines::SegmentlineType::I16T1;
 
 
 // 		enum class SegmentlineType{ ILM, NFL, I3T1, I4T1, I5T1, I6T1, I8T3, I14T1, I15T1, I16T1, BM, NR_OF_ELEMENTS };
-		if(cmpString("MULTILAYERS_1", id))
-			lineType = OctData::BScan::SegmentlineType::ILM;
-		else if(cmpString("MULTILAYERS_2", id))
-			lineType = OctData::BScan::SegmentlineType::NFL;
-		else if(cmpString("MULTILAYERS_3", id))
-			lineType = OctData::BScan::SegmentlineType::I3T1;
-		else if(cmpString("MULTILAYERS_4", id))
-			lineType = OctData::BScan::SegmentlineType::I4T1;
-		else if(cmpString("MULTILAYERS_5", id))
-			lineType = OctData::BScan::SegmentlineType::I5T1;
-		else if(cmpString("MULTILAYERS_6", id))
-			lineType = OctData::BScan::SegmentlineType::I6T1;
-		else if(cmpString("MULTILAYERS_7", id))
-			lineType = OctData::BScan::SegmentlineType::I8T3;
-		else if(cmpString("MULTILAYERS_8", id))
-			lineType = OctData::BScan::SegmentlineType::I14T1;
-		else if(cmpString("MULTILAYERS_9", id))
-			lineType = OctData::BScan::SegmentlineType::BM;
+		     if(cmpString("MULTILAYERS_1", id)) lineType = OctData::Segmentationlines::SegmentlineType::ILM;
+		else if(cmpString("MULTILAYERS_2", id)) lineType = OctData::Segmentationlines::SegmentlineType::NFL;
+		else if(cmpString("MULTILAYERS_3", id)) lineType = OctData::Segmentationlines::SegmentlineType::I3T1;
+		else if(cmpString("MULTILAYERS_4", id)) lineType = OctData::Segmentationlines::SegmentlineType::I4T1;
+		else if(cmpString("MULTILAYERS_5", id)) lineType = OctData::Segmentationlines::SegmentlineType::I5T1;
+		else if(cmpString("MULTILAYERS_6", id)) lineType = OctData::Segmentationlines::SegmentlineType::I6T1;
+		else if(cmpString("MULTILAYERS_7", id)) lineType = OctData::Segmentationlines::SegmentlineType::I8T3;
+		else if(cmpString("MULTILAYERS_8", id)) lineType = OctData::Segmentationlines::SegmentlineType::I14T1;
+		else if(cmpString("MULTILAYERS_9", id)) lineType = OctData::Segmentationlines::SegmentlineType::BM;
 		else
 		{
 			BOOST_LOG_TRIVIAL(error) << "unhandled id: " << id    ;
@@ -271,14 +262,14 @@ namespace
 					BScanPair& bscanPair = list.at(actFrame);
 					int imgHeight = bscanPair.image.rows;
 
-					OctData::BScan::Segmentline line;
+					OctData::Segmentationlines::Segmentline line;
 					readFStream(stream, tmpVec, width);
 					for(uint32_t ascan = 0; ascan < width; ++ascan)
 					{
 // 						std::cout << tmpVec[ascan] << std::endl;
-						line.push_back(imgHeight - static_cast<OctData::BScan::SegmentlineDataType>(tmpVec[ascan]));
+						line.push_back(imgHeight - static_cast<OctData::Segmentationlines::SegmentlineDataType>(tmpVec[ascan]));
 					}
-					bscanPair.data.getSegmentLine(lineType) = line;
+					bscanPair.data.getSegmentLine(lineType) = std::move(line);
 				}
 			}
 			delete[] tmpVec;
