@@ -16,6 +16,7 @@ namespace OctData
 	// GCL IPL INL OPL ELM PR1 PR2 RPE BM
 	class Octdata_EXPORTS  Segmentationlines
 	{
+		static const std::size_t numSegmentlineType = 11;
 	public:
 		enum class SegmentlineType
 		{
@@ -31,7 +32,6 @@ namespace OctData
 			I16T1,
 			BM
 		};
-		static const SegmentlineType segmentlineTypes[11];
 
 		typedef double SegmentlineDataType;
 		typedef std::vector<SegmentlineDataType> Segmentline;
@@ -41,8 +41,10 @@ namespace OctData
 
 		static const char* getSegmentlineName(SegmentlineType type);
 
-		static const std::size_t numSegmentlineType = sizeof(segmentlineTypes)/sizeof(segmentlineTypes[0]);
+		constexpr static const std::array<SegmentlineType, numSegmentlineType>& getSegmentlineTypes()
+		                                                               { return segmentlineTypes; }
 	private:
+		static const std::array<SegmentlineType, numSegmentlineType> segmentlineTypes;
 		std::array<Segmentline, numSegmentlineType> segmentlines;
 
 	};

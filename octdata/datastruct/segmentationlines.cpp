@@ -3,7 +3,7 @@
 namespace OctData
 {
 
-const Segmentationlines::SegmentlineType Segmentationlines::segmentlineTypes[11] =
+const std::array<Segmentationlines::SegmentlineType, Segmentationlines::numSegmentlineType> Segmentationlines::segmentlineTypes =
 {
 	SegmentlineType::ILM,
 	SegmentlineType::NFL,

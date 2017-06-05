@@ -76,7 +76,7 @@ namespace OctData
 		      bool        getClockwiseRot() const                   { return data.clockwiseRotation      ; }
 
 
-		constexpr static std::size_t getNumSegmentLine()            { return Segmentationlines::numSegmentlineType; }
+		constexpr static std::size_t getNumSegmentLine()            { return Segmentationlines::getSegmentlineTypes().size(); }
 		const Segmentationlines::Segmentline& getSegmentLine(Segmentationlines::SegmentlineType i) const
 		                                                            { return data.getSegmentLine(i); }
 
