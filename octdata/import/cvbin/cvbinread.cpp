@@ -332,6 +332,8 @@ namespace OctData
 		{
 			SloImage* sloImage = new SloImage();
 			sloImage->setImage(sloNode->getMat());
+			sloImage->setScaleFactor(ScaleFactor(CppFW::CVMatTreeExtra::getCvScalar<double>(seriesDataNode, "SloScale", 1.0, 0)
+			                                   , CppFW::CVMatTreeExtra::getCvScalar<double>(seriesDataNode, "SloScale", 1.0, 1)));
 			series.takeSloImage(sloImage);
 			sloIsSet = true;
 		}
@@ -375,6 +377,7 @@ namespace OctData
 							{
 								SloImage* sloImage = new SloImage();
 								sloImage->setImage(refSeries->getSloImage().getImage());
+								sloImage->setScaleFactor(refSeries->getSloImage().getScaleFactor());
 								series.takeSloImage(sloImage);
 							}
 						}

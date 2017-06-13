@@ -21,7 +21,10 @@ namespace OctData
 
 		ScaleFactor  operator* (double factor) const                { return ScaleFactor(x*factor, y*factor); }
 		ScaleFactor& operator*=(double factor)                      { x *= factor; y *= factor; return *this; }
+
+		void print(std::ostream& stream) const                      { stream << "(" << x << " | " << y << ")"; }
 	};
+	inline std::ostream& operator<<(std::ostream& stream, const ScaleFactor& obj) { obj.print(stream); return stream; }
 
 	class CoordSLOpx
 	{
