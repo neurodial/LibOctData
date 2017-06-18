@@ -80,6 +80,8 @@ namespace OctData
 		const Segmentationlines::Segmentline& getSegmentLine(Segmentationlines::SegmentlineType i) const
 		                                                            { return data.getSegmentLine(i); }
 
+		const Segmentationlines& getSegmentLines() const            { return data.segmentationslines; }
+
 		int   getWidth()                    const;
 		int   getHeight()                   const;
 
