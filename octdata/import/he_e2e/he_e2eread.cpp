@@ -374,18 +374,18 @@ namespace OctData
 
 			// segmenation lines
 			const E2E::BScan::SegmentationMap& e2eSegMap = e2eBScan.getSegmentationMap();
-			addSegData(bscanData, Segmentationlines::SegmentlineType::ILM  , e2eSegMap, 0, 5, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::BM   , e2eSegMap, 1, 2, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::NFL  , e2eSegMap, 2, 7, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::ILM , e2eSegMap,  0, 5, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::BM  , e2eSegMap,  1, 2, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::RNFL, e2eSegMap,  2, 7, reg, e2eImage.cols);
 
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I3T1 , e2eSegMap,  3, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I4T1 , e2eSegMap,  4, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I5T1 , e2eSegMap,  5, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I6T1 , e2eSegMap,  6, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I8T3 , e2eSegMap,  8, 3, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I14T1, e2eSegMap, 14, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I15T1, e2eSegMap, 15, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::I16T1, e2eSegMap, 16, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::GCL , e2eSegMap,  3, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::IPL , e2eSegMap,  4, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::INL , e2eSegMap,  5, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::OPL , e2eSegMap,  6, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::ELM , e2eSegMap,  8, 3, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::PR1 , e2eSegMap, 14, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::PR2 , e2eSegMap, 15, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::RPE , e2eSegMap, 16, 1, reg, e2eImage.cols);
 
 			cv::Mat bscanImageConv;
 			if(e2eImage.type() == cv::DataType<float>::type)

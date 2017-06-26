@@ -382,17 +382,17 @@ namespace OctData
 
 			constexpr const Segmentationlines::SegmentlineType seglines[] =
 			{
-				Segmentationlines::SegmentlineType::ILM  ,
-				Segmentationlines::SegmentlineType::BM   ,
-				Segmentationlines::SegmentlineType::NFL  ,
-				Segmentationlines::SegmentlineType::I3T1 , // TODO: check order
-				Segmentationlines::SegmentlineType::I4T1 ,
-				Segmentationlines::SegmentlineType::I5T1 ,
-				Segmentationlines::SegmentlineType::I6T1 ,
-				Segmentationlines::SegmentlineType::I8T3 ,
-				Segmentationlines::SegmentlineType::I14T1,
-				Segmentationlines::SegmentlineType::I15T1,
-				Segmentationlines::SegmentlineType::I16T1
+				Segmentationlines::SegmentlineType::ILM ,
+				Segmentationlines::SegmentlineType::BM  ,
+				Segmentationlines::SegmentlineType::RNFL,
+				Segmentationlines::SegmentlineType::GCL , // TODO: check order
+				Segmentationlines::SegmentlineType::IPL ,
+				Segmentationlines::SegmentlineType::INL ,
+				Segmentationlines::SegmentlineType::OPL ,
+				Segmentationlines::SegmentlineType::ELM ,
+				Segmentationlines::SegmentlineType::PR1 ,
+				Segmentationlines::SegmentlineType::PR2 ,
+				Segmentationlines::SegmentlineType::RPE
 			};
 
 			// TODO

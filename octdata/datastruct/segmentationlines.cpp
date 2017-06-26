@@ -5,17 +5,20 @@ namespace OctData
 
 const std::array<Segmentationlines::SegmentlineType, Segmentationlines::numSegmentlineType> Segmentationlines::segmentlineTypes =
 {
-	SegmentlineType::ILM,
-	SegmentlineType::NFL,
-	SegmentlineType::I3T1,
-	SegmentlineType::I4T1,
-	SegmentlineType::I5T1,
-	SegmentlineType::I6T1,
-	SegmentlineType::I8T3,
-	SegmentlineType::I14T1,
-	SegmentlineType::I15T1,
-	SegmentlineType::I16T1,
-	SegmentlineType::BM
+	{
+		SegmentlineType::ILM ,
+		SegmentlineType::RNFL,
+		SegmentlineType::GCL ,
+		SegmentlineType::IPL ,
+		SegmentlineType::INL ,
+		SegmentlineType::OPL ,
+		SegmentlineType::ELM ,
+		SegmentlineType::PR1 ,
+		SegmentlineType::PR2 ,
+		SegmentlineType::RPE ,
+		SegmentlineType::BM  ,
+		SegmentlineType::CHO
+	}
 };
 
 // ILM, NFL, I3T1, I4T1, I5T1, I6T1, I8T3, I14T1, I15T1, I16T1, BM, NR_OF_ELEMENTS
@@ -24,28 +27,18 @@ const char* Segmentationlines::getSegmentlineName(OctData::Segmentationlines::Se
 {
 	switch(type)
 	{
-		case SegmentlineType::ILM:
-			return "ILM";
-		case SegmentlineType::NFL:
-			return "NFL";
-		case SegmentlineType::I3T1:
-			return "I3T1";
-		case SegmentlineType::I4T1:
-			return "I4T1";
-		case SegmentlineType::I5T1:
-			return "I5T1";
-		case SegmentlineType::I6T1:
-			return "I6T1";
-		case SegmentlineType::I8T3:
-			return "I8T3";
-		case SegmentlineType::I14T1:
-			return "I14T1";
-		case SegmentlineType::I15T1:
-			return "I15T1";
-		case SegmentlineType::I16T1:
-			return "I16T1";
-		case SegmentlineType::BM:
-			return "BM";
+		case SegmentlineType::ILM : return "ILM" ;
+		case SegmentlineType::RNFL: return "RNFL";
+		case SegmentlineType::GCL : return "GCL" ;
+		case SegmentlineType::IPL : return "IPL" ;
+		case SegmentlineType::INL : return "INL" ;
+		case SegmentlineType::OPL : return "OPL" ;
+		case SegmentlineType::ELM : return "ELM" ;
+		case SegmentlineType::PR1 : return "PR1" ;
+		case SegmentlineType::PR2 : return "PR2" ;
+		case SegmentlineType::RPE : return "RPE" ;
+		case SegmentlineType::BM  : return "BM"  ;
+		case SegmentlineType::CHO : return "CHO" ;
 	}
 	return "invalid type";
 }

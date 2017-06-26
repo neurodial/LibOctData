@@ -226,18 +226,18 @@ namespace
 		const uint32_t frames = readFStream<uint32_t>(stream);
 		const uint32_t size   = readFStream<uint32_t>(stream);
 
-		OctData::Segmentationlines::SegmentlineType lineType = OctData::Segmentationlines::SegmentlineType::I16T1;
+		OctData::Segmentationlines::SegmentlineType lineType = OctData::Segmentationlines::SegmentlineType::RPE;
 
 
 // 		enum class SegmentlineType{ ILM, NFL, I3T1, I4T1, I5T1, I6T1, I8T3, I14T1, I15T1, I16T1, BM, NR_OF_ELEMENTS };
 		     if(cmpString("MULTILAYERS_1", id)) lineType = OctData::Segmentationlines::SegmentlineType::ILM;
-		else if(cmpString("MULTILAYERS_2", id)) lineType = OctData::Segmentationlines::SegmentlineType::NFL;
-		else if(cmpString("MULTILAYERS_3", id)) lineType = OctData::Segmentationlines::SegmentlineType::I3T1;
-		else if(cmpString("MULTILAYERS_4", id)) lineType = OctData::Segmentationlines::SegmentlineType::I4T1;
-		else if(cmpString("MULTILAYERS_5", id)) lineType = OctData::Segmentationlines::SegmentlineType::I5T1;
-		else if(cmpString("MULTILAYERS_6", id)) lineType = OctData::Segmentationlines::SegmentlineType::I6T1;
-		else if(cmpString("MULTILAYERS_7", id)) lineType = OctData::Segmentationlines::SegmentlineType::I8T3;
-		else if(cmpString("MULTILAYERS_8", id)) lineType = OctData::Segmentationlines::SegmentlineType::I14T1;
+		else if(cmpString("MULTILAYERS_2", id)) lineType = OctData::Segmentationlines::SegmentlineType::RNFL;
+		else if(cmpString("MULTILAYERS_3", id)) lineType = OctData::Segmentationlines::SegmentlineType::GCL;
+		else if(cmpString("MULTILAYERS_4", id)) lineType = OctData::Segmentationlines::SegmentlineType::IPL;
+		else if(cmpString("MULTILAYERS_5", id)) lineType = OctData::Segmentationlines::SegmentlineType::INL;
+		else if(cmpString("MULTILAYERS_6", id)) lineType = OctData::Segmentationlines::SegmentlineType::OPL;
+		else if(cmpString("MULTILAYERS_7", id)) lineType = OctData::Segmentationlines::SegmentlineType::ELM;
+		else if(cmpString("MULTILAYERS_8", id)) lineType = OctData::Segmentationlines::SegmentlineType::PR1;
 		else if(cmpString("MULTILAYERS_9", id)) lineType = OctData::Segmentationlines::SegmentlineType::BM;
 		else
 		{

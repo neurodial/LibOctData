@@ -16,21 +16,22 @@ namespace OctData
 	// GCL IPL INL OPL ELM PR1 PR2 RPE BM
 	class Octdata_EXPORTS  Segmentationlines
 	{
-		static const std::size_t numSegmentlineType = 11;
+		static const std::size_t numSegmentlineType = 12;
 	public:
 		enum class SegmentlineType
 		{
-			ILM,
-			NFL,
-			I3T1,
-			I4T1,
-			I5T1,
-			I6T1,
-			I8T3,
-			I14T1,
-			I15T1,
-			I16T1,
-			BM
+			ILM ,
+			RNFL,
+			GCL ,
+			IPL ,
+			INL ,
+			OPL ,
+			ELM ,
+			PR1 ,
+			PR2 ,
+			RPE ,
+			BM  ,
+			CHO
 		};
 
 		typedef double SegmentlineDataType;
