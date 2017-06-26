@@ -10,17 +10,20 @@ namespace OctData
 	{
 		double x;
 		double y;
+		double z = 0;
 
 	public:
-		ScaleFactor(double x, double y) : x(x), y(y)                {}
+		ScaleFactor(double x, double y, double z = 0) : x(x), y(y), z(z)
+		                                                            {}
 		explicit ScaleFactor(double factor) : x(factor), y(factor)  {}
 		ScaleFactor() : x(1), y(1)                                  {}
 
 		double getX() const                                         { return x; }
 		double getY() const                                         { return y; }
+		double getZ() const                                         { return z; }
 
-		ScaleFactor  operator* (double factor) const                { return ScaleFactor(x*factor, y*factor); }
-		ScaleFactor& operator*=(double factor)                      { x *= factor; y *= factor; return *this; }
+		ScaleFactor  operator* (double factor) const                { return ScaleFactor(x*factor, y*factor, z*factor); }
+		ScaleFactor& operator*=(double factor)                      { x *= factor; y *= factor; z*= factor; return *this; }
 
 		void print(std::ostream& stream) const                      { stream << "(" << x << " | " << y << ")"; }
 	};

@@ -373,7 +373,8 @@ namespace OctData
 			else
 				bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
 
-			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleZ, volHeader.data.scaleX);
+// 			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleZ, volHeader.data.scaleX);
+			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleX, volHeader.data.distance, volHeader.data.scaleZ);
 
 			bscanData.imageQuality = bscanHeader.data.quality;
 			// fseek( fid, 256+2048+(header.SizeXSlo*header.SizeYSlo)+(ii*(header.BScanHdrSize+header.SizeX*header.SizeZ*4)), -1 );
