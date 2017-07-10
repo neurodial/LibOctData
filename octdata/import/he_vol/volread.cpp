@@ -328,7 +328,8 @@ namespace OctData
 		slo->setScaleFactor(ScaleFactor(volHeader.data.scaleXSlo, volHeader.data.scaleYSlo));
 		series.takeSloImage(slo);
 
-		const std::size_t numBScans = volHeader.data.numBScans;
+
+		const std::size_t numBScans = op.readBScans?volHeader.data.numBScans:1;
 		// Read BScann
 		for(std::size_t numBscan = 0; numBscan<numBScans; ++numBscan)
 		{

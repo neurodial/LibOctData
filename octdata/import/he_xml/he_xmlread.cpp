@@ -17,6 +17,7 @@
 #include <boost/filesystem.hpp>
 
 #include "../platform_helper.h"
+#include <filereadoptions.h>
 #include <cpp_framework/callback.h>
 
 #include <opencv2/opencv.hpp>
@@ -222,7 +223,7 @@ namespace OctData
 		static HeXmlRead instance; return &instance;
 	}
 
-	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
+	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 		if(file.extension() != ".xml")
 			return false;
@@ -334,7 +335,7 @@ namespace OctData
 					fillSeriesLocalizer(imageNode.second, series);
 				}
 
-				if(typeStr == "OCT")
+				if(typeStr == "OCT" && op.readBScans)
 					fillBScann(imageNode.second, studyNode, series, xmlPath);
 
 

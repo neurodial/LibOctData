@@ -15,6 +15,8 @@ namespace OctData
 
 		bool loadRefFiles        = true;
 
+		bool readBScans          = true;
+
 		E2eGrayTransform e2eGray = E2eGrayTransform::xml;
 	};
 }
