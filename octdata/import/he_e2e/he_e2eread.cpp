@@ -471,6 +471,7 @@ namespace OctData
 		}
 
 		E2E::E2EData e2eData;
+		e2eData.options.readBScanImages = op.readBScans;
 		e2eData.readE2EFile(file.generic_string(), &loadCallback);
 
 		const E2E::DataRoot& e2eRoot = e2eData.getDataRoot();

@@ -36,16 +36,16 @@ namespace OctData
 
 		typedef double SegmentlineDataType;
 		typedef std::vector<SegmentlineDataType> Segmentline;
+		typedef std::array<SegmentlineType, numSegmentlineType> SegLinesTypeList;
 
 		      Segmentline& getSegmentLine(SegmentlineType i)           { return segmentlines.at(static_cast<std::size_t>(i)); }
 		const Segmentline& getSegmentLine(SegmentlineType i)     const { return segmentlines.at(static_cast<std::size_t>(i)); }
 
 		static const char* getSegmentlineName(SegmentlineType type);
 
-		constexpr static const std::array<SegmentlineType, numSegmentlineType>& getSegmentlineTypes()
-		                                                               { return segmentlineTypes; }
+		constexpr static const SegLinesTypeList& getSegmentlineTypes() { return segmentlineTypes; }
 	private:
-		static const std::array<SegmentlineType, numSegmentlineType> segmentlineTypes;
+		static const SegLinesTypeList segmentlineTypes;
 		std::array<Segmentline, numSegmentlineType> segmentlines;
 
 	};
