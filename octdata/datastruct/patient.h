@@ -34,6 +34,8 @@ namespace OctData
 
 		const std::string& getPatientUID() const                 { return uid; }
 		void setPatientUID(const std::string& id)                { uid = id  ; }
+		const std::string& getAncestry() const                   { return ancestry; }
+		void setAncestry (const std::string& v)                  { ancestry  = v ; }
 
 		      Study& getStudy(int seriesId)                      { return getAndInsert(seriesId)         ; }
 		const Study& getStudy(int seriesId) const                { return *(substructureMap.at(seriesId)); }
@@ -47,6 +49,7 @@ namespace OctData
 		std::string title   ;
 		std::string id      ;
 		std::string uid     ;
+		std::string ancestry;
 
 		std::u16string diagnose;
 

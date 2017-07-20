@@ -8,6 +8,7 @@ namespace OctData
 	class Study : public SubstructureTemplate<Series>
 	{
 		std::string studyUID     ;
+		std::string studyName    ;
 		std::string studyOperator;
 		Date        studyDate    ;
 
@@ -21,6 +22,10 @@ namespace OctData
 
 		const std::string& getStudyUID() const                    { return studyUID; }
 		void setStudyUID(const std::string& uid)                  { studyUID = uid;  }
+
+
+		const std::string& getStudyName() const                   { return studyName; }
+		void setStudyName(const std::string& name)                { studyName = name;  }
 		
 		
 		const std::string& getStudyOperator() const               { return studyOperator; }

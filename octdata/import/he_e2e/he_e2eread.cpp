@@ -83,10 +83,17 @@ namespace OctData
 			const E2E::TextElement16* e2eDiagnose = e2ePat.getDiagnose();
 			if(e2eDiagnose)
 				pat.setDiagnose(e2eDiagnose->getText());
+
+
+			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+			E2E::StringListElement* ancestry = e2ePat.getAncestry();
+			if(ancestry && ancestry->size() > 0)
+				pat.setAncestry(converter.to_bytes(ancestry->getString(0)));
 		}
 		
 		void copyStudyData(Study& study, const E2E::Study& e2eStudy)
 		{
+			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
 			if(e2eStudy.getStudyUID())
 				study.setStudyUID(e2eStudy.getStudyUID()->getText());
 			
@@ -96,6 +103,10 @@ namespace OctData
 				study.setStudyDate(Date::fromWindowsTimeFormat(e2eStudyData->getWindowsStudyDate()));
 				study.setStudyOperator(loc::conv::to_utf<char>(e2eStudyData->getOperator(), "ISO-8859-15"));
 			}
+
+			E2E::StringListElement* e2eStudyName = e2eStudy.getStudyName();
+			if(e2eStudyName && e2eStudyName->size() > 0)
+				study.setStudyName(converter.to_bytes(e2eStudyName->getString(0)));
 		}
 		
 		void copySeriesData(Series& series, const E2E::Series& e2eSeries)
