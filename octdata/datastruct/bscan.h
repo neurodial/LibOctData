@@ -29,8 +29,9 @@ namespace OctData
 
 			ScaleFactor scaleFactor;
 
-			int    numAverage              = 0 ;
-			double imageQuality            = 0 ;
+			int    numAverage              = 0;
+			double imageQuality            = 0;
+			double scanAngle               = 0;
 			Date   acquisitionTime;
 /*
 			bool   positionWithinTolerance     ;
@@ -64,6 +65,7 @@ namespace OctData
 
 		int    getNumAverage()              const                   { return data.numAverage             ; }
 		double getImageQuality()            const                   { return data.imageQuality           ; }
+		double getScanAngle   ()            const                   { return data.scanAngle              ; }
 		Date   getAcquisitionTime()         const                   { return data.acquisitionTime        ; }
 
 // 		bool   getPositionWithinTolerance() const                   { return data.positionWithinTolerance; }

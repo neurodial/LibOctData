@@ -34,12 +34,16 @@ namespace OctData
 
 		Octdata_EXPORTS static bool isLoadable(const std::string& filename);
 
+		Octdata_EXPORTS static void writeFile(const std::string& filename, const OCT& octdata);
+
 	private:
 		OctFileRead();
 		~OctFileRead();
 
 		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
 		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback);
+
+		void writeFilePrivat(const std::string& filename, const OCT& octdata);
 
 		ExtensionsList extensions;
 

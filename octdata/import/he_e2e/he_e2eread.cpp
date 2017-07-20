@@ -46,6 +46,10 @@ namespace OctData
 
 	namespace
 	{
+		constexpr const double factorAngle2mm = 4.4/15.; // TODO 15 grad = 4.4mm => 1grad = 0.29333333
+
+		inline double pow2(double v) { return v*v; }
+
 		Patient::Sex convertSex(E2E::PatientDataElement::Sex e2eSex)
 		{
 			switch(e2eSex)
@@ -194,12 +198,16 @@ namespace OctData
 			}
 
 			if(!imageIsSet)
-			{
 				slo->setImage(e2eSloImage);
-			}
 
-			slo->setShift(CoordSLOpx(static_cast<double>(e2eSlo->getImageRows())/2.,
-			                         static_cast<double>(e2eSlo->getImageCols())/2.));
+			double sizeX = static_cast<double>(e2eSlo->getImageCols());
+			double sizeY = static_cast<double>(e2eSlo->getImageRows());
+
+			double sloScanAngle = 30; // TODO
+			double factor = factorAngle2mm*sloScanAngle;
+			slo->setScaleFactor(ScaleFactor(factor/sizeX, factor/sizeY));
+			slo->setShift(CoordSLOpx(sizeX/2.,
+			                         sizeY/2.));
 			series.takeSloImage(slo);
 		}
 
@@ -352,9 +360,9 @@ namespace OctData
 			const E2E::BScanMetaDataElement* e2eMeta = e2eBScan.getBScanMetaDataElement();
 			if(e2eMeta)
 			{
-				uint32_t factor = 30; // TODO
-				bscanData.start = CoordSLOmm(e2eMeta->getX1()*factor, e2eMeta->getY1()*factor);
-				bscanData.end   = CoordSLOmm(e2eMeta->getX2()*factor, e2eMeta->getY2()*factor);
+				double scanLengthAngle;
+				bscanData.start = CoordSLOmm(e2eMeta->getX1()*factorAngle2mm, e2eMeta->getY1()*factorAngle2mm);
+				bscanData.end   = CoordSLOmm(e2eMeta->getX2()*factorAngle2mm, e2eMeta->getY2()*factorAngle2mm);
 
 				bscanData.numAverage      = e2eMeta->getNumAve();
 				bscanData.imageQuality    = e2eMeta->getImageQuality();
@@ -362,9 +370,19 @@ namespace OctData
 
 				if(e2eMeta->getScanType() == E2E::BScanMetaDataElement::ScanType::Circle)
 				{
+					double scanAngle            = sqrt(pow2(e2eMeta->getX1()-e2eMeta->getCenterX()) + pow2(e2eMeta->getY1()-e2eMeta->getCenterY()))*2.;
+					scanLengthAngle             = scanAngle*M_PI;
+					bscanData.scanAngle         = scanAngle;
 					bscanData.clockwiseRotation = series.getLaterality() == OctData::Series::Laterality::OD; // TODO: inoperable because not read Laterality from e2e
-					bscanData.center            = CoordSLOmm(e2eMeta->getCenterX()*factor, e2eMeta->getCenterY()*factor);
+					bscanData.center            = CoordSLOmm(e2eMeta->getCenterX()*factorAngle2mm, e2eMeta->getCenterY()*factorAngle2mm);
 				}
+				else
+				{
+					scanLengthAngle = sqrt(pow2(e2eMeta->getX1()-e2eMeta->getX2()) + pow2(e2eMeta->getY1()-e2eMeta->getY2()));
+					bscanData.scanAngle   = scanLengthAngle;
+
+				}
+				bscanData.scaleFactor = ScaleFactor(scanLengthAngle*factorAngle2mm/static_cast<double>(e2eImage.cols), 0, e2eMeta->getScaleY());
 			}
 
 
@@ -482,7 +500,7 @@ namespace OctData
 		// load extra Data from patient file (pdb) and study file (edb)
 		if(file.extension() == ".sdb")
 		{
-			BOOST_LOG_TRIVIAL(trace) << "Try to load extra files";
+			BOOST_LOG_TRIVIAL(debug) << "Try to load extra files";
 			for(const E2E::DataRoot::SubstructurePair& e2ePatPair : e2eRoot)
 			{
 				const std::size_t bufferSize = 100;

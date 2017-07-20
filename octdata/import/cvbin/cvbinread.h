@@ -11,7 +11,7 @@ namespace OctData
 	public:
 		static CvBinRead* getInstance();
 
-	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
 	};
 }
 

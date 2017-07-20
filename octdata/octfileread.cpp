@@ -3,6 +3,7 @@
 #include <datastruct/oct.h>
 #include "import/octfilereader.h"
 #include "filereadoptions.h"
+#include<export/cvbin/cvbinoctwrite.h>
 
 #include "buildconstants.h"
 
@@ -94,6 +95,15 @@ namespace OctData
 	}
 
 
+	void OctFileRead::writeFile(const std::string& filename, const OCT& octdata)
+	{
+		getInstance().writeFilePrivat(filename, octdata);
+	}
+
+	void OctFileRead::writeFilePrivat(const std::string& filename, const OCT& octdata)
+	{
+		CvBinOctWrite::writeFile(filename, octdata);
+	}
 
 }
 
