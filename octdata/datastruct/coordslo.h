@@ -5,6 +5,7 @@
 
 namespace OctData
 {
+	class CoordSLOmm;
 
 	class ScaleFactor
 	{
@@ -55,6 +56,8 @@ namespace OctData
 		double abs(const CoordSLOpx& o) const                       { return std::sqrt((x-o.x)*(x-o.x) + (y-o.y)*(y-o.y)); }
 
 		void print(std::ostream& stream) const                      { stream << "(" << x << " | " << y << ")"; }
+
+		CoordSLOmm operator/(const ScaleFactor& factor) const;
 	};
 
 	inline std::ostream& operator<<(std::ostream& stream, const CoordSLOpx& obj) { obj.print(stream); return stream; }
@@ -104,4 +107,7 @@ namespace OctData
 		CoordSLOpx operator*(const CoordSLOpx& px) const            { return CoordSLOpx(a11*px.getXf() + a12*px.getYf() + b1, a21*px.getXf() + a22*px.getYf() + b2); }
 	};
 
+
+
+	inline CoordSLOmm CoordSLOpx::operator/(const ScaleFactor& factor) const { return CoordSLOmm(x*factor.getX(), y*factor.getY()); }
 }

@@ -26,6 +26,16 @@ namespace bfs = boost::filesystem;
 
 namespace OctData
 {
+	namespace
+	{
+		void setCoords2Node(CppFW::CVMatTree& node, const CoordSLOmm& coords, const OctData::CoordSLOmm& shift)
+		{
+			double coordData[2] = { coords.getX()+shift.getX(), coords.getY()+shift.getY() };
+			node.getMat() = cv::Mat(1, 2, cv::DataType<double>::type, coordData).clone();
+		}
+	}
+
+
 	bool CvBinOctWrite::writeFile(const boost::filesystem::path& file, const OCT& oct)
 	{
 
@@ -54,9 +64,13 @@ namespace OctData
 		CppFW::CVMatTreeExtra::setCvScalar(seriesDataNode, "ID", seriesId);
 
 
-		const OctData::SloImage& slo = ser->getSloImage();
+		const SloImage& slo = ser->getSloImage();
 		octtree.getDirNode("slo").getMat() = slo.getImage();
+		const CoordSLOpx& sloShift = slo.getShift();
+		const CoordSLOmm& sloShiftMM = sloShift/slo.getScaleFactor();
 
+		double sloScaleData[2] = { slo.getScaleFactor().getX(), slo.getScaleFactor().getY() };
+		seriesDataNode.getDirNode("SloScale").getMat() = cv::Mat(1, 2, cv::DataType<double>::type, sloScaleData).clone();
 
 		CppFW::CVMatTree& seriesNode = octtree.getDirNode("Serie");
 
@@ -68,27 +82,17 @@ namespace OctData
 			CppFW::CVMatTree& bscanNode = seriesNode.newListNode();
 			CppFW::CVMatTree& bscanImgNode = bscanNode.getDirNode("img");
 			bscanImgNode.getMat() = bscan->getImage();
+
+			CppFW::CVMatTree& bscanCoordNode = bscanNode.getDirNode("Coords");
+			setCoords2Node(bscanCoordNode.getDirNode("Start"), bscan->getStart(), sloShiftMM);
+			setCoords2Node(bscanCoordNode.getDirNode("End"  ), bscan->getEnd  (), sloShiftMM);
+
+
+			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("Segmentations");
+			const Segmentationlines::Segmentline& seg = bscan->getSegmentLine(Segmentationlines::SegmentlineType::ILM);
+			bscanSegNode.getDirNode("ILM").getMat() = cv::Mat(1, static_cast<int>(seg.size()), cv::DataType<Segmentationlines::SegmentlineDataType>::type, const_cast<Segmentationlines::SegmentlineDataType*>(seg.data())).clone();
+
 		}
-
-
-/*
-
-
-		if(!seriesNode || seriesNode->type() != CppFW::CVMatTree::Type::List)
-		{
-			BOOST_LOG_TRIVIAL(trace) << "Serie node not found or false datatype";
-			return false;
-		}
-		Patient& pat    = oct  .getPatient(patId   );
-		Study&   study  = pat  .getStudy  (studyId );
-		Series&  series = study.getSeries (seriesId);
-
-		series.setRefSeriesUID(CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "RefUID"));
-		series.setSeriesUID   (CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "UID"   ));
-		pat   .setId          (CppFW::CVMatTreeExtra::getStringOrEmpty(patDataNode   , "PatID" ));
-
-*/
-
 
 		CppFW::CVMatTreeStructBin::writeBin(file.generic_string(), octtree);
 
