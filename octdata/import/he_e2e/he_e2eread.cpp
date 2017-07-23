@@ -1,5 +1,8 @@
 #include "he_e2eread.h"
 
+#define _USE_MATH_DEFINES
+#include<cmath>
+
 #include <datastruct/oct.h>
 #include <datastruct/coordslo.h>
 #include <datastruct/sloimage.h>
@@ -32,8 +35,9 @@
 #include <boost/locale.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <codecvt>
 #include <cpp_framework/callback.h>
+
+#include"../platform_helper.h"
 
 
 
@@ -84,16 +88,13 @@ namespace OctData
 			if(e2eDiagnose)
 				pat.setDiagnose(e2eDiagnose->getText());
 
-
-			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
 			E2E::StringListElement* ancestry = e2ePat.getAncestry();
 			if(ancestry && ancestry->size() > 0)
-				pat.setAncestry(converter.to_bytes(ancestry->getString(0)));
+				pat.setAncestry(convertUTF16StringToUTF8(ancestry->getString(0)));
 		}
 		
 		void copyStudyData(Study& study, const E2E::Study& e2eStudy)
 		{
-			std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
 			if(e2eStudy.getStudyUID())
 				study.setStudyUID(e2eStudy.getStudyUID()->getText());
 			
@@ -106,7 +107,7 @@ namespace OctData
 
 			E2E::StringListElement* e2eStudyName = e2eStudy.getStudyName();
 			if(e2eStudyName && e2eStudyName->size() > 0)
-				study.setStudyName(converter.to_bytes(e2eStudyName->getString(0)));
+				study.setStudyName(convertUTF16StringToUTF8(e2eStudyName->getString(0)));
 		}
 		
 		void copySeriesData(Series& series, const E2E::Series& e2eSeries)
@@ -114,9 +115,6 @@ namespace OctData
 			if(e2eSeries.getSeriesUID())
 				series.setSeriesUID(e2eSeries.getSeriesUID()->getText());
 
-// 			std::wstring_convert<std::codecvt<char16_t,char,std::mbstate_t>,char16_t> convert;
-//			std::wstring_convert<codecvtLocal<unsigned int, char, std::mbstate_t>, char16_t> convert;
-			
 			if(e2eSeries.getExaminedStructure())
 			{
 				if(e2eSeries.getExaminedStructure()->size() > 0)
@@ -126,19 +124,11 @@ namespace OctData
 						series.setExaminedStructure(Series::ExaminedStructure::ONH);
 					else if(examinedStructure == u"Retina")
 						series.setExaminedStructure(Series::ExaminedStructure::Retina);
-					
-// https://connect.microsoft.com/VisualStudio/feedback/details/1403302/unresolved-external-when-using-codecvt-utf8
-// > I have fixed this issue, and the fix will be available in the next major version of Visual Studio.
-#if BOOST_COMP_MSVC == false
 					else
 					{
-						std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
-						series.setExaminedStructureText(converter.to_bytes(examinedStructure));
-//						return converter.from_bytes(utf_str);
+						series.setExaminedStructureText(convertUTF16StringToUTF8(examinedStructure));
 						series.setExaminedStructure(Series::ExaminedStructure::Unknown);
-//						series.setExaminedStructureText(convert.to_bytes(examinedStructure));
 					}
-#endif
 				}
 			}
 
@@ -151,15 +141,12 @@ namespace OctData
 						series.setScanPattern(Series::ScanPattern::Volume);
 					else if(scanPattern == u"OCT Radial+Circles")
 						series.setScanPattern(Series::ScanPattern::RadialCircles);
-#if BOOST_COMP_MSVC == false
 					else
 					{
-						std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
-						series.setScanPatternText(converter.to_bytes(scanPattern));
+						series.setScanPatternText(convertUTF16StringToUTF8(scanPattern));
 						series.setScanPattern(Series::ScanPattern::Unknown);
 //						series.setScanPatternText(convert.to_bytes(scanPattern));
 					}
-#endif
 				}
 			}
 			// e2eSeries.
