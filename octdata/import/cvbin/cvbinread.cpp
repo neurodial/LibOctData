@@ -210,17 +210,22 @@ namespace OctData
 				BScan::Data bscanData;
 				if(seriesSegNode)
 				{
-					const CppFW::CVMatTree* seriesSegILMNode = seriesSegNode->getDirNodeOpt("ILM");
-					if(seriesSegILMNode && seriesSegILMNode->type() == CppFW::CVMatTree::Type::Mat)
+					for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
 					{
-						const cv::Mat& segMat = seriesSegILMNode->getMat();
-						cv::Mat convertedSegMat;
-						segMat.convertTo(convertedSegMat, cv::DataType<double>::type);
+						const char* segLineName = Segmentationlines::getSegmentlineName(type);
 
-						const double* p = convertedSegMat.ptr<double>(0);
-						std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
+						const CppFW::CVMatTree* seriesSegILMNode = seriesSegNode->getDirNodeOpt(segLineName);
+						if(seriesSegILMNode && seriesSegILMNode->type() == CppFW::CVMatTree::Type::Mat)
+						{
+							const cv::Mat& segMat = seriesSegILMNode->getMat();
+							cv::Mat convertedSegMat;
+							segMat.convertTo(convertedSegMat, cv::DataType<double>::type);
 
-						bscanData.getSegmentLine(Segmentationlines::SegmentlineType::ILM) = std::move(segVec);
+							const double* p = convertedSegMat.ptr<double>(0);
+							std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
+
+							bscanData.getSegmentLine(type) = std::move(segVec);
+						}
 					}
 				}
 

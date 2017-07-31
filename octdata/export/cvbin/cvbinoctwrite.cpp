@@ -89,9 +89,14 @@ namespace OctData
 
 
 			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("Segmentations");
-			const Segmentationlines::Segmentline& seg = bscan->getSegmentLine(Segmentationlines::SegmentlineType::ILM);
-			bscanSegNode.getDirNode("ILM").getMat() = cv::Mat(1, static_cast<int>(seg.size()), cv::DataType<Segmentationlines::SegmentlineDataType>::type, const_cast<Segmentationlines::SegmentlineDataType*>(seg.data())).clone();
 
+
+			for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
+			{
+				const Segmentationlines::Segmentline& seg = bscan->getSegmentLine(type);
+				if(!seg.empty())
+					bscanSegNode.getDirNode(Segmentationlines::getSegmentlineName(type)).getMat() = cv::Mat(1, static_cast<int>(seg.size()), cv::DataType<Segmentationlines::SegmentlineDataType>::type, const_cast<Segmentationlines::SegmentlineDataType*>(seg.data())).clone();
+			}
 		}
 
 		CppFW::CVMatTreeStructBin::writeBin(file.generic_string(), octtree);
