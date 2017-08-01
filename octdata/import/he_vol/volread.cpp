@@ -390,8 +390,8 @@ namespace OctData
 				Segmentationlines::SegmentlineType::IPL ,
 				Segmentationlines::SegmentlineType::INL ,
 				Segmentationlines::SegmentlineType::OPL ,
-				Segmentationlines::SegmentlineType::ELM ,
 				Segmentationlines::SegmentlineType::PR1 ,
+				Segmentationlines::SegmentlineType::ELM ,
 				Segmentationlines::SegmentlineType::PR2 ,
 				Segmentationlines::SegmentlineType::RPE
 			};
