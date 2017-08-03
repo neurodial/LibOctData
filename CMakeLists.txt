@@ -20,6 +20,7 @@ option(BUILD_WITH_SUPPORT_CVBIN     "build support for cvbin import" ON)
 option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
 option(BUILD_WITH_SUPPORT_OCT_FILE  "build support for oct format" ON)
 option(BUILD_WITH_SUPPORT_TOPCON    "build support for topcon format" ON)
+option(BUILD_WITH_SUPPORT_GIPL      "build support for gipl format" ON)
 
 
 # General build config
@@ -103,6 +104,12 @@ if(BUILD_WITH_SUPPORT_TOPCON)
 		include_directories(SYSTEM ${OPENJPEG_INCLUDE_DIRS})
 		message(${OPENJPEG_INCLUDE_DIRS})
 	endif()
+endif()
+
+if(BUILD_WITH_SUPPORT_GIPL)
+	list(APPEND import_srcs import/gipl)
+
+	add_definitions(-DGIPL_SUPPORT)
 endif()
 
 if(BUILD_WITH_SUPPORT_HE_XML)

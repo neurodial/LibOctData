@@ -12,6 +12,7 @@
 #include "he_e2e/he_e2eread.h"
 #include "tiffstack/tiffstackread.h"
 #include "cvbin/cvbinread.h"
+#include "gipl/giplread.h"
 
 namespace OctData
 {
@@ -64,6 +65,9 @@ namespace OctData
 #endif
 #ifdef TOPCON_FILE_SUPPORT
 		TopconFileFormatRead::getInstance();
+#endif
+#ifdef GIPL_SUPPORT
+		GIPLRead::getInstance();
 #endif
 	}
 
