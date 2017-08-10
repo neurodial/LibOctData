@@ -168,6 +168,27 @@ namespace
 
 	};
 
+	struct ThicknessGrid
+	{
+		PACKSTRUCT(struct Data
+		{
+			int     gridType;
+			double  diameterA;
+			double  diameterB;
+			double  diameterC;
+			double  centerPosXmm;
+			double  centerPosYmm;
+			float   centralThk   ;
+			float   minCentralThk;
+			float   maxCentralThk;
+			float   totalVolume;
+			// sectors
+		});
+
+		Data data;
+	};
+
+
 	void copyMetaData(const VolHeader& header, OctData::Patient& pat, OctData::Study& study, OctData::Series& series)
 	{
 		// Patient data
@@ -419,6 +440,20 @@ namespace OctData
 			if(op.holdRawData)
 				bscan->setRawImage(bscanImage);
 			series.takeBScan(bscan);
+		}
+
+		if(volHeader.data.gridType > 0 && volHeader.data.gridOffset > 2000)
+		{
+			ThicknessGrid grid;
+			stream.seekg(volHeader.data.gridOffset);
+			readFStream(stream, &(grid.data));
+
+			AnalyseGrid& analyseGrid = series.getAnalyseGrid();
+			analyseGrid.addDiameterMM(grid.data.diameterA);
+			analyseGrid.addDiameterMM(grid.data.diameterB);
+			analyseGrid.addDiameterMM(grid.data.diameterC);
+
+			analyseGrid.setCenter(CoordSLOmm(grid.data.centerPosXmm, grid.data.centerPosYmm));
 		}
 
 

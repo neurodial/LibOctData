@@ -4,6 +4,7 @@
 #include <vector>
 #include <chrono>
 #include "date.h"
+#include "analysegrid.h"
 
 
 
@@ -73,9 +74,12 @@ namespace OctData
 		void takeBScan(BScan* bscan);
 
 		void setDescription(const std::string& text)                   { description = text; }
-		Octdata_EXPORTS const std::string& getDescription() const      { return description; }
+		Octdata_EXPORTS const std::string& getDescription()      const { return description; }
 
-		Octdata_EXPORTS int getInternalId() const                   { return internalId; }
+		Octdata_EXPORTS int getInternalId()                      const { return internalId; }
+
+		Octdata_EXPORTS       AnalyseGrid& getAnalyseGrid()            { return analyseGrid; }
+		Octdata_EXPORTS const AnalyseGrid& getAnalyseGrid()      const { return analyseGrid; }
 	private:
 		const int internalId;
 
@@ -96,6 +100,8 @@ namespace OctData
 		std::string                             description;
 
 		BScanList                               bscans;
+
+		AnalyseGrid                             analyseGrid;
 	};
 
 }

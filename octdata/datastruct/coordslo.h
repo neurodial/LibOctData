@@ -79,6 +79,10 @@ namespace OctData
 
 		CoordSLOpx operator*(const ScaleFactor& factor) const       { return CoordSLOpx(x/factor.getX(), y/factor.getY()); }
 
+		CoordSLOmm operator+(const CoordSLOmm& o) const             { return CoordSLOmm(x+o.x   , y+o.y   ); }
+		CoordSLOmm operator*(double factor)       const             { return CoordSLOmm(x*factor, y*factor); }
+		CoordSLOmm operator-(const CoordSLOmm& v) const             { return CoordSLOmm(x-v.x   , y-v.y   ); }
+
 		operator bool() const                                       { return set; }
 	};
 
