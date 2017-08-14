@@ -31,6 +31,7 @@ namespace OctData
 		enum class ScanPattern { Unknown, Text, SingleLine, Circular, Volume, FastVolume, Radial, RadialCircles };
 		enum class ExaminedStructure { Unknown, Text, ONH, Retina };
 		typedef std::vector<BScan*> BScanList;
+		typedef std::vector<CoordSLOmm> BScanSLOCoordList;
 
 		Octdata_EXPORTS explicit Series(int internalId);
 		Octdata_EXPORTS ~Series();
@@ -80,6 +81,8 @@ namespace OctData
 
 		Octdata_EXPORTS       AnalyseGrid& getAnalyseGrid()            { return analyseGrid; }
 		Octdata_EXPORTS const AnalyseGrid& getAnalyseGrid()      const { return analyseGrid; }
+
+		Octdata_EXPORTS const BScanSLOCoordList& getConvexHull() const { return convexHullSLOBScans; }
 	private:
 		const int internalId;
 
@@ -102,6 +105,9 @@ namespace OctData
 		BScanList                               bscans;
 
 		AnalyseGrid                             analyseGrid;
+
+		BScanSLOCoordList                       convexHullSLOBScans;
+		void calculateSLOConvexHull();
 	};
 
 }

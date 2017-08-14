@@ -83,6 +83,8 @@ namespace OctData
 		CoordSLOmm operator*(double factor)       const             { return CoordSLOmm(x*factor, y*factor); }
 		CoordSLOmm operator-(const CoordSLOmm& v) const             { return CoordSLOmm(x-v.x   , y-v.y   ); }
 
+		double abs(const CoordSLOmm& o) const                       { return std::sqrt((x-o.x)*(x-o.x) + (y-o.y)*(y-o.y)); }
+
 		operator bool() const                                       { return set; }
 	};
 
