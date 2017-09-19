@@ -30,6 +30,7 @@ namespace OctData
 
 		Octdata_EXPORTS static const ExtensionsList& supportedExtensions();
 		Octdata_EXPORTS static OCT openFile(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback = nullptr);
+		Octdata_EXPORTS static OCT openFile(const boost::filesystem::path& filename, const FileReadOptions& op, CppFW::Callback* callback = nullptr);
 		Octdata_EXPORTS static OCT openFile(const std::string& filename, CppFW::Callback* callback = nullptr);
 
 		Octdata_EXPORTS static bool isLoadable(const std::string& filename);
@@ -42,6 +43,7 @@ namespace OctData
 
 		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
 		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback);
+		OCT openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback);
 
 		void writeFilePrivat(const std::string& filename, const OCT& octdata);
 

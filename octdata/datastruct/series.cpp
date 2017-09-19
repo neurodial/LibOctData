@@ -5,6 +5,8 @@
 
 #include <limits>
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>

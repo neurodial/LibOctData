@@ -23,13 +23,12 @@ namespace bfs = boost::filesystem;
 
 namespace
 {
-	void readCVImage(std::istream& stream, cv::Mat& image, int cvFormat, int factor, std::size_t sizeX, std::size_t sizeY)
+	template<typename T>
+	void readCVImage(std::istream& stream, cv::Mat& image, std::size_t sizeX, std::size_t sizeY)
 	{
-		image = cv::Mat(static_cast<int>(sizeX), static_cast<int>(sizeY), cvFormat);
-
+		image = cv::Mat(static_cast<int>(sizeX), static_cast<int>(sizeY), cv::DataType<T>::type);
 		std::size_t num = sizeX*sizeY;
-
-		stream.read(reinterpret_cast<char*>(image.data), num*factor);
+		stream.read(reinterpret_cast<char*>(image.data), num*sizeof(T));
 	}
 }
 
@@ -140,10 +139,7 @@ end
 			}
 
 			cv::Mat bscanImage;
-			int sloCvFormat = CV_8UC1;
-			int sloFactor   = 1;
-			readCVImage(stream, bscanImage, sloCvFormat, sloFactor, volSizeZ, volSizeX);
-
+			readCVImage<uint8_t>(stream, bscanImage, volSizeZ, volSizeX);
 			cv::flip(bscanImage, bscanImage, 0);
 
 			BScan* bscan = new BScan(bscanImage, BScan::Data());
@@ -163,19 +159,15 @@ end
 		if(!bfs::exists(slofile))
 			return true; // bscans loaded successfull
 
-
 		std::fstream streamSlo(slofile.generic_string(), std::ios::binary | std::ios::in);
 		if(!streamSlo.good())
 			return true; // bscans loaded successfull
 
 		cv::Mat sloImage;
-		int sloCvFormat = CV_8UC1;
-		int sloFactor   = 1;
-
 		std::size_t filesizeSlo = bfs::file_size(slofile);
 
 		std::size_t sloWidth = 512;
-		readCVImage(streamSlo, sloImage, sloCvFormat, sloFactor, sloWidth, filesizeSlo/sloWidth);
+		readCVImage<uint8_t>(streamSlo, sloImage, sloWidth, filesizeSlo/sloWidth);
 		SloImage* slo = new SloImage;
 		slo->setImage(sloImage);
 		series.takeSloImage(slo);

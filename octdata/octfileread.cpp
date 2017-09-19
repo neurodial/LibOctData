@@ -43,15 +43,25 @@ namespace OctData
 		return getInstance().openFilePrivat(filename, op, callback);
 	}
 
+	OCT OctFileRead::openFile(const boost::filesystem::path& filename, const FileReadOptions& op, CppFW::Callback* callback)
+	{
+		return getInstance().openFilePrivat(filename, op, callback);
+	}
+
 
 
 	OCT OctFileRead::openFilePrivat(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback)
 	{
+		bfs::path file(filenameConv(filename));
+		return openFilePrivat(file, op, callback);
+	}
+
+
+	OCT OctFileRead::openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback)
+	{
 		OctFileReader::registerReaders(); // TODO: serch better implementation to prevent remove by linker
 
 		OctData::OCT oct;
-
-		bfs::path file(filenameConv(filename));
 
 		if(bfs::exists(file))
 		{
