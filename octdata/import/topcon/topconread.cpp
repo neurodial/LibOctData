@@ -277,6 +277,33 @@ namespace
 		}
 	}
 
+	void readRegistInfo(std::istream& stream, BScanList& list)
+	{
+		uint32_t unknown1   [ 2];
+		uint32_t boundFundus[ 4];
+		uint8_t  unknown2   [32];
+		uint32_t boundTrc   [ 4];
+
+		readFStream<uint8_t> (stream);
+		readFStream(stream, unknown1   , sizeof(unknown1   )/sizeof(unknown1   [0]));
+		readFStream(stream, boundFundus, sizeof(boundFundus)/sizeof(boundFundus[0]));
+		readFStream(stream, unknown2   , sizeof(unknown2   )/sizeof(unknown2   [0]));
+		readFStream(stream, boundTrc   , sizeof(boundTrc   )/sizeof(boundTrc   [0]));
+
+		const std::size_t numBScans = list.size();
+
+		std::size_t bscanNum = 0;
+		for(BScanPair& bscan : list)
+		{
+			double pos = static_cast<double>(bscanNum)/static_cast<double>(numBScans);
+
+			bscan.data.start = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[1]);
+			bscan.data.end   = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[3]);
+
+			++bscanNum;
+		}
+	}
+
 }
 
 
@@ -375,6 +402,8 @@ namespace OctData
 				readConturInfo(stream, bscanList);
 			else if(chunkName == "@CAPTURE_INFO_02")
 				readCaptureInfo02(stream, series);
+			else if(chunkName == "@REGIST_INFO")
+				readRegistInfo(stream, bscanList);
 
 			stream.seekg(chunkBegin + chunkSize);
 		}
