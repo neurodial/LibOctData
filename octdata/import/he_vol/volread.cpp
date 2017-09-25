@@ -26,6 +26,8 @@
 #include <emmintrin.h>
 #include <cpp_framework/callback.h>
 
+#include<boost/optional.hpp>
+
 namespace bfs = boost::filesystem;
 
 
@@ -401,39 +403,67 @@ namespace OctData
 			bscanData.imageQuality = bscanHeader.data.quality;
 			// fseek( fid, 256+2048+(header.SizeXSlo*header.SizeYSlo)+(ii*(header.BScanHdrSize+header.SizeX*header.SizeZ*4)), -1 );
 
-
+/*
 			constexpr const Segmentationlines::SegmentlineType seglines[] =
 			{
-				Segmentationlines::SegmentlineType::ILM ,
-				Segmentationlines::SegmentlineType::BM  ,
-				Segmentationlines::SegmentlineType::RNFL,
-				Segmentationlines::SegmentlineType::GCL , // TODO: check order
-				Segmentationlines::SegmentlineType::IPL ,
-				Segmentationlines::SegmentlineType::INL ,
-				Segmentationlines::SegmentlineType::OPL ,
-				Segmentationlines::SegmentlineType::PR1 ,
-				Segmentationlines::SegmentlineType::ELM ,
-				Segmentationlines::SegmentlineType::PR2 ,
-				Segmentationlines::SegmentlineType::RPE
+				Segmentationlines::SegmentlineType::ILM , // 1
+				Segmentationlines::SegmentlineType::BM  , // 2
+				Segmentationlines::SegmentlineType::RNFL, // 3
+				Segmentationlines::SegmentlineType::GCL , // 4   TODO: check order
+				Segmentationlines::SegmentlineType::IPL , // 5
+				Segmentationlines::SegmentlineType::INL , // 6
+				Segmentationlines::SegmentlineType::OPL , // 7
+				Segmentationlines::SegmentlineType::PR1 , // 8
+				Segmentationlines::SegmentlineType::ELM , // 9
+				Segmentationlines::SegmentlineType::PR2 , // 10
+				Segmentationlines::SegmentlineType::RPE   // 11
+			};
+			*/
+
+			typedef boost::optional<Segmentationlines::SegmentlineType> SegLineOpt;
+			const SegLineOpt seglines[] =
+			{
+				Segmentationlines::SegmentlineType::ILM ,   // 1
+				Segmentationlines::SegmentlineType::BM  ,   // 2
+				Segmentationlines::SegmentlineType::RNFL,   // 3
+				Segmentationlines::SegmentlineType::GCL ,   // 4
+				Segmentationlines::SegmentlineType::IPL ,   // 5
+				Segmentationlines::SegmentlineType::INL ,   // 6
+				Segmentationlines::SegmentlineType::OPL ,   // 7
+				SegLineOpt()                            ,   // 8
+				Segmentationlines::SegmentlineType::ELM ,   // 9
+				SegLineOpt()                            ,   // 10
+				SegLineOpt()                            ,   // 11
+				SegLineOpt()                            ,   // 12
+				SegLineOpt()                            ,   // 13
+				SegLineOpt()                            ,   // 14
+				Segmentationlines::SegmentlineType::PR1 ,   // 15;
+				Segmentationlines::SegmentlineType::PR2 ,   // 16;
+				Segmentationlines::SegmentlineType::RPE     // 17;
 			};
 
 			// TODO
 			stream.seekg(256+bscanPos);
-			for(int segNum = 0; segNum < bscanHeader.data.numSeg; ++segNum)
+			const int maxSeg = std::min(static_cast<int>(sizeof(seglines)/sizeof(seglines[0])), bscanHeader.data.numSeg);
+			for(int segNum = 0; segNum < maxSeg; ++segNum)
 			{
-				if(segNum < static_cast<int>(sizeof(seglines)/sizeof(seglines[0])))
+				Segmentationlines::Segmentline segVec;
+
+// 				segVec.resize(volHeader.data.sizeX);
+// 				readFStream(stream, segVec.data(), volHeader.data.sizeX);
+
+				segVec.reserve(volHeader.data.sizeX);
+				float value;
+				for(std::size_t xpos = 0; xpos<volHeader.data.sizeX; ++xpos)
 				{
-					float value;
-					Segmentationlines::Segmentline segVec;
-					segVec.reserve(volHeader.data.sizeX);
-					for(std::size_t xpos = 0; xpos<volHeader.data.sizeX; ++xpos)
-					{
-						stream.read(reinterpret_cast<char*>(&value), sizeof(value));
-						segVec.push_back(value);
-					}
-					bscanData.getSegmentLine(seglines[segNum]) = std::move(segVec);
+					stream.read(reinterpret_cast<char*>(&value), sizeof(value));
+					segVec.push_back(value);
 				}
+// 				BOOST_LOG_TRIVIAL(debug) << !seglines[segNum] << "\t" << static_cast<int>(*seglines[segNum]);
+				if(seglines[segNum])
+					bscanData.getSegmentLine(*(seglines[segNum])) = std::move(segVec);
 			}
+
 
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);

@@ -342,8 +342,6 @@ namespace OctData
 
 		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as topcon file";
 
-		std::string dir      = file.branch_path().generic_string();
-		std::string filename = file.filename   ().generic_string();
 
 		const unsigned char magicHeader[] = { 'F', 'O', 'C', 'T' };
 
@@ -415,22 +413,6 @@ namespace OctData
 
 			series.takeBScan(bscan);
 		}
-
-
-// 		Patient& pat    = oct.getPatient(1);
-// 		Study&   study  = pat.getStudy(1);
-// 		Series&  series = study.getSeries(1);
-//
-//
-//
-// 		MainDict mainDict(series, op);
-//
-// 		stream.seekg(0, std::ios_base::end);
-// 		std::size_t fielsize = stream.tellg();
-// 		stream.seekg(6, std::ios_base::beg);
-//
-// 		readDict(stream, mainDict, fielsize);
-//
 
 
 		BOOST_LOG_TRIVIAL(debug) << "read oct file \"" << file.generic_string() << "\" finished";
