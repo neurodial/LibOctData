@@ -143,15 +143,20 @@ namespace
 	{
 		PACKSTRUCT(struct Data
 		{
-			double  startX ;
-			double  startY ;
-			double  endX   ;
-			double  endY   ;
-			int32_t numSeg ;
-			int32_t offSeg ;
-			float   quality;
-			int32_t shift  ;
+			char     hsfOctRawStr[ 7];
+			char     version     [ 5];
+			uint32_t bscanHdrSize    ;
+			double   startX          ;
+			double   startY          ;
+			double   endX            ;
+			double   endY            ;
+			int32_t  numSeg          ;
+			int32_t  offSeg          ;
+			float    quality         ;
+			int32_t  shift           ;
 		});
+
+		constexpr static const std::size_t identiferSize = sizeof(Data::hsfOctRawStr)/sizeof(Data::hsfOctRawStr[0]);
 
 		Data data;
 
@@ -174,16 +179,16 @@ namespace
 	{
 		PACKSTRUCT(struct Data
 		{
-			int     gridType;
-			double  diameterA;
-			double  diameterB;
-			double  diameterC;
-			double  centerPosXmm;
-			double  centerPosYmm;
-			float   centralThk   ;
-			float   minCentralThk;
-			float   maxCentralThk;
-			float   totalVolume;
+			int    gridType     ;
+			double diameterA    ;
+			double diameterB    ;
+			double diameterC    ;
+			double centerPosXmm ;
+			double centerPosYmm ;
+			float  centralThk   ;
+			float  minCentralThk;
+			float  maxCentralThk;
+			float  totalVolume  ;
 			// sectors
 		});
 
@@ -207,7 +212,7 @@ namespace
 		else if(strcmp("OS", header.data.scanPosition) == 0)
 			series.setLaterality(OctData::Series::Laterality::OS);
 		else
-			BOOST_LOG_TRIVIAL(warning) << "Unknown scan position" << header.data.scanPosition;
+			BOOST_LOG_TRIVIAL(warning) << "Unknown scan position: " << std::string(header.data.scanPosition, header.data.scanPosition+4);
 		
 		series.setSeriesUID   (header.data.id);
 		series.setRefSeriesUID(header.data.referenceID);
@@ -216,28 +221,16 @@ namespace
 
 		switch(header.data.scanPattern)
 		{
-			case 1:
-				series.setScanPattern(OctData::Series::ScanPattern::SingleLine);
-				break;
-			case 2:
-				series.setScanPattern(OctData::Series::ScanPattern::Circular);
-				break;
-			case 3:
-				series.setScanPattern(OctData::Series::ScanPattern::Volume);
-				break;
-			case 4:
-				series.setScanPattern(OctData::Series::ScanPattern::FastVolume);
-				break;
-			case 5:
-				series.setScanPattern(OctData::Series::ScanPattern::Radial);
-				break;
-			case 6:
-				series.setScanPattern(OctData::Series::ScanPattern::RadialCircles);
-				break;
+			case 1: series.setScanPattern(OctData::Series::ScanPattern::SingleLine   ); break;
+			case 2: series.setScanPattern(OctData::Series::ScanPattern::Circular     ); break;
+			case 3: series.setScanPattern(OctData::Series::ScanPattern::Volume       ); break;
+			case 4: series.setScanPattern(OctData::Series::ScanPattern::FastVolume   ); break;
+			case 5: series.setScanPattern(OctData::Series::ScanPattern::Radial       ); break;
+			case 6: series.setScanPattern(OctData::Series::ScanPattern::RadialCircles); break;
 			default:
 				series.setScanPattern(OctData::Series::ScanPattern::Unknown);
 				series.setScanPatternText(boost::lexical_cast<std::string>(header.data.scanPattern));
-				BOOST_LOG_TRIVIAL(warning) << "Unknown scan pattern" << header.data.scanPattern;
+				BOOST_LOG_TRIVIAL(warning) << "Unknown scan pattern: " << header.data.scanPattern;
 				break;
 		}
 
@@ -332,6 +325,7 @@ namespace OctData
 
 		readFStream(stream, &(volHeader.data));
 // 		volHeader.printData(std::cout);
+		BOOST_LOG_TRIVIAL(info) << "HSF file version: " << volHeader.data.version;
 		stream.seekg(VolHeader::getHeaderSize());
 
 		Patient& pat    = oct.getPatient(volHeader.data.pid);
@@ -368,8 +362,15 @@ namespace OctData
 
 // 			std::cout << "bscanPos: " << bscanPos << std::endl;
 
-			stream.seekg(16+bscanPos);
+			stream.seekg(bscanPos);
 			readFStream(stream, &(bscanHeader.data));
+
+			if(memcmp(bscanHeader.data.hsfOctRawStr, "HSF-BS-", BScanHeader::identiferSize) != 0) // 0 = strings are equal
+			{
+				BOOST_LOG_TRIVIAL(error) << file.generic_string() << " Wrong fileformat (not HSF-BS-) -> " << bscanHeader.data.hsfOctRawStr;
+				return false;
+			}
+// 			BOOST_LOG_TRIVIAL(info) << "HSF-BScan version: " << bscanHeader.data.version;
 
 			// bscanHeader.printData();
 
@@ -397,69 +398,47 @@ namespace OctData
 			else
 				bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
 
-// 			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleZ, volHeader.data.scaleX);
+
 			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleX, volHeader.data.distance, volHeader.data.scaleZ);
-
 			bscanData.imageQuality = bscanHeader.data.quality;
-			// fseek( fid, 256+2048+(header.SizeXSlo*header.SizeYSlo)+(ii*(header.BScanHdrSize+header.SizeX*header.SizeZ*4)), -1 );
 
-/*
-			constexpr const Segmentationlines::SegmentlineType seglines[] =
-			{
-				Segmentationlines::SegmentlineType::ILM , // 1
-				Segmentationlines::SegmentlineType::BM  , // 2
-				Segmentationlines::SegmentlineType::RNFL, // 3
-				Segmentationlines::SegmentlineType::GCL , // 4   TODO: check order
-				Segmentationlines::SegmentlineType::IPL , // 5
-				Segmentationlines::SegmentlineType::INL , // 6
-				Segmentationlines::SegmentlineType::OPL , // 7
-				Segmentationlines::SegmentlineType::PR1 , // 8
-				Segmentationlines::SegmentlineType::ELM , // 9
-				Segmentationlines::SegmentlineType::PR2 , // 10
-				Segmentationlines::SegmentlineType::RPE   // 11
-			};
-			*/
 
 			typedef boost::optional<Segmentationlines::SegmentlineType> SegLineOpt;
 			const SegLineOpt seglines[] =
 			{
-				Segmentationlines::SegmentlineType::ILM ,   // 1
-				Segmentationlines::SegmentlineType::BM  ,   // 2
-				Segmentationlines::SegmentlineType::RNFL,   // 3
-				Segmentationlines::SegmentlineType::GCL ,   // 4
-				Segmentationlines::SegmentlineType::IPL ,   // 5
-				Segmentationlines::SegmentlineType::INL ,   // 6
-				Segmentationlines::SegmentlineType::OPL ,   // 7
-				SegLineOpt()                            ,   // 8
-				Segmentationlines::SegmentlineType::ELM ,   // 9
+				Segmentationlines::SegmentlineType::ILM ,   // 0
+				Segmentationlines::SegmentlineType::BM  ,   // 1
+				Segmentationlines::SegmentlineType::RNFL,   // 2
+				Segmentationlines::SegmentlineType::GCL ,   // 3
+				Segmentationlines::SegmentlineType::IPL ,   // 4
+				Segmentationlines::SegmentlineType::INL ,   // 5
+				Segmentationlines::SegmentlineType::OPL ,   // 6
+				SegLineOpt()                            ,   // 7
+				Segmentationlines::SegmentlineType::ELM ,   // 8
+				SegLineOpt()                            ,   // 9
 				SegLineOpt()                            ,   // 10
 				SegLineOpt()                            ,   // 11
 				SegLineOpt()                            ,   // 12
 				SegLineOpt()                            ,   // 13
-				SegLineOpt()                            ,   // 14
-				Segmentationlines::SegmentlineType::PR1 ,   // 15;
-				Segmentationlines::SegmentlineType::PR2 ,   // 16;
-				Segmentationlines::SegmentlineType::RPE     // 17;
+				Segmentationlines::SegmentlineType::PR1 ,   // 14
+				Segmentationlines::SegmentlineType::PR2 ,   // 15
+				Segmentationlines::SegmentlineType::RPE     // 16
 			};
 
-			// TODO
+
 			stream.seekg(256+bscanPos);
 			const int maxSeg = std::min(static_cast<int>(sizeof(seglines)/sizeof(seglines[0])), bscanHeader.data.numSeg);
 			for(int segNum = 0; segNum < maxSeg; ++segNum)
 			{
 				Segmentationlines::Segmentline segVec;
-
-// 				segVec.resize(volHeader.data.sizeX);
-// 				readFStream(stream, segVec.data(), volHeader.data.sizeX);
-
 				segVec.reserve(volHeader.data.sizeX);
 				float value;
 				for(std::size_t xpos = 0; xpos<volHeader.data.sizeX; ++xpos)
 				{
-					stream.read(reinterpret_cast<char*>(&value), sizeof(value));
+					readFStream(stream, &value);
 					segVec.push_back(value);
 				}
-// 				BOOST_LOG_TRIVIAL(debug) << !seglines[segNum] << "\t" << static_cast<int>(*seglines[segNum]);
+
 				if(seglines[segNum])
 					bscanData.getSegmentLine(*(seglines[segNum])) = std::move(segVec);
 			}

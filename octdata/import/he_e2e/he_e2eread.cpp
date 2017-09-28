@@ -58,12 +58,9 @@ namespace OctData
 		{
 			switch(e2eSex)
 			{
-				case E2E::PatientDataElement::Sex::Female:
-					return Patient::Sex::Female;
-				case E2E::PatientDataElement::Sex::Male:
-					return Patient::Sex::Male;
-				case E2E::PatientDataElement::Sex::Unknown:
-					return Patient::Sex::Unknown;
+				case E2E::PatientDataElement::Sex::Female : return Patient::Sex::Female ;
+				case E2E::PatientDataElement::Sex::Male   : return Patient::Sex::Male   ;
+				case E2E::PatientDataElement::Sex::Unknown: return Patient::Sex::Unknown;
 			}
 			return Patient::Sex::Unknown;
 		}
@@ -76,11 +73,11 @@ namespace OctData
 			const E2E::PatientDataElement* e2ePatData = e2ePat.getPatientData();
 			if(e2ePatData)
 			{
-				pat.setForename(e2ePatData->getForename());
-				pat.setSurname (e2ePatData->getSurname ());
-				pat.setId      (e2ePatData->getId      ());
-				pat.setSex     (convertSex(e2ePatData->getSex()));
-				pat.setTitle   (e2ePatData->getTitle   ());
+				pat.setForename (                            e2ePatData->getForename() );
+				pat.setSurname  (                            e2ePatData->getSurname () );
+				pat.setId       (                            e2ePatData->getId      () );
+				pat.setSex      (                 convertSex(e2ePatData->getSex     ()));
+				pat.setTitle    (                            e2ePatData->getTitle   () );
 				pat.setBirthdate(Date::fromWindowsTimeFormat(e2ePatData->getWinBDate()));
 			}
 
@@ -171,8 +168,8 @@ namespace OctData
 					const float* sloTrans = e2eSloData->getTransformData();
 
 					const double a11 = 1./sloTrans[0];
-					const double a12 = -sloTrans[1];
-					const double a21 = -sloTrans[3];
+					const double a12 =   -sloTrans[1];
+					const double a21 =   -sloTrans[3];
 					const double a22 = 1./sloTrans[4];
 
 					const double b1  = -sloTrans[2] - a12*e2eSloImage.rows/2;
@@ -221,11 +218,11 @@ namespace OctData
 					Segmentationlines::Segmentline segVec(numSegData);
 					if(reg)
 					{
-						double shiftY = -reg->values[3];
-						double degree = -reg->values[7];
-						double shiftX = -reg->values[9] - degree*static_cast<double>(imagecols)/2.;
+						double shiftY    = -reg->values[3];
+						double degree    = -reg->values[7];
+						double shiftX    = -reg->values[9] - degree*static_cast<double>(imagecols)/2.;
 						int    shiftXVec = static_cast<int>(std::round(shiftY));
-						double pos    = shiftXVec;
+						double pos       = shiftXVec;
 
 						Segmentationlines::Segmentline::iterator segVecBegin = segVec.begin();
 						E2E::SegmentationData::pointer segDataBegin = segData->begin();
@@ -393,12 +390,17 @@ namespace OctData
 			addSegData(bscanData, Segmentationlines::SegmentlineType::ILM , e2eSegMap,  0, 5, reg, e2eImage.cols);
 			addSegData(bscanData, Segmentationlines::SegmentlineType::BM  , e2eSegMap,  1, 2, reg, e2eImage.cols);
 			addSegData(bscanData, Segmentationlines::SegmentlineType::RNFL, e2eSegMap,  2, 7, reg, e2eImage.cols);
-
 			addSegData(bscanData, Segmentationlines::SegmentlineType::GCL , e2eSegMap,  3, 1, reg, e2eImage.cols);
 			addSegData(bscanData, Segmentationlines::SegmentlineType::IPL , e2eSegMap,  4, 1, reg, e2eImage.cols);
 			addSegData(bscanData, Segmentationlines::SegmentlineType::INL , e2eSegMap,  5, 1, reg, e2eImage.cols);
 			addSegData(bscanData, Segmentationlines::SegmentlineType::OPL , e2eSegMap,  6, 1, reg, e2eImage.cols);
+			//                                                                          7
 			addSegData(bscanData, Segmentationlines::SegmentlineType::ELM , e2eSegMap,  8, 3, reg, e2eImage.cols);
+			//                                                                          9
+			//                                                                         10
+			//                                                                         11
+			//                                                                         12
+			//                                                                         13
 			addSegData(bscanData, Segmentationlines::SegmentlineType::PR1 , e2eSegMap, 14, 1, reg, e2eImage.cols);
 			addSegData(bscanData, Segmentationlines::SegmentlineType::PR2 , e2eSegMap, 15, 1, reg, e2eImage.cols);
 			addSegData(bscanData, Segmentationlines::SegmentlineType::RPE , e2eSegMap, 16, 1, reg, e2eImage.cols);
