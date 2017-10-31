@@ -272,7 +272,7 @@ namespace OctData
 	}
 
 	CvBinRead::CvBinRead()
-	: OctFileReader(OctExtension(".bin", "CvBin format"))
+	: OctFileReader(OctExtension(".octbin", "CvBin format"))
 	{
 	}
 
@@ -286,7 +286,7 @@ namespace OctData
 //     BOOST_LOG_TRIVIAL(error)   << "An error severity message";
 //     BOOST_LOG_TRIVIAL(fatal)   << "A fatal severity message";
 
-		if(file.extension() != ".bin")
+		if(file.extension() != ".octbin")
 			return false;
 
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as bins";
