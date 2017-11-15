@@ -4,6 +4,14 @@
 
 namespace cv { class Mat; }
 
+
+
+#ifdef OCTDATA_EXPORT
+	#include "octdata_EXPORTS.h"
+#else
+	#define Octdata_EXPORTS
+#endif
+
 namespace OctData
 {
 	class SloImage
@@ -42,7 +50,7 @@ namespace OctData
 		int    getImageQuality()                    const           { return imageQuality           ; }
 
 		bool  hasImage()                            const           { return image                  ; }
-		int   getWidth()                            const;
-		int   getHeight()                           const;
+		Octdata_EXPORTS int   getWidth()            const;
+		Octdata_EXPORTS int   getHeight()           const;
 	};
 }
