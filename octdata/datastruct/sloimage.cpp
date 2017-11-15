@@ -24,4 +24,19 @@ namespace OctData
 		*(this->image) = image;
 	}
 
+	int SloImage::getHeight() const
+	{
+		if(image)
+			return image->rows;
+		return 0;
+	}
+
+	int SloImage::getWidth() const
+	{
+		if(image)
+			return image->cols;
+		return 0;
+	}
+
+
 }

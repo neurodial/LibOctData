@@ -40,5 +40,9 @@ namespace OctData
 
 		int    getNumAverage()                      const           { return numAverage             ; }
 		int    getImageQuality()                    const           { return imageQuality           ; }
+
+		bool  hasImage()                            const           { return image                  ; }
+		int   getWidth()                            const;
+		int   getHeight()                           const;
 	};
 }
