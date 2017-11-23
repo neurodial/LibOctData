@@ -470,11 +470,4 @@ namespace OctData
 		return true;
 	}
 
-	VOLRead* VOLRead::getInstance()
-	{
-		static VOLRead instance;
-		return &instance;
-	}
-
-
 }

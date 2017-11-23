@@ -20,15 +20,15 @@ namespace OctData
 	class OCT;
 	class OctFileReader;
 	class FileReadOptions;
+	class OctExtensionsList;
 
 	class OctFileRead
 	{
 		friend class OctFileReader;
 	public:
-		typedef std::vector<OctExtension> ExtensionsList;
 		Octdata_EXPORTS static OctFileRead& getInstance()                        { static OctFileRead instance; return instance; }
 
-		Octdata_EXPORTS static const ExtensionsList& supportedExtensions();
+		Octdata_EXPORTS static const OctExtensionsList& supportedExtensions();
 		Octdata_EXPORTS static OCT openFile(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback = nullptr);
 		Octdata_EXPORTS static OCT openFile(const boost::filesystem::path& filename, const FileReadOptions& op, CppFW::Callback* callback = nullptr);
 		Octdata_EXPORTS static OCT openFile(const std::string& filename, CppFW::Callback* callback = nullptr);
@@ -41,13 +41,13 @@ namespace OctData
 		OctFileRead();
 		~OctFileRead();
 
-		void registerFileRead(OctFileReader* reader, const OctExtension& ext);
+		void registerFileRead(OctFileReader* reader);
 		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback);
 		OCT openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback);
 
 		void writeFilePrivat(const std::string& filename, const OCT& octdata);
 
-		ExtensionsList extensions;
+		OctExtensionsList extensions;
 
 		std::vector<OctFileReader*> fileReaders;
 	};

@@ -178,10 +178,4 @@ end
 	}
 
 
-	CirrusRawRead* CirrusRawRead::getInstance()
-	{
-		static CirrusRawRead instance; return &instance;
-	}
-
-
 }

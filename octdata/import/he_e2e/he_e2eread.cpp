@@ -587,10 +587,5 @@ namespace OctData
 		return true;
 	}
 
-	HeE2ERead* HeE2ERead::getInstance()
-	{
-		static HeE2ERead instance; return &instance;
-	}
-
 
 }

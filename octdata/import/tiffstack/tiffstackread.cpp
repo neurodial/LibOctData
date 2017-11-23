@@ -76,10 +76,4 @@ namespace OctData
 		return dircount>0;
 	}
 
-	TiffStackRead* TiffStackRead::getInstance()
-	{
-		static TiffStackRead instance; return &instance;
-	}
-
-
 }

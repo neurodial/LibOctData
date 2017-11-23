@@ -479,11 +479,4 @@ namespace OctData
 		return true;
 	}
 
-	OctFileFormatRead* OctFileFormatRead::getInstance()
-	{
-		static OctFileFormatRead instance;
-		return &instance;
-	}
-
-
 }

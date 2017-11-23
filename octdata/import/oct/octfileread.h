@@ -7,11 +7,10 @@ namespace OctData
 {
 	class OctFileFormatRead : public OctFileReader
 	{
-		OctFileFormatRead();
 	public:
-		static OctFileFormatRead* getInstance();
+		OctFileFormatRead();
 
-	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
+	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) override;
 	};
 }
 

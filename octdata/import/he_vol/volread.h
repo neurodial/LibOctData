@@ -7,11 +7,10 @@ namespace OctData
 {
 	class VOLRead : public OctFileReader
 	{
-		VOLRead();
 	public:
-		static VOLRead* getInstance();
+		VOLRead();
 
-	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
+	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) override;
 	};
 }
 

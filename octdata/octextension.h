@@ -45,4 +45,12 @@ namespace OctData
 		ExtList extensions;
 		std::string name;
 	};
+
+
+	class OctExtensionsList : public std::vector<OctExtension>
+	{
+	public:
+		OctExtensionsList() = default;
+		OctExtensionsList(const std::initializer_list<OctExtension>& list) : std::vector<OctExtension>(list) {};
+	};
 }

@@ -5,6 +5,8 @@
 #include "filereadoptions.h"
 #include<export/cvbin/cvbinoctwrite.h>
 
+#include<opencv/cv.hpp>
+
 #include "buildconstants.h"
 
 #include <boost/log/trivial.hpp>
@@ -24,12 +26,16 @@ namespace OctData
 		BOOST_LOG_TRIVIAL(info) << "OctData: Build Time      : " << BuildConstants::buildTime;
 		BOOST_LOG_TRIVIAL(info) << "OctData: Compiler Id     : " << BuildConstants::compilerId;
 		BOOST_LOG_TRIVIAL(info) << "OctData: Compiler Version: " << BuildConstants::compilerVersion;
+		BOOST_LOG_TRIVIAL(info) << "OctData: OpenCV Version  : " << CV_VERSION ; // cv::getBuildInformation();
+
+		OctFileReader::registerReaders(*this); // TODO: serch better implementation
 	}
 
 
 	OctFileRead::~OctFileRead()
 	{
-
+		for(OctFileReader* reader : fileReaders)
+			delete reader;
 	}
 
 
@@ -59,7 +65,6 @@ namespace OctData
 
 	OCT OctFileRead::openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback)
 	{
-		OctFileReader::registerReaders(); // TODO: serch better implementation to prevent remove by linker
 
 		OctData::OCT oct;
 
@@ -79,16 +84,24 @@ namespace OctData
 	}
 
 // used by friend class OctFileReader
-	void OctFileRead::registerFileRead(OctFileReader* reader, const OctExtension& ext)
+	void OctFileRead::registerFileRead(OctFileReader* reader)
 	{
-		extensions.push_back(ext);
+		if(!reader)
+			return;
+
+		const OctExtensionsList& extList = reader->getExtentsions();
+
+		for(const OctExtension& ext : extList)
+		{
+			BOOST_LOG_TRIVIAL(info) << "OctData: register reader for " << ext.name;
+			extensions.push_back(ext);
+		}
+
 		fileReaders.push_back(reader);
 	}
 
-	const OctFileRead::ExtensionsList& OctFileRead::supportedExtensions()
+	const OctExtensionsList& OctFileRead::supportedExtensions()
 	{
-		OctFileReader::registerReaders(); // TODO: serch better implementation to prevent remove by linker
-		
 		return getInstance().extensions;
 	}
 
@@ -98,9 +111,8 @@ namespace OctData
 		const std::string fileExt = file.extension().generic_string();
 
 		for(const OctExtension& supportedExtension : getInstance().extensions)
-			for(const std::string& ext : supportedExtension.extensions)
-				if(ext == fileExt)
-					return true;
+			if(supportedExtension == fileExt)
+				return true;
 		return false;
 	}
 

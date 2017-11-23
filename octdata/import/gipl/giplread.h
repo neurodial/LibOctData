@@ -7,11 +7,10 @@ namespace OctData
 {
 	class GIPLRead : public OctFileReader
 	{
-		GIPLRead();
 	public:
-		static GIPLRead* getInstance();
+		GIPLRead();
 
-	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
+	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) override;
 	};
 }
 

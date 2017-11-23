@@ -419,11 +419,4 @@ namespace OctData
 		return true;
 	}
 
-	TopconFileFormatRead* TopconFileFormatRead::getInstance()
-	{
-		static TopconFileFormatRead instance;
-		return &instance;
-	}
-
-
 }

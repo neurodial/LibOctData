@@ -91,13 +91,6 @@ namespace
 namespace OctData
 {
 
-	OctData::GIPLRead * OctData::GIPLRead::getInstance()
-	{
-		static GIPLRead instance;
-		return &instance;
-	}
-
-
 	bool OctData::GIPLRead::readFile(const boost::filesystem::path& file, OctData::OCT& oct, const OctData::FileReadOptions& op, CppFW::Callback* callback)
 	{
 

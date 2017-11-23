@@ -403,11 +403,5 @@ namespace OctData
 		return fillStatus;
 	}
 
-	CvBinRead* CvBinRead::getInstance()
-	{
-		static CvBinRead instance;
-		return &instance;
-	}
-
 
 }

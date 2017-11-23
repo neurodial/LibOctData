@@ -21,15 +21,12 @@ namespace OctData
 
 	OctFileReader::OctFileReader(const OctExtension& ext)
 	{
-		OctFileRead& fileRead = OctFileRead::getInstance();
-		fileRead.registerFileRead(this, ext);
+		extList.push_back(ext);
 	}
 
-	OctFileReader::OctFileReader(const std::vector<OctExtension>& extList)
+	OctFileReader::OctFileReader(const OctExtensionsList& extList)
+	: extList(extList)
 	{
-		OctFileRead& fileRead = OctFileRead::getInstance();
-		for(const OctExtension& ext : extList)
-			fileRead.registerFileRead(this, ext);
 	}
 
 	OctFileReader::~OctFileReader()
@@ -37,37 +34,37 @@ namespace OctData
 
 	}
 
-	void OctFileReader::registerReaders()
+	void OctFileReader::registerReaders(OctFileRead& fileRead)
 	{
 #ifdef HE_VOL_SUPPORT
-		VOLRead::getInstance();
+		fileRead.registerFileRead(new VOLRead);
 #endif
 #ifdef HE_XML_SUPPORT
-		HeXmlRead::getInstance();
+		fileRead.registerFileRead(new HeXmlRead);
 #endif
 #ifdef CIRRUS_RAW_SUPPORT
-		CirrusRawRead::getInstance();
+		fileRead.registerFileRead(new CirrusRawRead);
 #endif
 #ifdef DICOM_SUPPORT
-		DicomRead::getInstance();
+		fileRead.registerFileRead(new DicomRead);
 #endif
 #ifdef HE_E2E_SUPPORT
-		HeE2ERead::getInstance();
+		fileRead.registerFileRead(new HeE2ERead);
 #endif
 #ifdef TIFFSTACK_SUPPORT
-		TiffStackRead::getInstance();
+		fileRead.registerFileRead(new TiffStackRead);
 #endif
 #ifdef CVBIN_SUPPORT
-		CvBinRead::getInstance();
+		fileRead.registerFileRead(new CvBinRead);
 #endif
 #ifdef OCT_FILE_SUPPORT
-		OctFileFormatRead::getInstance();
+		fileRead.registerFileRead(new OctFileFormatRead);
 #endif
 #ifdef TOPCON_FILE_SUPPORT
-		TopconFileFormatRead::getInstance();
+		fileRead.registerFileRead(new TopconFileFormatRead);
 #endif
 #ifdef GIPL_SUPPORT
-		GIPLRead::getInstance();
+		fileRead.registerFileRead(new GIPLRead);
 #endif
 	}
 

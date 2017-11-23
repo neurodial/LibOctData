@@ -7,11 +7,10 @@ namespace OctData
 {
 	class CvBinRead : public OctFileReader
 	{
-		CvBinRead();
 	public:
-		static CvBinRead* getInstance();
+		CvBinRead();
 
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
+		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) override;
 	};
 }
 
