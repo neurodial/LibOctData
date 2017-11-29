@@ -19,6 +19,8 @@
 
 #include<filereader/filereader.h>
 
+#include <boost/log/trivial.hpp>
+
 namespace bfs = boost::filesystem;
 
 
@@ -37,7 +39,7 @@ namespace
 namespace OctData
 {
 	CirrusRawRead::CirrusRawRead()
-	: OctFileReader(OctExtension(".img", "Cirrus img files"))
+	: OctFileReader(OctExtension{".img", ".img.gz", "Cirrus img files"})
 	{
 
 	}
@@ -46,17 +48,30 @@ namespace OctData
 	{
 		const boost::filesystem::path& file = filereader.getFilepath();
 
+		if(filereader.getExtension() != ".vol")
+			return false;
+
+		const std::string filenameString = filereader.getFilepath().generic_string();
+		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
+
+		if(!filereader.openFile())
+		{
+			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << filenameString;
+			return false;
+		}
+		/*
 		if(file.extension() != ".img")
 			return false;
 
 		if(!bfs::exists(file))
 			return false;
+		*/
 
 		bool debug = false;
 
 		// split filename in elements
 		std::vector<std::string> elements;
-		std::string filenameString = file.filename().generic_string();
+// 		std::string filenameString = file.filename().generic_string();
 		boost::split(elements, filenameString, boost::is_any_of("_"), boost::token_compress_on);
 
 		if(debug)
@@ -126,9 +141,9 @@ end
 		std::size_t filesize = bfs::file_size(file);
 		std::size_t volSizeZ = filesize / volSizeX /volSizeY;
 
-		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
-		if(!stream.good())
-			return false;
+// // 		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
+// 		if(!stream.good())
+// 			return false;
 
 		Patient& pat    = oct.getPatient(0);
 		Series&  series = pat.getStudy(0).getSeries(0);
@@ -142,7 +157,8 @@ end
 			}
 
 			cv::Mat bscanImage;
-			readCVImage<uint8_t>(stream, bscanImage, volSizeZ, volSizeX);
+// 			readCVImage<uint8_t>(stream, bscanImage, volSizeZ, volSizeX);
+			filereader.readCVImage<uint8_t>(bscanImage, volSizeZ, volSizeX);
 			cv::flip(bscanImage, bscanImage, 0);
 
 			BScan* bscan = new BScan(bscanImage, BScan::Data());

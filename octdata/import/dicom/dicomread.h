@@ -11,13 +11,11 @@ namespace OctData
 
 	class DicomRead : public OctFileReader
 	{
-	    DicomRead();
-
 		bool readDicomDir(const boost::filesystem::path& file, OCT& oct);
 	public:
-		static DicomRead* getInstance();
+	    DicomRead();
 
-		virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback);
+	    virtual bool readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) override;
 	};
 
 }

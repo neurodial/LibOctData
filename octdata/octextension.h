@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
 #include <string>
 
 #include <initializer_list>
@@ -39,12 +40,15 @@ namespace OctData
 		bool matchWithFile(const std::string& filename) const
 		{
 			const std::size_t fileLength = filename.length();
+			std::string lowerCaseName = filename;
+			std::transform(lowerCaseName.begin(), lowerCaseName.end(), lowerCaseName.begin(), ::tolower);
+
 			for(const std::string& str : extensions)
 			{
 				const std::size_t extLength = str.length();
 				if(fileLength > extLength)
 				{
-					if(str == filename.substr(fileLength-extLength, extLength))
+					if(str == lowerCaseName.substr(fileLength-extLength, extLength))
 						return true;
 				}
 			}

@@ -2,7 +2,7 @@
 
 #ifdef USE_DCMTK
 
-#include "readjpeg2k.h"
+#include "../topcon/readjpeg2k.h"
 
 #include <iostream>
 #include <fstream>
@@ -29,6 +29,12 @@
 #include <datastruct/coordslo.h>
 #include <datastruct/sloimage.h>
 #include <datastruct/bscan.h>
+
+
+#include<filereader/filereader.h>
+
+#include<omp.h>
+#include <cpp_framework/callback.h>
 
 namespace bfs = boost::filesystem;
 
@@ -106,8 +112,13 @@ namespace OctData
 	{
 	}
 
-	bool DicomRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* /*callback*/)
+
+#if false
+	bool DicomRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* /*callback*/)
+// 	bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* /*callback*/)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
+
 		std::string ext = file.extension().generic_string();
 		std::string filename = file.filename().generic_string();
 
@@ -226,12 +237,7 @@ namespace OctData
 		return false;
 	}
 
-
-	DicomRead* DicomRead::getInstance()
-	{
-		static DicomRead instance; return &instance;
-	}
-
+#endif
 
 	#if false
 	void ReadDICOM::readFile(const std::string& filename, CScan* cscan)
@@ -331,9 +337,12 @@ namespace OctData
 	}
 	#endif
 
-	#if false
-	void ReadDICOM::readFile(const std::string& filename, CScan* cscan)
+	#if true
+
+	bool DicomRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
+// 	void ReadDICOM::readFile(const std::string& filename, CScan* cscan)
 	{
+		const std::string filename = filereader.getFilepath().generic_string();
 		std::cout << "ReadDICOM: " << filename << std::endl;
 
 		OFCondition result = EC_Normal;
@@ -341,18 +350,25 @@ namespace OctData
 		DcmFileFormat dfile;
 		result = dfile.loadFile(filename.c_str());
 		if(result.bad())
-			return;
+			return false;
 
 		DcmDataset *data = dfile.getDataset();
 		if (data == NULL)
-			return;
+			return false;
 
 		// data->print(std::cout);
 
 		DcmElement* element = NULL;
 		result = data->findAndGetElement(DCM_PixelData, element);
 		if(result.bad() || element == NULL)
-			return;
+			return false;
+
+
+
+		Patient& pat    = oct.getPatient(1);
+		Study&   study  = pat.getStudy(1);
+		Series&  series = study.getSeries(1); // TODO
+
 
 		DcmPixelData *dpix = NULL;
 		dpix = OFstatic_cast(DcmPixelData*, element);
@@ -387,16 +403,21 @@ namespace OctData
 			// std::cout << u << " - " << c << " - " << dseq->card() << std::endl;
 			// dseq->print(std::cout);
 
-			const int maxEle = dseq->card();
+			const unsigned long maxEle = dseq->card();
 			// #pragma omp parallel for ordered schedule(dynamic) private(pixitem)
-			#pragma omp parallel for ordered schedule(dynamic)
-			for(int i = 1; i<maxEle; ++i)
+// 			#pragma omp parallel for ordered schedule(dynamic)
+			for(unsigned long i = 1; i<maxEle; ++i)
 			{
+				if(callback)
+				{
+					if(!callback->callback(static_cast<double>(i)/static_cast<double>(maxEle)))
+						break;
+				}
 
 				char* copyPixData = nullptr;
 				Uint8* pixData = NULL;
 				DcmPixelItem* pixitem = NULL;
-	#pragma omp critical
+// 	#pragma omp critical
 				{
 					dseq->getItem(pixitem, i);
 					if(pixitem != NULL)
@@ -522,10 +543,10 @@ namespace OctData
 				bool flip = true; // for Cirrus
 				obj.getImage(gray_image, flip);
 
-				#pragma omp ordered
+// 				#pragma omp ordered
 				{
 					if(!gray_image.empty())
-						cscan->takeBScan(new BScan(gray_image, BScan::Data()));
+						series.takeBScan(new BScan(gray_image, BScan::Data()));
 					else
 						std::cerr << "Empty openCV image\n";
 				}
@@ -535,6 +556,7 @@ namespace OctData
 				delete[] copyPixData;
 			}
 		}
+		return true;
 	}
 	#endif
 
@@ -552,16 +574,11 @@ namespace OctData
 	: OctFileReader()
 	{ }
 
-	bool DicomRead::readFile(const boost::filesystem::path&, OCT&, const FileReadOptions& /*op*/)
+	bool DicomRead::readFile(OctData::FileReader& /*filereader*/, OctData::OCT& /*oct*/, const OctData::FileReadOptions& /*op*/, CppFW::Callback* /*callback*/)
 	{
 		return false;
 	}
 
-
-	DicomRead* DicomRead::getInstance()
-	{
-		static DicomRead instance; return &instance;
-	}
 }
 
 #endif // USE_DCMTK
