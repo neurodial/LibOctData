@@ -109,11 +109,9 @@ namespace OctData
 
 	bool OctFileRead::isLoadable(const std::string& filename)
 	{
-		const bfs::path file(filename);
-		const std::string fileExt = file.extension().generic_string();
 
 		for(const OctExtension& supportedExtension : getInstance().extensions)
-			if(supportedExtension == fileExt)
+			if(supportedExtension.matchWithFile(filename))
 				return true;
 		return false;
 	}

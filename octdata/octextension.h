@@ -5,6 +5,8 @@
 
 #include <initializer_list>
 
+#include<iostream> // TODO
+
 namespace OctData
 {
 	class OctExtension
@@ -34,13 +36,21 @@ namespace OctData
 		}
 
 
-		bool operator==(const std::string& ext) const
+		bool matchWithFile(const std::string& filename) const
 		{
+			const std::size_t fileLength = filename.length();
 			for(const std::string& str : extensions)
-				if(str == ext)
-					return true;
+			{
+				const std::size_t extLength = str.length();
+				if(fileLength > extLength)
+				{
+					if(str == filename.substr(fileLength-extLength, extLength))
+						return true;
+				}
+			}
 			return false;
 		}
+
 
 		ExtList extensions;
 		std::string name;
