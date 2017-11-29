@@ -21,6 +21,7 @@ option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
 option(BUILD_WITH_SUPPORT_OCT_FILE  "build support for oct format" ON)
 option(BUILD_WITH_SUPPORT_TOPCON    "build support for topcon format" ON)
 option(BUILD_WITH_SUPPORT_GIPL      "build support for gipl format" ON)
+option(BUILD_WITH_ZLIB              "build the programms with ZLIB" ON)
 
 
 # General build config
@@ -125,9 +126,14 @@ if(BUILD_WITH_SUPPORT_TIFFSTACK)
 	
 	add_definitions(-DTIFFSTACK_SUPPORT)
 endif()
-	
-	
-	
+
+
+if(BUILD_WITH_ZLIB)
+	find_package(ZLIB REQUIRED)
+	include_directories(${ZLIB_INCLUDE_DIRS})
+	add_definitions(-DWITH_ZLIB)
+endif()
+
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
@@ -177,15 +183,15 @@ ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 
 
 # add a target to generate API documentation with Doxygen
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-	add_custom_target(doc
-	${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-	COMMENT "Generating API documentation with Doxygen" VERBATIM
-	)
-endif(DOXYGEN_FOUND)
+# find_package(Doxygen)
+# if(DOXYGEN_FOUND)
+# 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+# 	add_custom_target(doc
+# 	${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+# 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+# 	COMMENT "Generating API documentation with Doxygen" VERBATIM
+# 	)
+# endif(DOXYGEN_FOUND)
 
 
 if(DEFINED DCMTK_FOUND)
@@ -193,8 +199,10 @@ if(DEFINED DCMTK_FOUND)
 	target_link_libraries(octdata ${DCMTK_LIBRARIES})
 endif()
 # target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 target_link_libraries(octdata ${CppFramework_LIBRARIES})
+
+
 
 GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EXPORTS.h automatically
 	BASE_NAME octdata
@@ -206,6 +214,5 @@ GENERATE_EXPORT_HEADER(octdata           # generates the export header shared_EX
 add_definitions(-DOCTDATA_EXPORT)
 
 add_executable(liboctdata_test main.cpp)
-target_link_libraries(liboctdata_test octdata)
-
+target_link_libraries(liboctdata_test octdata ${OpenCV_LIBRARIES} )
 

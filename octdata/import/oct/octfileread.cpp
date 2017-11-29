@@ -21,6 +21,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include<filereader/filereader.h>
 
 namespace bfs = boost::filesystem;
 
@@ -407,8 +408,9 @@ namespace OctData
 	{
 	}
 
-	bool OctFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
+	bool OctFileFormatRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
 //     BOOST_LOG_TRIVIAL(debug) << "A debug severity message";

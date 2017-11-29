@@ -20,6 +20,8 @@ namespace bfs = boost::filesystem;
 #include <filereadoptions.h>
 
 
+#include<filereader/filereader.h>
+
 
 // GIPL magic number
 const unsigned GIPL_MAGIC1 = 719555000;
@@ -91,8 +93,9 @@ namespace
 namespace OctData
 {
 
-	bool OctData::GIPLRead::readFile(const boost::filesystem::path& file, OctData::OCT& oct, const OctData::FileReadOptions& op, CppFW::Callback* callback)
+	bool OctData::GIPLRead::readFile(FileReader& filereader, OctData::OCT& oct, const OctData::FileReadOptions& op, CppFW::Callback* callback)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
 
 		if(file.extension() != ".gipl")
 			return false;

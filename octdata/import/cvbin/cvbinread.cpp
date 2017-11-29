@@ -19,6 +19,7 @@
 #include <cpp_framework/callback.h>
 #include <octfileread.h>
 
+#include<filereader/filereader.h>
 
 namespace bfs = boost::filesystem;
 
@@ -276,8 +277,9 @@ namespace OctData
 	{
 	}
 
-	bool CvBinRead::readFile(const bfs::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
+	bool CvBinRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
 //
 //     BOOST_LOG_TRIVIAL(trace)   << "A trace severity message";
 //     BOOST_LOG_TRIVIAL(debug)   << "A debug severity message";

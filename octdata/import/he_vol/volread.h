@@ -10,7 +10,7 @@ namespace OctData
 	public:
 		VOLRead();
 
-	    virtual bool readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) override;
+	    virtual bool readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback) override;
 	};
 }
 

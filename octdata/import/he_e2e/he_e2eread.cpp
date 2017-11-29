@@ -39,6 +39,7 @@
 
 #include"../platform_helper.h"
 
+#include<filereader/filereader.h>
 
 
 namespace bfs = boost::filesystem;
@@ -469,8 +470,10 @@ namespace OctData
 	{
 	}
 
-	bool HeE2ERead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
+	bool HeE2ERead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
+
 		if(file.extension() != ".E2E" && file.extension() != ".sdb")
 			return false;
 

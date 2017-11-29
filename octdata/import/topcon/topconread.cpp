@@ -1,27 +1,28 @@
 #include "topconread.h"
 
+
+#include <ostream>
+#include <fstream>
+#include <iomanip>
+
+#include <boost/log/trivial.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
+
+#include <opencv2/opencv.hpp>
+
+
 #include <cpp_framework/callback.h>
 
 #include <datastruct/oct.h>
 #include <datastruct/bscan.h>
 #include <datastruct/date.h>
 #include <datastruct/sloimage.h>
+#include <filereadoptions.h>
+#include<filereader/filereader.h>
 
-#include <ostream>
-#include <fstream>
-#include <iomanip>
-
-#include <opencv2/opencv.hpp>
-
-#include <boost/filesystem.hpp>
 
 #include "../platform_helper.h"
-#include <filereadoptions.h>
-
-
-#include <boost/log/trivial.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include "readjpeg2k.h"
 
 
@@ -317,8 +318,9 @@ namespace OctData
 	{
 	}
 
-	bool TopconFileFormatRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
+	bool TopconFileFormatRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
 //     BOOST_LOG_TRIVIAL(debug) << "A debug severity message";

@@ -26,6 +26,9 @@
 #include <boost/log/trivial.hpp>
 
 
+#include<filereader/filereader.h>
+
+
 namespace bfs = boost::filesystem;
 namespace bpt = boost::property_tree;
 
@@ -218,8 +221,9 @@ namespace OctData
 	{
 	}
 
-	bool HeXmlRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
+	bool HeXmlRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
 		if(file.extension() != ".xml")
 			return false;
 

@@ -17,6 +17,7 @@
 #include <boost/lexical_cast.hpp>
 #include <cpp_framework/callback.h>
 
+#include<filereader/filereader.h>
 
 namespace bfs = boost::filesystem;
 
@@ -41,8 +42,10 @@ namespace OctData
 
 	}
 
-	bool CirrusRawRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
+	bool CirrusRawRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
+
 		if(file.extension() != ".img")
 			return false;
 

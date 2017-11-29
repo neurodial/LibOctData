@@ -14,6 +14,8 @@
 #include <boost/filesystem.hpp>
 namespace bfs = boost::filesystem;
 
+#include<filereader/filereader.h>
+
 #include "import/platform_helper.h"
 
 namespace OctData
@@ -65,14 +67,14 @@ namespace OctData
 
 	OCT OctFileRead::openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback)
 	{
-
+		FileReader filereader(file);
 		OctData::OCT oct;
 
 		if(bfs::exists(file))
 		{
 			for(OctFileReader* reader : fileReaders)
 			{
-				if(reader->readFile(file, oct, op, callback))
+				if(reader->readFile(filereader, oct, op, callback))
 					break;
 				oct.clear();
 			}

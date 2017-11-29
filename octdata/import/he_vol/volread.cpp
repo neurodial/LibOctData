@@ -5,8 +5,6 @@
 #include <datastruct/bscan.h>
 
 #include <ostream>
-#include <fstream>
-#include <iomanip>
 
 #include <chrono>
 #include <ctime>
@@ -16,9 +14,7 @@
 #include <boost/filesystem.hpp>
 
 #include "../../octdata_packhelper.h"
-#include "../platform_helper.h"
 #include <filereadoptions.h>
-
 
 #include <boost/log/trivial.hpp>
 #include <boost/lexical_cast.hpp>
@@ -27,6 +23,8 @@
 #include <cpp_framework/callback.h>
 
 #include<boost/optional.hpp>
+
+#include<filereader/filereader.h>
 
 namespace bfs = boost::filesystem;
 
@@ -277,13 +275,12 @@ namespace
 
 namespace OctData
 {
-
 	VOLRead::VOLRead()
-	: OctFileReader(OctExtension(".vol", "Heidelberg Engineering Raw File"))
+	: OctFileReader(OctExtension{".vol", ".vol.gz", "Heidelberg Engineering Raw File"})
 	{
 	}
 
-	bool VOLRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
+	bool VOLRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 //
 //     BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
@@ -293,40 +290,44 @@ namespace OctData
 //     BOOST_LOG_TRIVIAL(error) << "An error severity message";
 //     BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
 
-		if(file.extension() != ".vol")
+		if(filereader.getExtension() != ".vol")
 			return false;
 
+		const std::string filename = filereader.getFilepath().generic_string();
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
 
-
+		if(!filereader.openFile())
+		{
+			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << filename;
+			return false;
+		}
+/*
 		std::fstream stream(filepathConv(file), std::ios::binary | std::ios::in);
 		if(!stream.good())
 		{
 			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << filepathConv(file);
 			return false;
 		}
+		*/
 
-		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as vol file";
-
-		std::string dir      = file.branch_path().generic_string();
-		std::string filename = file.filename().generic_string();
+		BOOST_LOG_TRIVIAL(debug) << "open " << filename << " as vol file";
 
 
 		const std::size_t formatstringlength = 8;
 		char fileformatstring[formatstringlength];
-		readFStream(stream, fileformatstring, formatstringlength);
+		filereader.readFStream(fileformatstring, formatstringlength);
 		if(memcmp(fileformatstring, "HSF-OCT-", formatstringlength) != 0) // 0 = strings are equal
 		{
-			BOOST_LOG_TRIVIAL(error) << file.generic_string() << " Wrong fileformat (not HSF-OCT)";
+			BOOST_LOG_TRIVIAL(error) << filename << " Wrong fileformat (not HSF-OCT)";
 			return false;
 		}
 
 		VolHeader volHeader;
 
-		readFStream(stream, &(volHeader.data));
+		filereader.readFStream(&(volHeader.data));
 // 		volHeader.printData(std::cout);
 		BOOST_LOG_TRIVIAL(info) << "HSF file version: " << volHeader.data.version;
-		stream.seekg(VolHeader::getHeaderSize());
+		filereader.seekg(VolHeader::getHeaderSize());
 
 		Patient& pat    = oct.getPatient(volHeader.data.pid);
 		Study&   study  = pat.getStudy(volHeader.data.vid);
@@ -338,7 +339,7 @@ namespace OctData
 
 		// Read SLO
 		cv::Mat sloImage;
-		readCVImage<uint8_t>(stream, sloImage, volHeader.data.sizeXSlo, volHeader.data.sizeYSlo);
+		filereader.readCVImage<uint8_t>(sloImage, volHeader.data.sizeXSlo, volHeader.data.sizeYSlo);
 
 		SloImage* slo = new SloImage;
 		slo->setImage(sloImage);
@@ -357,50 +358,23 @@ namespace OctData
 			}
 
 			BScanHeader bscanHeader;
+			BScan::Data bscanData;
 
 			std::size_t bscanPos = VolHeader::getHeaderSize() + volHeader.getSLOPixelSize() + numBscan*volHeader.getBScanSize();
 
 // 			std::cout << "bscanPos: " << bscanPos << std::endl;
 
-			stream.seekg(bscanPos);
-			readFStream(stream, &(bscanHeader.data));
+			filereader.seekg(bscanPos);
+			filereader.readFStream(&(bscanHeader.data));
 
 			if(memcmp(bscanHeader.data.hsfOctRawStr, "HSF-BS-", BScanHeader::identiferSize) != 0) // 0 = strings are equal
 			{
-				BOOST_LOG_TRIVIAL(error) << file.generic_string() << " Wrong fileformat (not HSF-BS-) -> " << bscanHeader.data.hsfOctRawStr;
+				BOOST_LOG_TRIVIAL(error) << filename << " Wrong fileformat (not HSF-BS-) -> " << bscanHeader.data.hsfOctRawStr;
 				return false;
 			}
 // 			BOOST_LOG_TRIVIAL(info) << "HSF-BScan version: " << bscanHeader.data.version;
 
 			// bscanHeader.printData();
-
-			stream.seekg(volHeader.data.bScanHdrSize+bscanPos);
-			cv::Mat bscanImage;
-			cv::Mat bscanImagePow;
-			cv::Mat bscanImageConv;
-			readCVImage<float>(stream, bscanImage, volHeader.data.sizeZ, volHeader.data.sizeX);
-
-			if(op.fillEmptyPixelWhite)
-				cv::threshold(bscanImage, bscanImage, 1.0, 1.0, cv::THRESH_TRUNC); // schneide hohe werte ab, sonst: bei der konvertierung werden sie auf 0 gesetzt
-			// cv::pow(bscanImage, 0.25, bscanImagePow);
-			simdQuadRoot(bscanImage, bscanImagePow);
-			bscanImagePow.convertTo(bscanImageConv, CV_8U, 255, 0);
-
-			BScan::Data bscanData;
-			bscanData.start       = CoordSLOmm(bscanHeader.data.startX, bscanHeader.data.startY);
-
-			if(series.getScanPattern() == OctData::Series::ScanPattern::Circular
-			|| (series.getScanPattern() == OctData::Series::ScanPattern::RadialCircles && numBscan >= numBScans-3)) // specific to the ScanPattern
-			{
-				bscanData.center            = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
-				bscanData.clockwiseRotation = series.getLaterality() == OctData::Series::Laterality::OD;
-			}
-			else
-				bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
-
-
-			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleX, volHeader.data.distance, volHeader.data.scaleZ);
-			bscanData.imageQuality = bscanHeader.data.quality;
 
 
 			typedef boost::optional<Segmentationlines::SegmentlineType> SegLineOpt;
@@ -425,8 +399,7 @@ namespace OctData
 				Segmentationlines::SegmentlineType::RPE     // 16
 			};
 
-
-			stream.seekg(256+bscanPos);
+			filereader.seekg(256+bscanPos);
 			const int maxSeg = std::min(static_cast<int>(sizeof(seglines)/sizeof(seglines[0])), bscanHeader.data.numSeg);
 			for(int segNum = 0; segNum < maxSeg; ++segNum)
 			{
@@ -435,13 +408,40 @@ namespace OctData
 				float value;
 				for(std::size_t xpos = 0; xpos<volHeader.data.sizeX; ++xpos)
 				{
-					readFStream(stream, &value);
+					filereader.readFStream(&value);
 					segVec.push_back(value);
 				}
 
 				if(seglines[segNum])
 					bscanData.getSegmentLine(*(seglines[segNum])) = std::move(segVec);
 			}
+
+			filereader.seekg(volHeader.data.bScanHdrSize+bscanPos);
+			cv::Mat bscanImage;
+			cv::Mat bscanImagePow;
+			cv::Mat bscanImageConv;
+			filereader.readCVImage<float>(bscanImage, volHeader.data.sizeZ, volHeader.data.sizeX);
+
+			if(op.fillEmptyPixelWhite)
+				cv::threshold(bscanImage, bscanImage, 1.0, 1.0, cv::THRESH_TRUNC); // schneide hohe werte ab, sonst: bei der konvertierung werden sie auf 0 gesetzt
+			// cv::pow(bscanImage, 0.25, bscanImagePow);
+			simdQuadRoot(bscanImage, bscanImagePow);
+			bscanImagePow.convertTo(bscanImageConv, CV_8U, 255, 0);
+
+			bscanData.start       = CoordSLOmm(bscanHeader.data.startX, bscanHeader.data.startY);
+
+			if(series.getScanPattern() == OctData::Series::ScanPattern::Circular
+			|| (series.getScanPattern() == OctData::Series::ScanPattern::RadialCircles && numBscan >= numBScans-3)) // specific to the ScanPattern
+			{
+				bscanData.center            = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
+				bscanData.clockwiseRotation = series.getLaterality() == OctData::Series::Laterality::OD;
+			}
+			else
+				bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
+
+
+			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleX, volHeader.data.distance, volHeader.data.scaleZ);
+			bscanData.imageQuality = bscanHeader.data.quality;
 
 
 
@@ -454,8 +454,8 @@ namespace OctData
 		if(volHeader.data.gridType > 0 && volHeader.data.gridOffset > 2000)
 		{
 			ThicknessGrid grid;
-			stream.seekg(volHeader.data.gridOffset);
-			readFStream(stream, &(grid.data));
+			filereader.seekg(volHeader.data.gridOffset);
+			filereader.readFStream(&(grid.data));
 
 			AnalyseGrid& analyseGrid = series.getAnalyseGrid();
 			analyseGrid.addDiameterMM(grid.data.diameterA);
@@ -466,7 +466,7 @@ namespace OctData
 		}
 
 
-		BOOST_LOG_TRIVIAL(debug) << "read vol file \"" << file.generic_string() << "\" finished";
+		BOOST_LOG_TRIVIAL(debug) << "read vol file \"" << filename << "\" finished";
 		return true;
 	}
 

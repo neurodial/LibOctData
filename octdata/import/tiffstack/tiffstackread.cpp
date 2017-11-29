@@ -17,6 +17,8 @@
 #include <tiffio.h>
 #include <tiffio.hxx>
 
+#include<filereader/filereader.h>
+
 namespace bfs = boost::filesystem;
 
 namespace OctData
@@ -27,8 +29,10 @@ namespace OctData
 	{
 	}
 
-	bool TiffStackRead::readFile(const boost::filesystem::path& file, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* /*callback*/)
+	bool TiffStackRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* /*callback*/)
 	{
+		const boost::filesystem::path& file = filereader.getFilepath();
+
 		if(file.extension() != ".tiff" && file.extension() != ".tif")
 			return false;
 		
