@@ -20,17 +20,17 @@ extern "C" {
 
 	void opj_error_callback(const char* msg, void* /*usr*/)
 	{
-		std::cerr << "Err: OpenJPEG: " << msg << std::endl;
+		std::cerr << "Err: OpenJPEG: " << msg;
 	}
 
 	void opj_warning_callback(const char* msg, void*)
 	{
-		std::cout << "Wrn: OpenJPEG: " << msg << std::endl;
+		std::cout << "Wrn: OpenJPEG: " << msg;
 	}
 
 	void opj_info_callback(const char* msg, void*)
 	{
-		std::cout << "Info: OpenJPEG: " << msg << std::endl;
+		std::cout << "Info: OpenJPEG: " << msg;
 	}
 }
 
@@ -268,7 +268,7 @@ bool ReadJPEG2K::openJpeg(const char* data, std::size_t dataSize)
 	if(l_codec == nullptr)
 		return false;
 	
-	// bool infoH = opj_set_info_handler   (l_codec, opj_info_callback   , 0);
+// 	/* bool infoH = */ opj_set_info_handler   (l_codec, opj_info_callback   , 0);
 	/* bool warnH = */ opj_set_warning_handler(l_codec, opj_warning_callback, 0);
 	/* bool erroH = */ opj_set_error_handler  (l_codec, opj_error_callback  , 0);
 
@@ -390,6 +390,8 @@ bool ReadJPEG2K::copyMatrix(cv::Mat& cvImage, bool flip)
 		rowAdd  = 1;
 	}
 
+	if(!image->comps[0].data)
+		return false;;
 
 	cvImage.create(rows, cols, type);
 
@@ -410,7 +412,8 @@ bool ReadJPEG2K::copyMatrix(cv::Mat& cvImage, bool flip)
 		{
 			for(int c = 0; c < channels; ++c)
 			{
-				*mi = static_cast<T>(*(dataIt[c]));
+				if(dataIt[c])
+					*mi = static_cast<T>(*(dataIt[c]));
 				++mi;
 				dataIt[c] += lineAdd;
 			}

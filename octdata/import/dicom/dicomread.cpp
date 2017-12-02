@@ -16,8 +16,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
-
-// #include <dcmtk/config/cfunix.h>
 #include <dcmtk/config/osconfig.h>
 #include <dcmtk/dcmimgle/dcmimage.h>
 
@@ -38,6 +36,11 @@
 
 namespace bfs = boost::filesystem;
 
+
+#include <boost/log/trivial.hpp>
+
+
+#include<string.h>
 
 namespace
 {
@@ -389,6 +392,8 @@ namespace OctData
 		// Access original data representation and get result within pixel sequence
 		result = dpix->getEncapsulatedRepresentation(xferSyntax, rep, dseq);
 
+		Uint8* pixData = nullptr;
+		DcmPixelItem* pixitem = NULL;
 		if(result == EC_Normal)
 		{
 
@@ -406,20 +411,22 @@ namespace OctData
 			const unsigned long maxEle = dseq->card();
 			// #pragma omp parallel for ordered schedule(dynamic) private(pixitem)
 // 			#pragma omp parallel for ordered schedule(dynamic)
-			for(unsigned long i = 1; i<maxEle; ++i)
+			for(unsigned long k = 1; k<maxEle; ++k)
 			{
+				unsigned long i = k-1;
 				if(callback)
 				{
 					if(!callback->callback(static_cast<double>(i)/static_cast<double>(maxEle)))
 						break;
 				}
 
+				std::cout << " ---- " << i << std::endl;
+
 				char* copyPixData = nullptr;
-				Uint8* pixData = NULL;
-				DcmPixelItem* pixitem = NULL;
 // 	#pragma omp critical
+// 				if(!pixData)
 				{
-					dseq->getItem(pixitem, i);
+					dseq->getItem(pixitem, k);
 					if(pixitem != NULL)
 					{
 						Uint32 length = pixitem->getLength();
@@ -434,16 +441,16 @@ namespace OctData
 							{
 								std::cout << "defect Pixdata" << std::endl;
 							}
-							else
-							{
-								copyPixData = new char[length];
-								memcpy(copyPixData, pixData, length);
-							}
+// 							else
+// 							{
+// 								copyPixData = new char[length];
+// 								memcpy(copyPixData, pixData, length);
+// 							}
 						}
 					}
 				}
-				if(copyPixData == nullptr)
-					continue;
+// 				if(copyPixData == nullptr)
+// 					continue;
 
 				// pixitem->print(std::cout);
 
@@ -451,6 +458,9 @@ namespace OctData
 				// Get the length of this pixel item (i.e. fragment, i.e. most of the time, the lenght of the frame)
 
 				Uint32 length = pixitem->getLength();
+
+				copyPixData = new char[length];
+				memcpy(copyPixData, pixData, length);
 	// 			if(length == 0)
 	// 			{
 	// 				std::cerr << "unexpected pixitem lengt 0, ignore item\n";
@@ -467,8 +477,8 @@ namespace OctData
 
 				// Do something useful with pixData...
 
-				const char* usedPixData = reinterpret_cast<const char*>(copyPixData);
-				bool deleteUsedPixData = false;
+				const char* usedPixData = nullptr; // reinterpret_cast<const char*>(copyPixData);
+// 				bool deleteUsedPixData = false;
 
 				const unsigned char jpeg2kHeader[8] =
 				{
@@ -477,63 +487,41 @@ namespace OctData
 				};
 
 
+
 				if(memcmp(pixData, jpeg2kHeader, sizeof(jpeg2kHeader)) != 0)	// non unencrypted cirrus
 				{
+
 					std::cout << "Anormal JPEG2K, versuche umsortierung" << std::endl;
-					for(uint8_t* it = pixData; it < pixData+length; it+=7)
+					for(char* it = copyPixData; it < copyPixData+length; it+=7)
 						*it ^= 0x5a;
 
-					// umsortieren
+					const std::size_t headerpos = 3*length/5;
+
+// 					std::size_t headerlength = 400+i;
+// 					std::size_t headerlength = 305;
+					std::size_t headerlength = 245;
+
 					char* newPixData = new char[length];
-					deleteUsedPixData = true;
-					std::size_t headerpos = 3*length/5;
-					std::size_t blocksize = length/5; //  512; //
-					memcpy(newPixData, pixData+headerpos, blocksize);
-					memcpy(newPixData+blocksize, pixData, headerpos);
-					memcpy(newPixData+headerpos+blocksize, pixData+headerpos+blocksize, length-headerpos-blocksize);
+
+					memcpy(newPixData, copyPixData, length);
+					memcpy(newPixData, copyPixData+headerpos, headerlength);
+					memcpy(newPixData+headerpos, copyPixData, headerlength);
 
 					usedPixData = newPixData;
-
-
-					// test datei schreiben
-					std::string number = boost::lexical_cast<std::string>(i);
-					std::fstream outFileTest("jp2/" + number + ".jp2", std::ios::binary | std::ios::out);
-					outFileTest.write(reinterpret_cast<const char*>(usedPixData), length);
-					outFileTest.close();
+// 					std::cout << i << "data: " << length << "\t" << headerpos << "\t" << std::endl;
 				}
-	/*
-				for(uint8_t* it = pixData; it < pixData+length; it+=7)
-				{
-					*it ^= 0x5a;
-				}*/
-
-
-				// umsortieren
-	// 			uint8_t* tempData = new uint8_t[length];
-	// 			std::size_t headerpos = 3*length/5;
-	// 			std::size_t blocksize = 1024; // length/5;
-	// 			memcpy(tempData, pixData+headerpos, blocksize);
-	// 			memcpy(tempData+blocksize, pixData, headerpos);
-	// 			memcpy(tempData+headerpos+blocksize, pixData+headerpos+blocksize, length-headerpos-blocksize);
-	/*
-				std::cout << "It: " << i << "\tlänge: " << length << std::endl;
-				std::cout << "\tHeader-Pos: " << headerpos << " - " << (length % 5)*3 << std::endl;*/
-
-		// 		memcpy(tempData, pixData+blocksize*3, blocksize*2);
-		// 		memcpy(tempData+blocksize*2, pixData, blocksize*3);
-
-
-
-	// 			std::fstream outFile("jp2/" + number + "_umsort.jp2", std::ios::binary | std::ios::out);
-	// 			outFile.write(reinterpret_cast<char*>(tempData), length);
-	// 			outFile.close();
-
 
 
 				// ausleseversuch
 				ReadJPEG2K obj;
-				if(!obj.openJpeg(usedPixData, length))
-					std::cerr << "Fehler beim JPEG2K-Einlesen" << std::endl;
+				if(usedPixData)
+				{
+					if(!obj.openJpeg(usedPixData, length))
+						std::cerr << "Fehler beim JPEG2K-Einlesen" << std::endl;
+				}
+				else
+					if(!obj.openJpeg(copyPixData, length))
+						std::cerr << "Fehler beim JPEG2K-Einlesen" << std::endl;
 
 				std::cout << "*" << std::flush;
 
@@ -543,6 +531,8 @@ namespace OctData
 				bool flip = true; // for Cirrus
 				obj.getImage(gray_image, flip);
 
+				putText(gray_image, boost::lexical_cast<std::string>(i), cv::Point(5, 850), cv::FONT_HERSHEY_PLAIN, 20, cv::Scalar(255));
+
 // 				#pragma omp ordered
 				{
 					if(!gray_image.empty())
@@ -551,7 +541,7 @@ namespace OctData
 						std::cerr << "Empty openCV image\n";
 				}
 
-				if(deleteUsedPixData)
+// 				if(deleteUsedPixData)
 					delete[] usedPixData;
 				delete[] copyPixData;
 			}
