@@ -25,6 +25,8 @@ namespace OctData
 		const boost::filesystem::path filepath;
 		      boost::filesystem::path extension;
 
+		mutable std::size_t filesize = 0;
+
 		Compressed compressType;
 
 		FileStreamInterface* fileStream = nullptr;
@@ -40,6 +42,7 @@ namespace OctData
 		bool openFile();
 		void seekg(std::streamoff pos)                                 { fileStream->seekg(pos); }
 		bool good()                                              const { return fileStream->good(); }
+		std::size_t file_size()                                  const;
 
 
 		template<typename T>

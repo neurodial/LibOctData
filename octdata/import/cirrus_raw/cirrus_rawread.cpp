@@ -48,15 +48,14 @@ namespace OctData
 	{
 		const boost::filesystem::path& file = filereader.getFilepath();
 
-		if(filereader.getExtension() != ".vol")
+		if(filereader.getExtension() != ".img")
 			return false;
 
-		const std::string filenameString = filereader.getFilepath().generic_string();
-		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as vol";
+		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as cirrus img";
 
 		if(!filereader.openFile())
 		{
-			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << filenameString;
+			BOOST_LOG_TRIVIAL(error) << "Can't open cirrus img file " << filereader.getFilepath().generic_string();
 			return false;
 		}
 		/*
@@ -71,14 +70,19 @@ namespace OctData
 
 		// split filename in elements
 		std::vector<std::string> elements;
-// 		std::string filenameString = file.filename().generic_string();
+		std::string filenameString = filereader.getFilepath().filename().generic_string();
 		boost::split(elements, filenameString, boost::is_any_of("_"), boost::token_compress_on);
 
 		if(debug)
 			std::cout << "elements.size(): " << elements.size() << std::endl;
 
 		if(elements.size() != 8)
+		{
+			BOOST_LOG_TRIVIAL(error) << "Can't open cirrus img file: false number of filename metadata " << elements.size() << " != 8";
+			for(const std::string& ele : elements)
+				BOOST_LOG_TRIVIAL(error) << "Metadata: " << ele;
 			return false;
+		}
 
 		const std::string& patient_id = elements.at(0);
 		const std::string& scantype   = elements.at(1);
@@ -101,7 +105,7 @@ namespace OctData
 			std::cout << "filetype  : " << filetype   << std::endl;
 		}
 
-		if(filetype != "raw.img" && filetype != "z.img")
+		if(filetype.substr(0, 7) != "raw.img" && filetype.substr(0, 5) != "z.img")
 			return false;
 
 
@@ -138,7 +142,8 @@ if strcmp(cube,'hidef')
 end
 */
 
-		std::size_t filesize = bfs::file_size(file);
+// 		std::size_t filesize = bfs::file_size(file);
+		std::size_t filesize = filereader.file_size();
 		std::size_t volSizeZ = filesize / volSizeX /volSizeY;
 
 // // 		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);

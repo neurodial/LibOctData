@@ -1,8 +1,10 @@
 #include "filereader.h"
 
+#include<boost/endian/conversion.hpp>
 
 #include"filestreamdircet.h"
 #include"filestreamgzip.h"
+#include <import/platform_helper.h>
 
 namespace bfs = boost::filesystem;
 
@@ -48,6 +50,30 @@ namespace OctData
 		}
 		return true;
 	}
+
+	std::size_t FileReader::file_size() const
+	{
+		if(filesize == 0)
+		{
+			switch(compressType)
+			{
+				case Compressed::none:
+					filesize = bfs::file_size(filepath);
+					break;
+				case Compressed::gzip:
+					std::ifstream stream(filepathConv(filepath), std::ios::binary | std::ios::in);
+					stream.seekg(-4, std::ios_base::end);
+					unsigned int size;
+					stream.read(reinterpret_cast<char*>(&size), sizeof(size));
+					boost::endian::little_to_native_inplace(size);
+					filesize = size;
+					break;
+			}
+		}
+
+		return filesize;
+	}
+
 
 
 

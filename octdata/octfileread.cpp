@@ -65,6 +65,33 @@ namespace OctData
 	}
 
 
+
+	bool OctFileRead::openFileFromExt(OCT& oct, FileReader& filereader, const FileReadOptions& op, CppFW::Callback* callback)
+	{
+		std::string filename = filereader.getFilepath().generic_string();
+		for(OctFileReader* reader : fileReaders)
+		{
+			if(reader->getExtentsions().matchWithFile(filename))
+			{
+				if(reader->readFile(filereader, oct, op, callback))
+					return true;
+				oct.clear();
+			}
+		}
+		return false;
+	}
+
+	bool OctFileRead::tryOpenFile(OCT& oct, FileReader& filereader, const FileReadOptions& op, CppFW::Callback* callback)
+	{
+		for(OctFileReader* reader : fileReaders)
+		{
+			if(reader->readFile(filereader, oct, op, callback))
+				return true;
+			oct.clear();
+		}
+		return false;
+	}
+
 	OCT OctFileRead::openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 		FileReader filereader(file);
@@ -72,12 +99,8 @@ namespace OctData
 
 		if(bfs::exists(file))
 		{
-			for(OctFileReader* reader : fileReaders)
-			{
-				if(reader->readFile(filereader, oct, op, callback))
-					break;
-				oct.clear();
-			}
+			if(!openFileFromExt(oct, filereader, op, callback))
+				tryOpenFile(oct, filereader, op, callback);
 		}
 		else
 			BOOST_LOG_TRIVIAL(error) << "file " << file.generic_string() << " not exists";

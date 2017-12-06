@@ -21,6 +21,7 @@ namespace OctData
 	class OctFileReader;
 	class FileReadOptions;
 	class OctExtensionsList;
+	class FileReader;
 
 	class OctFileRead
 	{
@@ -46,6 +47,9 @@ namespace OctData
 		OCT openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback);
 
 		void writeFilePrivat(const std::string& filename, const OCT& octdata);
+
+		bool openFileFromExt(OCT& oct, FileReader& filename, const FileReadOptions& op, CppFW::Callback* callback);
+		bool tryOpenFile(OCT& oct, FileReader& filename, const FileReadOptions& op, CppFW::Callback* callback);
 
 		OctExtensionsList extensions;
 

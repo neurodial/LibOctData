@@ -7,6 +7,8 @@
 
 #include<import/platform_helper.h>
 
+#include <boost/filesystem.hpp>
+namespace bfs = boost::filesystem;
 
 namespace OctData
 {
