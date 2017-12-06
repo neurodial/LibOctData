@@ -498,8 +498,8 @@ namespace OctData
 					const std::size_t headerpos = 3*length/5;
 
 // 					std::size_t headerlength = 400+i;
-// 					std::size_t headerlength = 305;
-					std::size_t headerlength = 245;
+					std::size_t headerlength = 305;
+// 					std::size_t headerlength = 245;
 
 					char* newPixData = new char[length];
 

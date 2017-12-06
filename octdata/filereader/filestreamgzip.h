@@ -19,8 +19,8 @@ namespace OctData
 
 		virtual std::streamsize read(char* dest, std::streamsize size) override
 		                                                               { return gzread(file, dest, static_cast<unsigned>(size)); }
-		virtual void seekg(std::streamoff pos) override                { gzseek(file, pos, SEEK_SET); }
-
+		virtual void seekg(std::streamoff pos)                override { gzseek(file, pos, SEEK_SET); }
+		virtual bool good()                             const override { return !gzeof(file); }
 	};
 
 }

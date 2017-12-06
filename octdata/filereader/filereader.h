@@ -14,6 +14,8 @@ namespace OctData
 
 		virtual std::streamsize read(char* dest, std::streamsize size) = 0;
 		virtual void seekg(std::streamoff pos) = 0;
+
+		virtual bool good() const = 0;
 	};
 
 	class FileReader
@@ -31,13 +33,13 @@ namespace OctData
 		FileReader(const boost::filesystem::path& filepath);
 		~FileReader();
 
-		const boost::filesystem::path& getFilepath() const { return filepath; }
-		const boost::filesystem::path& getExtension() const { return extension; }
+		const boost::filesystem::path& getFilepath()             const { return filepath; }
+		const boost::filesystem::path& getExtension()            const { return extension; }
 
 
 		bool openFile();
-
-		void seekg(std::streamoff pos) { fileStream->seekg(pos); }
+		void seekg(std::streamoff pos)                                 { fileStream->seekg(pos); }
+		bool good()                                              const { return fileStream->good(); }
 
 
 		template<typename T>

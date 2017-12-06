@@ -17,6 +17,8 @@ namespace OctData
 		                                                               { stream.read(dest, size); return size; }
 		virtual void seekg(std::streamoff pos) override                { stream.seekg(pos); }
 
+		bool good()                                     const override { return stream.good(); }
+
 	};
 
 }

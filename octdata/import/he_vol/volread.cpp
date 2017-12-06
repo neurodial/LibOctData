@@ -444,6 +444,8 @@ namespace OctData
 			bscanData.imageQuality = bscanHeader.data.quality;
 
 
+			if(!filereader.good())
+				break;
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
 			if(op.holdRawData)
