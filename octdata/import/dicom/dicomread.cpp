@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
 
 #include <algorithm>
 #include <string>
@@ -36,6 +37,7 @@
 
 namespace bfs = boost::filesystem;
 
+#include <filereadoptions.h>
 
 #include <boost/log/trivial.hpp>
 
@@ -342,22 +344,37 @@ namespace OctData
 
 	#if true
 
-	bool DicomRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
+	namespace
+	{
+		std::string getStdString(DcmItem& item, const DcmTagKey& tagKey, const long unsigned int pos = 0)
+		{
+			OFString string;
+			item.findAndGetOFString(tagKey, string, pos);
+			return std::string(string.begin(), string.end());
+		}
+	}
+
+	bool DicomRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 // 	void ReadDICOM::readFile(const std::string& filename, CScan* cscan)
 	{
 		const std::string filename = filereader.getFilepath().generic_string();
 		std::cout << "ReadDICOM: " << filename << std::endl;
 
-		OFCondition result = EC_Normal;
 		/* Load file and get pixel data element */
 		DcmFileFormat dfile;
-		result = dfile.loadFile(filename.c_str());
+		OFCondition result = dfile.loadFile(filename.c_str());
 		if(result.bad())
 			return false;
 
-		DcmDataset *data = dfile.getDataset();
-		if (data == NULL)
+		DcmDataset* data = dfile.getDataset();
+		if(data == nullptr)
 			return false;
+
+		const Sint32* registerArray = nullptr;
+		unsigned long numRegisterElements;
+		result = data->findAndGetSint32Array(DcmTagKey(0x0073, 0x1125), registerArray, &numRegisterElements);
+		if(result.bad())
+			registerArray = nullptr;
 
 		// data->print(std::cout);
 
@@ -372,9 +389,35 @@ namespace OctData
 		Study&   study  = pat.getStudy(1);
 		Series&  series = study.getSeries(1); // TODO
 
+		pat.setId     (getStdString(*data, DCM_PatientID  ));
+		pat.setSurname(getStdString(*data, DCM_PatientName));
 
-		DcmPixelData *dpix = NULL;
-		dpix = OFstatic_cast(DcmPixelData*, element);
+		double spacingBetweenSlices;
+		data->findAndGetFloat64(DCM_SpacingBetweenSlices, spacingBetweenSlices);
+		double pixelSpaceingX = 0, pixelSpaceingZ = 0;
+
+		std::string pixelSpacingStr = getStdString(*data, DCM_PixelSpacing);
+		if(!pixelSpacingStr.empty())
+		{
+			std::istringstream pixelSpaceingStream(pixelSpacingStr);
+			char c;
+			pixelSpaceingStream >> pixelSpaceingX >> c >> pixelSpaceingZ;
+		}
+/*
+		DcmElement* pixelSpaceingElement = nullptr;
+		result = data->findAndGetElement(DCM_PixelSpacing, pixelSpaceingElement);
+		if(!result.bad() || pixelSpaceingElement)
+		{
+			std::cerr << "pixelSpaceingElement->getLength(): " << pixelSpaceingElement->getLength() << std::endl;
+			pixelSpaceingElement->getFloat64(pixelSpaceingX, 0);
+			pixelSpaceingElement->getFloat64(pixelSpaceingZ, 1);
+		}*/
+
+// 		data->findAndGetFloat64(DCM_PixelSpacing, pixelSpaceingX, 0);
+// 		data->findAndGetFloat64(DCM_PixelSpacing, pixelSpaceingZ, 1);
+
+
+		DcmPixelData* dpix = OFstatic_cast(DcmPixelData*, element);
 		/* Since we have compressed data, we must utilize DcmPixelSequence
 			in order to access it in raw format, e. g. for decompressing it
 			with an external library.
@@ -420,7 +463,7 @@ namespace OctData
 						break;
 				}
 
-				std::cout << " ---- " << i << std::endl;
+// 				std::cout << " ---- " << i << std::endl;
 
 				char* copyPixData = nullptr;
 // 	#pragma omp critical
@@ -491,7 +534,7 @@ namespace OctData
 				if(memcmp(pixData, jpeg2kHeader, sizeof(jpeg2kHeader)) != 0)	// non unencrypted cirrus
 				{
 
-					std::cout << "Anormal JPEG2K, versuche umsortierung" << std::endl;
+// 					std::cout << "Anormal JPEG2K, versuche umsortierung" << std::endl;
 					for(char* it = copyPixData; it < copyPixData+length; it+=7)
 						*it ^= 0x5a;
 
@@ -528,15 +571,35 @@ namespace OctData
 
 				cv::Mat gray_image;
 
+
 				bool flip = true; // for Cirrus
 				obj.getImage(gray_image, flip);
 
-				putText(gray_image, boost::lexical_cast<std::string>(i), cv::Point(5, 850), cv::FONT_HERSHEY_PLAIN, 20, cv::Scalar(255));
+				if(op.registerBScanns && numRegisterElements > i)
+				{
+					// std::cout << "shift X: " << reg->values[9] << std::endl;
+					double shiftY = -registerArray[i];
+					double shiftX = 0;
+					// std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
+					cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, shiftX, 0, 1, shiftY);
+
+					uint8_t fillValue = 0;
+					if(op.fillEmptyPixelWhite)
+						fillValue = 255;
+					cv::warpAffine(gray_image, gray_image, trans_mat, gray_image.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(fillValue));
+
+				}
+
+				putText(gray_image, boost::lexical_cast<std::string>(i), cv::Point(5, 850), cv::FONT_HERSHEY_PLAIN, 10, cv::Scalar(255));
 
 // 				#pragma omp ordered
 				{
 					if(!gray_image.empty())
-						series.takeBScan(new BScan(gray_image, BScan::Data()));
+					{
+						BScan::Data bscanData;
+						bscanData.scaleFactor = ScaleFactor(pixelSpaceingX, spacingBetweenSlices, pixelSpaceingZ);
+						series.takeBScan(new BScan(gray_image, bscanData));
+					}
 					else
 						std::cerr << "Empty openCV image\n";
 				}
