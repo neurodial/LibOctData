@@ -26,7 +26,7 @@
 
 #include <datastruct/oct.h>
 #include <datastruct/coordslo.h>
-#include <datastruct/sloimage.h>
+// #include <datastruct/sloimage.h>
 #include <datastruct/bscan.h>
 
 
@@ -391,6 +391,23 @@ namespace OctData
 
 		pat.setId     (getStdString(*data, DCM_PatientID  ));
 		pat.setSurname(getStdString(*data, DCM_PatientName));
+
+		std::string laterality = getStdString(*data, DCM_Laterality);
+		if(laterality == "OD")
+			series.setLaterality(Series::Laterality::OD);
+		else if(laterality == "OS")
+			series.setLaterality(Series::Laterality::OS);
+
+		std::string patSex = getStdString(*data, DCM_PatientSex);
+		if(patSex == "M")
+			pat.setSex(Patient::Sex::Male);
+		else if(patSex == "F")
+			pat.setSex(Patient::Sex::Female);
+
+		study.setStudyOperator(getStdString(*data, DCM_OperatorsName));
+		study.setStudyUID(getStdString(*data, DCM_StudyInstanceUID));
+
+		series.setSeriesUID(getStdString(*data, DCM_SeriesInstanceUID));
 
 		double spacingBetweenSlices;
 		data->findAndGetFloat64(DCM_SpacingBetweenSlices, spacingBetweenSlices);

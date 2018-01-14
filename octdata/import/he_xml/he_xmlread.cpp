@@ -189,9 +189,15 @@ namespace OctData
 
 			bscanData.start       = readCoordmm    (imageNode.get_child("OphthalmicAcquisitionContext.Start"));
 			if(koordEndNode)
+			{
 				bscanData.end         = readCoordmm    (imageNode.get_child("OphthalmicAcquisitionContext.End"));
+				bscanData.bscanType   = BScan::BScanType::Line;
+			}
 			else
+			{
 				bscanData.center      = readCoordmm    (imageNode.get_child("OphthalmicAcquisitionContext.Center"));
+				bscanData.bscanType   = BScan::BScanType::Circle;
+			}
 
 			bscanData.scaleFactor = readScaleFactor(imageNode.get_child("OphthalmicAcquisitionContext"));
 

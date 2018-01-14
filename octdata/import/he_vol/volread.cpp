@@ -433,11 +433,15 @@ namespace OctData
 			if(series.getScanPattern() == OctData::Series::ScanPattern::Circular
 			|| (series.getScanPattern() == OctData::Series::ScanPattern::RadialCircles && numBscan >= numBScans-3)) // specific to the ScanPattern
 			{
+				bscanData.bscanType         = BScan::BScanType::Circle;
 				bscanData.center            = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
 				bscanData.clockwiseRotation = series.getLaterality() == OctData::Series::Laterality::OD;
 			}
 			else
-				bscanData.end         = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
+			{
+				bscanData.bscanType         = BScan::BScanType::Line;
+				bscanData.end               = CoordSLOmm(bscanHeader.data.endX  , bscanHeader.data.endY  );
+			}
 
 
 			bscanData.scaleFactor = ScaleFactor(volHeader.data.scaleX, volHeader.data.distance, volHeader.data.scaleZ);

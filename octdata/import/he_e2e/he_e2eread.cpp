@@ -371,12 +371,13 @@ namespace OctData
 					bscanData.scanAngle         = scanAngle;
 					bscanData.clockwiseRotation = series.getLaterality() == OctData::Series::Laterality::OD; // TODO: inoperable because not read Laterality from e2e
 					bscanData.center            = CoordSLOmm(e2eMeta->getCenterX()*factorAngle2mm, e2eMeta->getCenterY()*factorAngle2mm);
+					bscanData.bscanType         = BScan::BScanType::Circle;
 				}
 				else
 				{
-					scanLengthAngle = sqrt(pow2(e2eMeta->getX1()-e2eMeta->getX2()) + pow2(e2eMeta->getY1()-e2eMeta->getY2()));
-					bscanData.scanAngle   = scanLengthAngle;
-
+					scanLengthAngle             = sqrt(pow2(e2eMeta->getX1()-e2eMeta->getX2()) + pow2(e2eMeta->getY1()-e2eMeta->getY2()));
+					bscanData.scanAngle         = scanLengthAngle;
+					bscanData.bscanType         = BScan::BScanType::Line;
 				}
 				bscanData.scaleFactor = ScaleFactor(scanLengthAngle*factorAngle2mm/static_cast<double>(e2eImage.cols), 0, e2eMeta->getScaleY());
 			}
@@ -388,23 +389,24 @@ namespace OctData
 
 			// segmenation lines
 			const E2E::BScan::SegmentationMap& e2eSegMap = e2eBScan.getSegmentationMap();
-			addSegData(bscanData, Segmentationlines::SegmentlineType::ILM , e2eSegMap,  0, 5, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::BM  , e2eSegMap,  1, 2, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::RNFL, e2eSegMap,  2, 7, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::GCL , e2eSegMap,  3, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::IPL , e2eSegMap,  4, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::INL , e2eSegMap,  5, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::OPL , e2eSegMap,  6, 1, reg, e2eImage.cols);
+			const std::size_t imgCols = static_cast<std::size_t>(e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::ILM , e2eSegMap,  0, 5, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::BM  , e2eSegMap,  1, 2, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::RNFL, e2eSegMap,  2, 7, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::GCL , e2eSegMap,  3, 1, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::IPL , e2eSegMap,  4, 1, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::INL , e2eSegMap,  5, 1, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::OPL , e2eSegMap,  6, 1, reg, imgCols);
 			//                                                                          7
-			addSegData(bscanData, Segmentationlines::SegmentlineType::ELM , e2eSegMap,  8, 3, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::ELM , e2eSegMap,  8, 3, reg, imgCols);
 			//                                                                          9
 			//                                                                         10
 			//                                                                         11
 			//                                                                         12
 			//                                                                         13
-			addSegData(bscanData, Segmentationlines::SegmentlineType::PR1 , e2eSegMap, 14, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::PR2 , e2eSegMap, 15, 1, reg, e2eImage.cols);
-			addSegData(bscanData, Segmentationlines::SegmentlineType::RPE , e2eSegMap, 16, 1, reg, e2eImage.cols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::PR1 , e2eSegMap, 14, 1, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::PR2 , e2eSegMap, 15, 1, reg, imgCols);
+			addSegData(bscanData, Segmentationlines::SegmentlineType::RPE , e2eSegMap, 16, 1, reg, imgCols);
 
 			cv::Mat bscanImageConv;
 			if(e2eImage.type() == cv::DataType<float>::type)

@@ -23,11 +23,11 @@ namespace OctData
 	class Octdata_EXPORTS BScan
 	{
 	public:
+		enum class BScanType { Line, Circle };
 		struct Data
 		{
 			std::string filename;
 
-			ScaleFactor scaleFactor;
 
 			int    numAverage              = 0;
 			double imageQuality            = 0;
@@ -37,9 +37,11 @@ namespace OctData
 			bool   positionWithinTolerance     ;
 			bool   edi                         ;*/
 
-			CoordSLOmm start;
-			CoordSLOmm end;
-			CoordSLOmm center;
+			BScanType   bscanType          = BScanType::Line;
+			ScaleFactor scaleFactor;
+			CoordSLOmm  start;
+			CoordSLOmm  end;
+			CoordSLOmm  center;
 			bool clockwiseRotation = false;
 
 			Segmentationlines segmentationslines;
@@ -71,6 +73,7 @@ namespace OctData
 // 		bool   getPositionWithinTolerance() const                   { return data.positionWithinTolerance; }
 // 		bool   getEdi()                     const                   { return data.edi                    ; }
 
+		      BScanType   getBScanType()    const                   { return data.bscanType              ; }
 		const ScaleFactor& getScaleFactor() const                   { return data.scaleFactor            ; }
 		const CoordSLOmm& getStart()        const                   { return data.start                  ; }
 		const CoordSLOmm& getEnd()          const                   { return data.end                    ; }
