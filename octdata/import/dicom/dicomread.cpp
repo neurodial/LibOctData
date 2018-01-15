@@ -360,6 +360,12 @@ namespace OctData
 		const std::string filename = filereader.getFilepath().generic_string();
 		std::cout << "ReadDICOM: " << filename << std::endl;
 
+
+		const boost::filesystem::path& file = filereader.getFilepath();
+		if(file.extension() != ".dicom"
+		&& file.extension() != ".dcm")
+			return false;
+
 		/* Load file and get pixel data element */
 		DcmFileFormat dfile;
 		OFCondition result = dfile.loadFile(filename.c_str());
