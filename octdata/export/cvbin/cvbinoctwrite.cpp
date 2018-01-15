@@ -35,38 +35,73 @@ namespace OctData
 		}
 	}
 
+	void setStringOpt(CppFW::CVMatTree& tree, const char* nodeName, const std::string& value)
+	{
+		if(!value.empty())
+			tree.getDirNode(nodeName).getString() = value;
+	}
 
 	bool CvBinOctWrite::writeFile(const boost::filesystem::path& file, const OCT& oct)
 	{
-
-		CppFW::CVMatTree octtree;
-
 		OCT::SubstructureCIterator pat = oct.begin();
 
-		const int patId = pat->first;
+// 		const int patId = pat->first;
 		const Patient* p = pat->second;
 
 		Patient::SubstructureCIterator study = p->begin();
 		const Study* s = study->second;
-		const int studyId = study->first;
+// 		const int studyId = study->first;
 
 		Study::SubstructureCIterator series = s->begin();
 		const Series* ser = series->second;
-		const int seriesId = series->first;
+
+		if(!p || !s || !ser)
+			return false;
+
+		return writeFile(file, *p, *s, *ser);
+	}
+
+	bool CvBinOctWrite::writeFile(const boost::filesystem::path& file, const Patient& pat, const Study& study, const Series& series)
+	{
+		CppFW::CVMatTree octtree;
+
+
+// 		const int seriesId = series.getInternalId();
 
 
 		CppFW::CVMatTree& patDataNode    = octtree.getDirNode("PatientData");
 		CppFW::CVMatTree& studyDataNode  = octtree.getDirNode("StudyData"  );
 		CppFW::CVMatTree& seriesDataNode = octtree.getDirNode("SeriesData" );
 
-		CppFW::CVMatTreeExtra::setCvScalar(patDataNode   , "ID", patId   );
-		CppFW::CVMatTreeExtra::setCvScalar(studyDataNode , "ID", studyId );
-		CppFW::CVMatTreeExtra::setCvScalar(seriesDataNode, "ID", seriesId);
+		CppFW::CVMatTreeExtra::setCvScalar(patDataNode   , "ID", pat   .getInternalId());
+		CppFW::CVMatTreeExtra::setCvScalar(studyDataNode , "ID", study .getInternalId());
+		CppFW::CVMatTreeExtra::setCvScalar(seriesDataNode, "ID", series.getInternalId());
+
+		setStringOpt(patDataNode, "IID"      , pat.getId()             );
+		setStringOpt(patDataNode, "UID"      , pat.getPatientUID()     );
+		setStringOpt(patDataNode, "Forename" , pat.getForename()       );
+		setStringOpt(patDataNode, "Surname"  , pat.getSurname()        );
+		setStringOpt(patDataNode, "Title"    , pat.getTitle()          );
+		setStringOpt(patDataNode, "Sex"      , pat.getSexName()        );
+		setStringOpt(patDataNode, "Birthdate", pat.getBirthdate().str());
+// 		setStringOpt(patDataNode, "Dignose"  , pat.getDiagnose()       );
+		setStringOpt(patDataNode, "Ancestry" , pat.getAncestry()       );
 
 
-		const SloImage& slo = ser->getSloImage();
+		setStringOpt(studyDataNode, "UID"          , study.getStudyUID()       );
+		setStringOpt(studyDataNode, "StudyName"    , study.getStudyName()      );
+		setStringOpt(studyDataNode, "StudyOperator", study.getStudyOperator()  );
+		setStringOpt(studyDataNode, "StudyDate"    , study.getStudyDate().str());
+
+
+		setStringOpt(seriesDataNode, "UID"        , series.getSeriesUID()     );
+		setStringOpt(seriesDataNode, "ScanDate"   , series.getScanDate().str());
+		setStringOpt(seriesDataNode, "Description", series.getDescription()   );
+
+
+		const SloImage& slo = series.getSloImage();
 		octtree.getDirNode("slo").getMat() = slo.getImage();
-		const CoordSLOpx& sloShift = slo.getShift();
+		const CoordSLOpx& sloShift   = slo.getShift();
 		const CoordSLOmm& sloShiftMM = sloShift/slo.getScaleFactor();
 
 		double sloScaleData[2] = { slo.getScaleFactor().getX(), slo.getScaleFactor().getY() };
@@ -74,7 +109,7 @@ namespace OctData
 
 		CppFW::CVMatTree& seriesNode = octtree.getDirNode("Serie");
 
-		for(BScan* bscan : ser->getBScans())
+		for(BScan* bscan : series.getBScans())
 		{
 			if(!bscan)
 				continue;

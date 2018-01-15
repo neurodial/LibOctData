@@ -13,6 +13,9 @@ namespace OctData
 
 		enum class Sex { Unknown, Female, Male};
 
+		static const char* getSexName(Sex sex);
+		const char* getSexName()          const                  { return getSexName(sex); }
+
 		const std::string& getForename () const                  { return forename ; }
 		const std::string& getSurname  () const                  { return surname  ; }
 		const std::string& getTitle    () const                  { return title    ; }

@@ -369,7 +369,8 @@ namespace OctData
 
 			if(memcmp(bscanHeader.data.hsfOctRawStr, "HSF-BS-", BScanHeader::identiferSize) != 0) // 0 = strings are equal
 			{
-				BOOST_LOG_TRIVIAL(error) << filename << " Wrong fileformat (not HSF-BS-) -> " << bscanHeader.data.hsfOctRawStr;
+				std::string hsfStr(bscanHeader.data.hsfOctRawStr, bscanHeader.data.hsfOctRawStr+7);
+				BOOST_LOG_TRIVIAL(error) << filename << ": Error in B-scan " << numBscan << " ; Wrong bscan header (not HSF-BS-) -> " << hsfStr;
 				return false;
 			}
 // 			BOOST_LOG_TRIVIAL(info) << "HSF-BScan version: " << bscanHeader.data.version;
