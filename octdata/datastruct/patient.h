@@ -1,8 +1,12 @@
 #pragma once
 
+#include<ostream>
+
 #include "substructure_template.h"
 #include "study.h"
 #include "date.h"
+
+#include"enumwrapper.h"
 
 namespace OctData
 {
@@ -12,6 +16,7 @@ namespace OctData
 		explicit Patient(int internalId) : internalId(internalId) {}
 
 		enum class Sex { Unknown, Female, Male};
+		typedef EnumWrapper<Sex> SexEnumWrapper;
 
 		static const char* getSexName(Sex sex);
 		const char* getSexName()          const                  { return getSexName(sex); }
@@ -44,6 +49,33 @@ namespace OctData
 		const Study& getStudy(int seriesId) const                { return *(substructureMap.at(seriesId)); }
 
 		int getInternalId() const                                      { return internalId; }
+
+
+		template<typename T>
+		void getSetParameter(T& getSet)                                { getSetCvParameter(getSet, *this); }
+		template<typename T>
+		void getSetParameter(T& getSet) const                          { getSetCvParameter(getSet, *this); }
+
+
+		struct PrintOptions
+		{
+			std::ostream& stream;
+
+			PrintOptions(std::ostream& stream) : stream(stream) {}
+
+			template<typename T>
+			void operator()(const char* name, const T& value)
+			{
+				stream << std::setw(26) << name << " : " << value << '\n';
+			}
+		};
+
+		void print(std::ostream& stream) const
+		{
+			PrintOptions printer(stream);
+			this->getSetParameter(printer);
+		}
+
 	private:
 		const int internalId;
 
@@ -59,6 +91,23 @@ namespace OctData
 		Date birthdate      ;
 
 		Sex sex = Sex::Unknown;
+
+		template<typename T, typename ParameterSet>
+		static void getSetCvParameter(T& getSet, ParameterSet& p)
+		{
+			getSet("internalId"               , p.internalId             );
+			getSet("forename"                 , p.forename               );
+			getSet("surname"                  , p.surname                );
+			getSet("title"                    , p.title                  );
+			getSet("id"                       , p.id                     );
+			getSet("uid"                      , p.uid                    );
+			getSet("ancestry"                 , p.ancestry               );
+			getSet("birthdate"                , p.birthdate              );
+			getSet("sex"                      , SexEnumWrapper(p.sex)    );
+		}
+
 	};
+
+
 
 }
