@@ -93,18 +93,18 @@ namespace OctData
 		template<typename T, typename ParameterSet>
 		static void getSetParameter(T& getSet, ParameterSet& p)
 		{
-			SexEnumWrapper sexWrapper (p.sex);
+			SexEnumWrapper sexWrapper(p.sex);
 			DateWrapper    birthDateWrapper(p.birthdate);
 
-			getSet("internalId", p.internalId                              );
-			getSet("forename"  , p.forename                                );
-			getSet("surname"   , p.surname                                 );
-			getSet("title"     , p.title                                   );
-			getSet("id"        , p.id                                      );
-			getSet("uid"       , p.uid                                     );
-			getSet("ancestry"  , p.ancestry                                );
-			getSet("birthdate" , static_cast<std::string>(birthDateWrapper));
-			getSet("sex"       , static_cast<std::string>(sexWrapper)      );
+// 			getSet("internalId", p.internalId                               );
+			getSet("forename"  , p.forename                                 );
+			getSet("surname"   , p.surname                                  );
+			getSet("title"     , p.title                                    );
+			getSet("id"        , p.id                                       );
+			getSet("uid"       , p.uid                                      );
+			getSet("ancestry"  , p.ancestry                                 );
+			getSet("birthdate" , static_cast<std::string&>(birthDateWrapper));
+			getSet("sex"       , static_cast<std::string&>(sexWrapper)      );
 		}
 
 	};

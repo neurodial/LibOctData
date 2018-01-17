@@ -15,6 +15,7 @@
 
 #include <cpp_framework/cvmat/cvmattreestruct.h>
 #include <cpp_framework/cvmat/cvmattreestructextra.h>
+#include <cpp_framework/cvmat/cvmattreegetset.h>
 #include <cpp_framework/cvmat/treestructbin.h>
 #include <cpp_framework/callback.h>
 #include <octfileread.h>
@@ -321,9 +322,27 @@ namespace OctData
 		Study&   study  = pat  .getStudy  (studyId );
 		Series&  series = study.getSeries (seriesId);
 
-		series.setRefSeriesUID(CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "RefUID"));
-		series.setSeriesUID   (CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "UID"   ));
-		pat   .setId          (CppFW::CVMatTreeExtra::getStringOrEmpty(patDataNode   , "PatID" ));
+		if(patDataNode)
+		{
+			CppFW::GetFromCVMatTree patientReader(*patDataNode);
+			pat.getSetParameter(patientReader);
+		}
+
+		if(studyDataNode)
+		{
+			CppFW::GetFromCVMatTree studyWriter(*studyDataNode);
+			study.getSetParameter(studyWriter);
+		}
+
+		if(seriesDataNode)
+		{
+			CppFW::GetFromCVMatTree seriesWriter(*seriesDataNode);
+			series.getSetParameter(seriesWriter);
+		}
+
+// 		series.setRefSeriesUID(CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "RefUID"));
+// 		series.setSeriesUID   (CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "UID"   ));
+// 		pat   .setId          (CppFW::CVMatTreeExtra::getStringOrEmpty(patDataNode   , "PatID" ));
 
 
 		bool fillStatus = false;

@@ -127,16 +127,16 @@ namespace OctData
 
 			DateWrapper    scanDateWrapper(p.scanDate);
 
-			getSet("seriesUID"            , p.seriesUID                                       );
-			getSet("refSeriesID"          , p.refSeriesID                                     );
-			getSet("scanFocus"            , p.scanFocus                                       );
-			getSet("scanPatternText"      , p.scanPatternText                                 );
-			getSet("examinedStructureText", p.examinedStructureText                           );
-			getSet("description"          , p.description                                     );
-			getSet("scanDate"             , static_cast<std::string>(scanDateWrapper         ));
-			getSet("laterality"           , static_cast<std::string>(lateralityWrapper       ));
-			getSet("scanPattern"          , static_cast<std::string>(scanPatternWrapper      ));
-			getSet("examinedStructure"    , static_cast<std::string>(examinedStructureWrapper));
+			getSet("seriesUID"            , p.seriesUID                                        );
+			getSet("refSeriesID"          , p.refSeriesID                                      );
+			getSet("scanFocus"            , p.scanFocus                                        );
+			getSet("scanPatternText"      , p.scanPatternText                                  );
+			getSet("examinedStructureText", p.examinedStructureText                            );
+			getSet("description"          , p.description                                      );
+			getSet("scanDate"             , static_cast<std::string&>(scanDateWrapper         ));
+			getSet("laterality"           , static_cast<std::string&>(lateralityWrapper       ));
+			getSet("scanPattern"          , static_cast<std::string&>(scanPatternWrapper      ));
+			getSet("examinedStructure"    , static_cast<std::string&>(examinedStructureWrapper));
 		}
 
 	};
