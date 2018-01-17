@@ -8,6 +8,7 @@
 
 #include<ostream>
 
+#include"objectwrapper.h"
 
 namespace OctData
 {
@@ -70,6 +71,8 @@ namespace OctData
 		std::string str(char trenner = '.') const;
 		std::string timeDateStr(char datetrenner = '.', char timeTrenner = ':', bool showMs = false) const;
 
+		void decodeString(const std::string& str);
+
 		void print(std::ostream& stream)                         const { stream << timeDateStr(); }
 	};
 
@@ -100,6 +103,8 @@ namespace OctData
 	}
 
 	inline std::ostream& operator<<(std::ostream& stream, const Date& obj) { obj.print(stream); return stream; }
+
+	typedef ObjectWrapper<Date> DateWrapper;
 }
 
 

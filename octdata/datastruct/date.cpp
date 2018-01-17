@@ -61,6 +61,25 @@ namespace OctData
 		return time;
 	}
 
+	void Date::decodeString(const std::string& /*str*/)
+	{
+		// TODO
+	}
+
+
+	template<> void DateWrapper::toString()
+	{
+		if(!obj.isEmpty())
+			std::string::operator=(obj.timeDateStr());
+	}
+
+
+	template<> void DateWrapper::fromString()
+	{
+		if(!empty())
+			obj.decodeString(*this);
+	}
+
 
 
 }

@@ -108,4 +108,72 @@ namespace OctData
 			convexHullSLOBScans.emplace_back(p.get<0>(), p.get<1>());
 	}
 
+
+	template<> void Series::LateralityEnumWrapper::toString()
+	{
+		switch(obj)
+		{
+			case Series::Laterality::OD: std::string::operator=("OD"); break;
+			case Series::Laterality::OS: std::string::operator=("OS"); break;
+			case Series::Laterality::undef:
+				break;
+		}
+	}
+	template<> void Series::LateralityEnumWrapper::fromString()
+	{
+		     if(*this == "OD") obj = Series::Laterality::OD;
+		else if(*this == "OS") obj = Series::Laterality::OS;
+		else obj = Series::Laterality::undef;
+	}
+
+
+	template<> void Series::ScanPatternEnumWrapper::toString()
+	{
+		switch(obj)
+		{
+			case Series::ScanPattern::Text         : std::string::operator=("Text"         ); break;
+			case Series::ScanPattern::SingleLine   : std::string::operator=("SingleLine"   ); break;
+			case Series::ScanPattern::Circular     : std::string::operator=("Circular"     ); break;
+			case Series::ScanPattern::Volume       : std::string::operator=("Volume"       ); break;
+			case Series::ScanPattern::FastVolume   : std::string::operator=("FastVolume"   ); break;
+			case Series::ScanPattern::Radial       : std::string::operator=("Radial"       ); break;
+			case Series::ScanPattern::RadialCircles: std::string::operator=("RadialCircles"); break;
+			case Series::ScanPattern::Unknown:
+				break;
+		}
+	}
+	template<> void Series::ScanPatternEnumWrapper::fromString()
+	{
+		     if(*this == "Text"         ) obj = Series::ScanPattern::Text          ;
+		else if(*this == "SingleLine"   ) obj = Series::ScanPattern::SingleLine    ;
+		else if(*this == "Circular"     ) obj = Series::ScanPattern::Circular      ;
+		else if(*this == "Volume"       ) obj = Series::ScanPattern::Volume        ;
+		else if(*this == "FastVolume"   ) obj = Series::ScanPattern::FastVolume    ;
+		else if(*this == "Radial"       ) obj = Series::ScanPattern::Radial        ;
+		else if(*this == "RadialCircles") obj = Series::ScanPattern::RadialCircles ;
+		else obj = Series::ScanPattern::Unknown;
+	}
+
+
+
+	template<> void Series::ExaminedStructureEnumWrapper::toString()
+	{
+		switch(obj)
+		{
+			case Series::ExaminedStructure::Text  : std::string::operator=("Text"  ); break;
+			case Series::ExaminedStructure::ONH   : std::string::operator=("ONH"   ); break;
+			case Series::ExaminedStructure::Retina: std::string::operator=("Retina"); break;
+			case Series::ExaminedStructure::Unknown:
+				break;
+		}
+	}
+	template<> void Series::ExaminedStructureEnumWrapper::fromString()
+	{
+		     if(*this == "Text"  ) obj = Series::ExaminedStructure::Text  ;
+		else if(*this == "ONH"   ) obj = Series::ExaminedStructure::ONH   ;
+		else if(*this == "Retina") obj = Series::ExaminedStructure::Retina;
+		else obj = Series::ExaminedStructure::Unknown;
+	}
+
+
 }

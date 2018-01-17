@@ -6,7 +6,7 @@
 #include "study.h"
 #include "date.h"
 
-#include"enumwrapper.h"
+#include"objectwrapper.h"
 
 namespace OctData
 {
@@ -16,7 +16,7 @@ namespace OctData
 		explicit Patient(int internalId) : internalId(internalId) {}
 
 		enum class Sex { Unknown, Female, Male};
-		typedef EnumWrapper<Sex> SexEnumWrapper;
+		typedef ObjectWrapper<Sex> SexEnumWrapper;
 
 		static const char* getSexName(Sex sex);
 		const char* getSexName()          const                  { return getSexName(sex); }
@@ -51,10 +51,8 @@ namespace OctData
 		int getInternalId() const                                      { return internalId; }
 
 
-		template<typename T>
-		void getSetParameter(T& getSet)                                { getSetCvParameter(getSet, *this); }
-		template<typename T>
-		void getSetParameter(T& getSet) const                          { getSetCvParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
 
 
 		struct PrintOptions
@@ -93,17 +91,20 @@ namespace OctData
 		Sex sex = Sex::Unknown;
 
 		template<typename T, typename ParameterSet>
-		static void getSetCvParameter(T& getSet, ParameterSet& p)
+		static void getSetParameter(T& getSet, ParameterSet& p)
 		{
-			getSet("internalId"               , p.internalId             );
-			getSet("forename"                 , p.forename               );
-			getSet("surname"                  , p.surname                );
-			getSet("title"                    , p.title                  );
-			getSet("id"                       , p.id                     );
-			getSet("uid"                      , p.uid                    );
-			getSet("ancestry"                 , p.ancestry               );
-			getSet("birthdate"                , p.birthdate              );
-			getSet("sex"                      , SexEnumWrapper(p.sex)    );
+			SexEnumWrapper sexWrapper (p.sex);
+			DateWrapper    birthDateWrapper(p.birthdate);
+
+			getSet("internalId", p.internalId                              );
+			getSet("forename"  , p.forename                                );
+			getSet("surname"   , p.surname                                 );
+			getSet("title"     , p.title                                   );
+			getSet("id"        , p.id                                      );
+			getSet("uid"       , p.uid                                     );
+			getSet("ancestry"  , p.ancestry                                );
+			getSet("birthdate" , static_cast<std::string>(birthDateWrapper));
+			getSet("sex"       , static_cast<std::string>(sexWrapper)      );
 		}
 
 	};

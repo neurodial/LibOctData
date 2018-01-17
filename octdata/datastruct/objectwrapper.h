@@ -6,7 +6,7 @@
 namespace OctData
 {
 	template<typename T>
-	class EnumWrapper : public std::string
+	class ObjectWrapper : public std::string
 	{
 		T constObj; // temporary for const usage
 		T& obj;
@@ -15,16 +15,16 @@ namespace OctData
 		void fromString();
 
 	public:
-		EnumWrapper(const T& o)
+		ObjectWrapper(const T& o)
 		: constObj(o)
 		, obj(constObj)
 		{ toString(); }
 
-		EnumWrapper(T& o)
+		ObjectWrapper(T& o)
 		: obj(o)
 		{ toString(); }
 
-		~EnumWrapper()
+		~ObjectWrapper()
 		{
 			if(&constObj != &obj)
 				fromString();

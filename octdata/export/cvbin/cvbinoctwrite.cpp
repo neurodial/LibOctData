@@ -16,6 +16,7 @@
 
 #include <cpp_framework/cvmat/cvmattreestruct.h>
 #include <cpp_framework/cvmat/cvmattreestructextra.h>
+#include <cpp_framework/cvmat/cvmattreegetset.h>
 #include <cpp_framework/cvmat/treestructbin.h>
 #include <cpp_framework/callback.h>
 #include <octfileread.h>
@@ -77,26 +78,14 @@ namespace OctData
 		CppFW::CVMatTreeExtra::setCvScalar(studyDataNode , "ID", study .getInternalId());
 		CppFW::CVMatTreeExtra::setCvScalar(seriesDataNode, "ID", series.getInternalId());
 
-		setStringOpt(patDataNode, "IID"      , pat.getId()             );
-		setStringOpt(patDataNode, "UID"      , pat.getPatientUID()     );
-		setStringOpt(patDataNode, "Forename" , pat.getForename()       );
-		setStringOpt(patDataNode, "Surname"  , pat.getSurname()        );
-		setStringOpt(patDataNode, "Title"    , pat.getTitle()          );
-		setStringOpt(patDataNode, "Sex"      , pat.getSexName()        );
-		setStringOpt(patDataNode, "Birthdate", pat.getBirthdate().str());
-// 		setStringOpt(patDataNode, "Dignose"  , pat.getDiagnose()       );
-		setStringOpt(patDataNode, "Ancestry" , pat.getAncestry()       );
+		CppFW::SetToCVMatTree patientWriter(patDataNode);
+		pat.getSetParameter(patientWriter);
 
+		CppFW::SetToCVMatTree studyWriter(studyDataNode);
+		study.getSetParameter(studyWriter);
 
-		setStringOpt(studyDataNode, "UID"          , study.getStudyUID()       );
-		setStringOpt(studyDataNode, "StudyName"    , study.getStudyName()      );
-		setStringOpt(studyDataNode, "StudyOperator", study.getStudyOperator()  );
-		setStringOpt(studyDataNode, "StudyDate"    , study.getStudyDate().str());
-
-
-		setStringOpt(seriesDataNode, "UID"        , series.getSeriesUID()     );
-		setStringOpt(seriesDataNode, "ScanDate"   , series.getScanDate().str());
-		setStringOpt(seriesDataNode, "Description", series.getDescription()   );
+		CppFW::SetToCVMatTree seriesWriter(seriesDataNode);
+		series.getSetParameter(seriesWriter);
 
 
 		const SloImage& slo = series.getSloImage();

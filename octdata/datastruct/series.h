@@ -6,6 +6,7 @@
 #include "date.h"
 #include "analysegrid.h"
 
+#include"objectwrapper.h"
 
 
 #ifdef OCTDATA_EXPORT
@@ -27,9 +28,13 @@ namespace OctData
 		Series& operator=(const Series&) = delete;
 
 	public:
-		enum class Laterality { undef, OD, OS };
-		enum class ScanPattern { Unknown, Text, SingleLine, Circular, Volume, FastVolume, Radial, RadialCircles };
+		enum class Laterality        { undef, OD, OS };
+		enum class ScanPattern       { Unknown, Text, SingleLine, Circular, Volume, FastVolume, Radial, RadialCircles };
 		enum class ExaminedStructure { Unknown, Text, ONH, Retina };
+		typedef ObjectWrapper<Laterality       > LateralityEnumWrapper       ;
+		typedef ObjectWrapper<ScanPattern      > ScanPatternEnumWrapper      ;
+		typedef ObjectWrapper<ExaminedStructure> ExaminedStructureEnumWrapper;
+
 		typedef std::vector<BScan*> BScanList;
 		typedef std::vector<CoordSLOmm> BScanSLOCoordList;
 
@@ -81,6 +86,11 @@ namespace OctData
 		Octdata_EXPORTS const AnalyseGrid& getAnalyseGrid()      const { return analyseGrid; }
 
 		Octdata_EXPORTS const BScanSLOCoordList& getConvexHull() const { return convexHullSLOBScans; }
+
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
+
 	private:
 		const int internalId;
 
@@ -106,6 +116,29 @@ namespace OctData
 
 		BScanSLOCoordList                       convexHullSLOBScans;
 		void calculateSLOConvexHull();
+
+		template<typename T, typename ParameterSet>
+		static void getSetParameter(T& getSet, ParameterSet& p)
+		{
+			LateralityEnumWrapper        lateralityWrapper       (p.laterality       );
+			ScanPatternEnumWrapper       scanPatternWrapper      (p.scanPattern      );
+			ExaminedStructureEnumWrapper examinedStructureWrapper(p.examinedStructure);
+
+
+			DateWrapper    scanDateWrapper(p.scanDate);
+
+			getSet("seriesUID"            , p.seriesUID                                       );
+			getSet("refSeriesID"          , p.refSeriesID                                     );
+			getSet("scanFocus"            , p.scanFocus                                       );
+			getSet("scanPatternText"      , p.scanPatternText                                 );
+			getSet("examinedStructureText", p.examinedStructureText                           );
+			getSet("description"          , p.description                                     );
+			getSet("scanDate"             , static_cast<std::string>(scanDateWrapper         ));
+			getSet("laterality"           , static_cast<std::string>(lateralityWrapper       ));
+			getSet("scanPattern"          , static_cast<std::string>(scanPatternWrapper      ));
+			getSet("examinedStructure"    , static_cast<std::string>(examinedStructureWrapper));
+		}
+
 	};
 
 }
