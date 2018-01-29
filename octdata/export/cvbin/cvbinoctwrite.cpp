@@ -27,14 +27,14 @@ namespace bfs = boost::filesystem;
 
 namespace OctData
 {
-	namespace
-	{
-		void setCoords2Node(CppFW::CVMatTree& node, const CoordSLOmm& coords, const OctData::CoordSLOmm& shift)
-		{
-			double coordData[2] = { coords.getX()+shift.getX(), coords.getY()+shift.getY() };
-			node.getMat() = cv::Mat(1, 2, cv::DataType<double>::type, coordData).clone();
-		}
-	}
+// 	namespace
+// 	{
+// 		void setCoords2Node(CppFW::CVMatTree& node, const CoordSLOmm& coords, const OctData::CoordSLOmm& shift)
+// 		{
+// 			double coordData[2] = { coords.getX()+shift.getX(), coords.getY()+shift.getY() };
+// 			node.getMat() = cv::Mat(1, 2, cv::DataType<double>::type, coordData).clone();
+// 		}
+// 	}
 
 	void setStringOpt(CppFW::CVMatTree& tree, const char* nodeName, const std::string& value)
 	{
@@ -89,9 +89,13 @@ namespace OctData
 
 
 		const SloImage& slo = series.getSloImage();
-		octtree.getDirNode("slo").getMat() = slo.getImage();
-		const CoordSLOpx& sloShift   = slo.getShift();
-		const CoordSLOmm& sloShiftMM = sloShift/slo.getScaleFactor();
+
+		CppFW::CVMatTree& sloNode = octtree.getDirNode("slo");
+		CppFW::SetToCVMatTree sloWriter(sloNode);
+		slo.getSetParameter(sloWriter);
+		sloNode.getDirNode("img").getMat() = slo.getImage();
+// 		const CoordSLOpx& sloShift   = slo.getShift();
+// 		const CoordSLOmm& sloShiftMM = sloShift/slo.getScaleFactor();
 
 		double sloScaleData[2] = { slo.getScaleFactor().getX(), slo.getScaleFactor().getY() };
 		seriesDataNode.getDirNode("SloScale").getMat() = cv::Mat(1, 2, cv::DataType<double>::type, sloScaleData).clone();
@@ -107,9 +111,14 @@ namespace OctData
 			CppFW::CVMatTree& bscanImgNode = bscanNode.getDirNode("img");
 			bscanImgNode.getMat() = bscan->getImage();
 
+
+			CppFW::CVMatTree& bscanDataNode = bscanNode.getDirNode("data");
+			CppFW::SetToCVMatTree bscanWriter(bscanDataNode);
+			bscan->getSetParameter(bscanWriter);
+/*
 			CppFW::CVMatTree& bscanCoordNode = bscanNode.getDirNode("Coords");
 			setCoords2Node(bscanCoordNode.getDirNode("Start"), bscan->getStart(), sloShiftMM);
-			setCoords2Node(bscanCoordNode.getDirNode("End"  ), bscan->getEnd  (), sloShiftMM);
+			setCoords2Node(bscanCoordNode.getDirNode("End"  ), bscan->getEnd  (), sloShiftMM);*/
 
 
 			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("Segmentations");

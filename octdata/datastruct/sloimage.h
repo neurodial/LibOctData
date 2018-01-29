@@ -26,6 +26,24 @@ namespace OctData
 		int    numAverage              = 0 ;
 		int    imageQuality            = 0 ;
 
+		template<typename T, typename ParameterSet>
+		static void callSubset(T& getSet, ParameterSet& p, const std::string& name)
+		{
+			T subSetGetSet = getSet.subSet(name);
+			p.getSetParameter(subSetGetSet);
+		}
+
+		template<typename T, typename ParameterSet>
+		static void getSetParameter(T& getSet, ParameterSet& p)
+		{
+			getSet("numAverage"  , p.numAverage  );
+			getSet("imageQuality", p.imageQuality);
+
+			callSubset(getSet, p.scaleFactor, "scaleFactor");
+			callSubset(getSet, p.shift      , "shift_px"   );
+			callSubset(getSet, p.transform  , "transform"  );
+		}
+
 	public:
 		SloImage();
 		~SloImage();
@@ -52,5 +70,8 @@ namespace OctData
 		bool  hasImage()                            const           { return image                  ; }
 		Octdata_EXPORTS int   getWidth()            const;
 		Octdata_EXPORTS int   getHeight()           const;
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
 	};
 }

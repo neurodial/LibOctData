@@ -36,4 +36,21 @@ namespace OctData
 		*rawImage = img;
 	}
 
+
+	template<> void BScan::BScanTypeEnumWrapper::toString()
+	{
+		switch(obj)
+		{
+			case BScan::BScanType::Circle: std::string::operator=("Circle"); break;
+			case BScan::BScanType::Line  : std::string::operator=("Line"  ); break;
+			case BScan::BScanType::Unknown:
+				break;
+		}
+	}
+	template<> void BScan::BScanTypeEnumWrapper::fromString()
+	{
+		     if(*this == "Circle") obj = BScan::BScanType::Circle;
+		else if(*this == "Line"  ) obj = BScan::BScanType::Line  ;
+		else obj = BScan::BScanType::Unknown;
+	}
 }

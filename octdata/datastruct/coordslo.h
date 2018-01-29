@@ -13,20 +13,31 @@ namespace OctData
 		double y;
 		double z = 0;
 
+		template<typename T, typename ParameterSet>
+		static void getSetParameter(T& getSet, ParameterSet& p)
+		{
+			getSet("x", p.x);
+			getSet("y", p.y);
+			getSet("z", p.z);
+		}
+
 	public:
 		ScaleFactor(double x, double y, double z = 0) : x(x), y(y), z(z)
-		                                                            {}
-		explicit ScaleFactor(double factor) : x(factor), y(factor)  {}
-		ScaleFactor() : x(1), y(1)                                  {}
+		                                                               {}
+		explicit ScaleFactor(double factor) : x(factor), y(factor)     {}
+		ScaleFactor() : x(1), y(1)                                     {}
 
-		double getX() const                                         { return x; }
-		double getY() const                                         { return y; }
-		double getZ() const                                         { return z; }
+		double getX() const                                            { return x; }
+		double getY() const                                            { return y; }
+		double getZ() const                                            { return z; }
 
-		ScaleFactor  operator* (double factor) const                { return ScaleFactor(x*factor, y*factor, z*factor); }
-		ScaleFactor& operator*=(double factor)                      { x *= factor; y *= factor; z*= factor; return *this; }
+		ScaleFactor  operator* (double factor) const                   { return ScaleFactor(x*factor, y*factor, z*factor); }
+		ScaleFactor& operator*=(double factor)                         { x *= factor; y *= factor; z*= factor; return *this; }
 
-		void print(std::ostream& stream) const                      { stream << "(" << x << " | " << y << ")"; }
+		void print(std::ostream& stream) const                         { stream << "(" << x << " | " << y << ")"; }
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
 	};
 	inline std::ostream& operator<<(std::ostream& stream, const ScaleFactor& obj) { obj.print(stream); return stream; }
 
@@ -34,6 +45,13 @@ namespace OctData
 	{
 		double x;
 		double y;
+
+		template<typename T, typename ParameterSet>
+		static void getSetParameter(T& getSet, ParameterSet& p)
+		{
+			getSet("x", p.x);
+			getSet("y", p.y);
+		}
 
 	public:
 		CoordSLOpx(double x, double y) : x(x), y(y)                 {}
@@ -58,6 +76,9 @@ namespace OctData
 		void print(std::ostream& stream) const                      { stream << "(" << x << " | " << y << ")"; }
 
 		CoordSLOmm operator/(const ScaleFactor& factor) const;
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
 	};
 
 	inline std::ostream& operator<<(std::ostream& stream, const CoordSLOpx& obj) { obj.print(stream); return stream; }
@@ -69,6 +90,14 @@ namespace OctData
 		double y;
 
 		bool set = false;
+
+		template<typename T, typename ParameterSet>
+		static void getSetParameter(T& getSet, ParameterSet& p)
+		{
+			getSet("x"  , p.x  );
+			getSet("y"  , p.y  );
+			getSet("set", p.set);
+		}
 
 	public:
 		CoordSLOmm(double x, double y) : x(x), y(y), set(true)      {}
@@ -86,6 +115,9 @@ namespace OctData
 		double abs(const CoordSLOmm& o) const                       { return std::sqrt((x-o.x)*(x-o.x) + (y-o.y)*(y-o.y)); }
 
 		operator bool() const                                       { return set; }
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
 	};
 
 
@@ -98,6 +130,18 @@ namespace OctData
 
 		double b1 = 0.;
 		double b2 = 0.;
+
+		template<typename T, typename ParameterSet>
+		static void getSetParameter(T& getSet, ParameterSet& p)
+		{
+			getSet("a11", p.a11);
+			getSet("a12", p.a12);
+			getSet("a21", p.a21);
+			getSet("a22", p.a22);
+
+			getSet("b1" , p.b1 );
+			getSet("b2" , p.b2 );
+		}
 	public:
 		CoordTransform() = default;
 		CoordTransform(double a11, double a12, double a21, double a22, double b1, double b2)
@@ -111,6 +155,9 @@ namespace OctData
 
 		CoordSLOmm operator*(const CoordSLOmm& mm) const            { return CoordSLOmm(a11*mm.getX()  + a12*mm.getY()  + b1, a21*mm.getX()  + a22*mm.getY()  + b2); }
 		CoordSLOpx operator*(const CoordSLOpx& px) const            { return CoordSLOpx(a11*px.getXf() + a12*px.getYf() + b1, a21*px.getXf() + a22*px.getYf() + b2); }
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
 	};
 
 

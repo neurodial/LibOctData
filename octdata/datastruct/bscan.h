@@ -23,7 +23,10 @@ namespace OctData
 	class Octdata_EXPORTS BScan
 	{
 	public:
-		enum class BScanType { Line, Circle };
+		enum class BScanType { Unknown, Line, Circle };
+
+		typedef ObjectWrapper<BScanType> BScanTypeEnumWrapper;
+
 		struct Data
 		{
 			std::string filename;
@@ -39,9 +42,9 @@ namespace OctData
 
 			BScanType   bscanType          = BScanType::Line;
 			ScaleFactor scaleFactor;
-			CoordSLOmm  start;
-			CoordSLOmm  end;
-			CoordSLOmm  center;
+			CoordSLOmm  start      ;
+			CoordSLOmm  end        ;
+			CoordSLOmm  center     ;
 			bool clockwiseRotation = false;
 
 			Segmentationlines segmentationslines;
@@ -90,9 +93,44 @@ namespace OctData
 		int   getWidth()                    const;
 		int   getHeight()                   const;
 
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
+
+
 	private:
 		cv::Mat*                                image    = nullptr;
 		cv::Mat*                                rawImage = nullptr;
 		Data                                    data;
+
+
+		template<typename T, typename ParameterSet>
+		static void callSubset(T& getSet, ParameterSet& p, const std::string& name)
+		{
+			T subSetGetSet = getSet.subSet(name);
+			p.getSetParameter(subSetGetSet);
+		}
+
+		template<typename T, typename ParameterSet>
+		static void getSetParameter(T& getSet, ParameterSet& p)
+		{
+			BScanTypeEnumWrapper        bscanTypeWrapper       (p.data.bscanType);
+
+
+			DateWrapper    acquisitionTimeWrapper(p.data.acquisitionTime);
+
+			getSet("numAverage"       , p.data.numAverage                                );
+			getSet("clockwiseRotation", p.data.clockwiseRotation                         );
+			getSet("imageQuality"     , p.data.imageQuality                              );
+			getSet("scanAngle"        , p.data.scanAngle                                 );
+			getSet("acquisitionTime"  , static_cast<std::string&>(acquisitionTimeWrapper));
+			getSet("bscanType"        , static_cast<std::string&>(bscanTypeWrapper)      );
+
+			callSubset(getSet, p.data.scaleFactor, "scaleFactor");
+			callSubset(getSet, p.data.start      , "start_mm"   );
+			callSubset(getSet, p.data.end        , "end_mm"     );
+			callSubset(getSet, p.data.center     , "center_mm"  );
+		}
+
 	};
 }
