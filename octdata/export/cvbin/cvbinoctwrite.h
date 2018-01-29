@@ -15,7 +15,6 @@ namespace OctData
 	public:
 
 		static bool writeFile(const boost::filesystem::path& file, const OCT& oct);
-		static bool writeFile(const boost::filesystem::path& file, const Patient& pat, const Study& study, const Series& series);
 	};
 }
 
