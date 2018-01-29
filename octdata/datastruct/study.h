@@ -18,11 +18,11 @@ namespace OctData
 		{
 			DateWrapper studyDateWrapper(p.studyDate);
 
-			getSet("studyUID     ", p.studyUID                                 );
-			getSet("studyName    ", p.studyName                                );
+			getSet("studyUID"     , p.studyUID                                 );
+			getSet("studyName"    , p.studyName                                );
 			getSet("studyOperator", p.studyOperator                            );
-			getSet("studyDate    ", static_cast<std::string&>(studyDateWrapper));
-// 			getSet("internalId   ", p.internalId                               );
+			getSet("studyDate"    , static_cast<std::string&>(studyDateWrapper));
+// 			getSet("internalId"   , p.internalId                               );
 		}
 
 	public:
