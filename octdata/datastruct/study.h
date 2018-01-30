@@ -28,6 +28,8 @@ namespace OctData
 	public:
 		explicit Study(int internalId) : internalId(internalId)   {}
 
+		      Series& getInsertId(int id)                              { return getAndInsert(id) ; }
+
 		      Series& getSeries(int seriesId)                     { return getAndInsert        (seriesId) ; }
 		const Series& getSeries(int seriesId) const               { return *(substructureMap.at(seriesId)); }
 

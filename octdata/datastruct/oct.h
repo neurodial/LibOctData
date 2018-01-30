@@ -8,6 +8,8 @@ namespace OctData
 	class OCT : public SubstructureTemplate<Patient>
 	{
 	public:
+		Octdata_EXPORTS       Patient& getInsertId(int id)                        { return getAndInsert        (id) ; }
+
 		Octdata_EXPORTS       Patient& getPatient(int patientId)                  { return getAndInsert        (patientId) ; }
 		Octdata_EXPORTS const Patient& getPatient(int patientId) const            { return *(substructureMap.at(patientId)); }
 		Octdata_EXPORTS void clear()                                              { clearSubstructure(); }

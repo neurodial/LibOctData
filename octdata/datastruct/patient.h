@@ -45,6 +45,9 @@ namespace OctData
 		const std::string& getAncestry() const                   { return ancestry; }
 		void setAncestry (const std::string& v)                  { ancestry  = v ; }
 
+
+		      Study& getInsertId(int id)                               { return getAndInsert(id) ; }
+
 		      Study& getStudy(int seriesId)                      { return getAndInsert(seriesId)         ; }
 		const Study& getStudy(int seriesId) const                { return *(substructureMap.at(seriesId)); }
 

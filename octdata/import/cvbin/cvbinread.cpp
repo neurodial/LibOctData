@@ -10,6 +10,7 @@
 
 #include <filereadoptions.h>
 
+#include<algorithm>
 
 #include <boost/log/trivial.hpp>
 
@@ -21,6 +22,7 @@
 #include <octfileread.h>
 
 #include<filereader/filereader.h>
+#include <boost/lexical_cast.hpp>
 
 namespace bfs = boost::filesystem;
 
@@ -30,6 +32,46 @@ namespace OctData
 
 	namespace
 	{
+
+		const CppFW::CVMatTree* getDirNodeOptCamelCase(const CppFW::CVMatTree& node, const char* name)
+		{
+			const CppFW::CVMatTree* result = node.getDirNodeOpt(name);
+			if(!result)
+			{
+				std::string nameFirstUpper(name);
+				nameFirstUpper[0] = static_cast<std::string::value_type>(std::toupper(nameFirstUpper[0]));
+				result = node.getDirNodeOpt(nameFirstUpper.c_str());
+			}
+			return result;
+		}
+
+
+// 		const CppFW::CVMatTree* getDirNodeOptCamelCase(const CppFW::CVMatTree* node, const char* name)
+// 		{
+// 			if(node) return getDirNodeOptCamelCase(*node, name);
+// 			return nullptr;
+// 		}
+
+		// general export methods
+		SloImage* readSlo(const CppFW::CVMatTree* sloNode)
+		{
+			if(!sloNode)
+				return nullptr;
+
+			const CppFW::CVMatTree* imgNode = sloNode->getDirNodeOpt("img");
+			if(imgNode && imgNode->type() == CppFW::CVMatTree::Type::Mat)
+			{
+				SloImage* slo = new SloImage();
+				CppFW::GetFromCVMatTree sloWriter(*sloNode);
+				slo->getSetParameter(sloWriter);
+				slo->setImage(imgNode->getMat());
+				return slo;
+			}
+			return nullptr;
+		}
+
+		/*
+
 		class TreeImgGetter
 		{
 			cv::Mat createdImage;
@@ -157,44 +199,62 @@ namespace OctData
 				}
 			}
 		};
+*/
 
-		class OctDataImgGetter
+		void fillSegmentationsLines(const CppFW::CVMatTree* segNode, BScan::Data& bscanData)
 		{
-			const Series& refSeries;
-			std::size_t pos = 0;
-			const BScan* actBscan;
-
-		public:
-			OctDataImgGetter(const Series& refSeries) : refSeries(refSeries) {}
-
-			const cv::Mat* get(const CppFW::CVMatTree* /*bscanNode*/)
+			if(segNode)
 			{
-				if(refSeries.bscanCount() <= pos)
+				for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
 				{
-					BOOST_LOG_TRIVIAL(warning) << "to less BScans in refFile: " << pos << " / " << refSeries.bscanCount();
-					return nullptr;
-				}
-				actBscan = refSeries.getBScan(pos);
-				++pos;
-				if(!actBscan)
-					return nullptr;
-				return &(actBscan->getImage());
-			}
+					const char* segLineName = Segmentationlines::getSegmentlineName(type);
 
-			void setBScanCoords(BScan::Data& bscanData, const CppFW::CVMatTree* /*bscanNode*/)
-			{
-				if(actBscan)
-				{
-					bscanData.start  = actBscan->getStart ();
-					bscanData.end    = actBscan->getEnd   ();
-					bscanData.center = actBscan->getCenter();
+					const CppFW::CVMatTree* seriesSegILMNode = segNode->getDirNodeOpt(segLineName);
+					if(seriesSegILMNode && seriesSegILMNode->type() == CppFW::CVMatTree::Type::Mat)
+					{
+						const cv::Mat& segMat = seriesSegILMNode->getMat();
+						cv::Mat convertedSegMat;
+						segMat.convertTo(convertedSegMat, cv::DataType<double>::type);
+
+						const double* p = convertedSegMat.ptr<double>(0);
+						std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
+
+						bscanData.getSegmentLine(type) = std::move(segVec);
+					}
 				}
 			}
+		}
 
-		};
+		BScan* readBScan(const CppFW::CVMatTree* bscanNode)
+		{
+			if(!bscanNode)
+				return nullptr;
 
-		template<typename ImgGetter>
-		bool fillSeries(const CppFW::CVMatTree::NodeList& seriesList, Series& series, ImgGetter imgGetter, CppFW::Callback* callback)
+			BScan* bscan = nullptr;
+			const CppFW::CVMatTree* imgNode = bscanNode->getDirNodeOpt("img");
+			if(imgNode && imgNode->type() == CppFW::CVMatTree::Type::Mat)
+			{
+				const cv::Mat& img = imgNode->getMat();
+				BScan::Data bscanData;
+
+				const CppFW::CVMatTree* seriesSegNode = getDirNodeOptCamelCase(*bscanNode, "segmentations");
+				fillSegmentationsLines(seriesSegNode, bscanData);
+
+				bscan = new BScan(img, bscanData);
+
+				CppFW::GetFromCVMatTree bscanReader(bscanNode->getDirNodeOpt("data"));
+				bscan->getSetParameter(bscanReader);
+
+
+				const CppFW::CVMatTree* angioNode = bscanNode->getDirNodeOpt("angioImg");
+				if(angioNode && angioNode->type() == CppFW::CVMatTree::Type::Mat)
+					bscan->setAngioImage(angioNode->getMat());
+			}
+
+			return bscan;
+		}
+
+		bool readBScanList(const CppFW::CVMatTree::NodeList& seriesList, Series& series, CppFW::Callback* callback)
 		{
 			CppFW::CallbackStepper bscanCallbackStepper(callback, seriesList.size());
 			for(const CppFW::CVMatTree* bscanNode : seriesList)
@@ -202,73 +262,126 @@ namespace OctData
 				if(++bscanCallbackStepper == false)
 					return false;
 
-				if(!bscanNode)
-					continue;
-
-				const CppFW::CVMatTree* seriesSegNode = bscanNode->getDirNodeOpt("Segmentations");
-
-				const cv::Mat* image = imgGetter.get(bscanNode);
-				if(!image)
-					return false;
-
-				BScan::Data bscanData;
-				if(seriesSegNode)
-				{
-					for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
-					{
-						const char* segLineName = Segmentationlines::getSegmentlineName(type);
-
-						const CppFW::CVMatTree* seriesSegILMNode = seriesSegNode->getDirNodeOpt(segLineName);
-						if(seriesSegILMNode && seriesSegILMNode->type() == CppFW::CVMatTree::Type::Mat)
-						{
-							const cv::Mat& segMat = seriesSegILMNode->getMat();
-							cv::Mat convertedSegMat;
-							segMat.convertTo(convertedSegMat, cv::DataType<double>::type);
-
-							const double* p = convertedSegMat.ptr<double>(0);
-							std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
-
-							bscanData.getSegmentLine(type) = std::move(segVec);
-						}
-					}
-				}
-
-				imgGetter.setBScanCoords(bscanData, bscanNode);
-
-				BScan* bscan = new BScan(*image, bscanData);
-				series.takeBScan(bscan);
+				BScan* bscan = readBScan(bscanNode);
+				if(bscan)
+					series.takeBScan(bscan);
 			}
 			return true;
 		}
 
-		OCT openIfExists(const bfs::path& file, const FileReadOptions& op, CppFW::Callback& callback)
+
+
+
+		// deep file format (support many scans per file, tree structure)
+		template<typename S>
+		bool readStructure(const CppFW::CVMatTree& tree, S& structure, CppFW::Callback* callback)
 		{
-			if(bfs::exists(file))
-				return OctFileRead::openFile(file.generic_string(), op, &callback);
-			return OCT();
+			bool result = true;
+			const CppFW::CVMatTree* dataNode = tree.getDirNodeOpt("data");
+			if(dataNode)
+			{
+				CppFW::GetFromCVMatTree structureReader(dataNode);
+				structure.getSetParameter(structureReader);
+			}
+
+
+			for(const CppFW::CVMatTree::NodePair& subNodePair : tree.getNodeDir())
+			{
+				if(!subNodePair.second)
+					continue;
+
+				const std::string& nodeName = subNodePair.first;
+				if(nodeName.substr(0,3) == "id_")
+				{
+					const std::string& nodeIdStr = nodeName.substr(3, 50);
+
+					try
+					{
+						int id = boost::lexical_cast<int>(nodeIdStr);
+						readStructure(*(subNodePair.second), structure.getInsertId(id), callback);
+					}
+					catch(const boost::bad_lexical_cast&)
+					{
+					}
+				}
+			}
+			return result;
 		}
 
-		OCT tryOpenFile(const bfs::path& baseFile, const std::string& refFilename, const FileReadOptions& op, CppFW::Callback& callback)
+
+		template<>
+		bool readStructure<Series>(const CppFW::CVMatTree& tree, Series& series, CppFW::Callback* callback)
 		{
-			bfs::path refFile(refFilename);
-			bfs::path baseFilePath(baseFile.branch_path());
+			const CppFW::CVMatTree* dataNode = tree.getDirNodeOpt("data");
+			if(dataNode)
+			{
+				CppFW::GetFromCVMatTree seriesReader(dataNode);
+				series.getSetParameter(seriesReader);
+			}
 
-			// direkt path
-			OCT octData = openIfExists(refFilename, op, callback);
-			if(octData.size() > 0)
-				return octData;
 
-			// as rel path from base file
-			bfs::path relPath = baseFilePath / refFile;
-			octData = openIfExists(relPath, op, callback);
-			if(octData.size() > 0)
-				return octData;
+			const CppFW::CVMatTree* sloNode = tree.getDirNodeOpt("slo");
+			series.takeSloImage(readSlo(sloNode));
 
-			// only filename in base file path
-			bfs::path filenamePath = baseFilePath / refFile.filename();
-			octData = openIfExists(filenamePath, op, callback);
+			const CppFW::CVMatTree* bscansNode = getDirNodeOptCamelCase(tree, "bscans");
+			if(!bscansNode)
+				return false;
 
-			return octData;
+			const CppFW::CVMatTree::NodeList& seriesList = bscansNode->getNodeList();
+			return readBScanList(seriesList, series, callback);
+		}
+
+		bool readTreeData(OCT& oct, const CppFW::CVMatTree& octtree, CppFW::Callback* callback)
+		{
+			return readStructure(octtree, oct, callback);
+		}
+
+
+
+
+		bool readFlatData(OCT& oct, const CppFW::CVMatTree& octtree, const CppFW::CVMatTree* seriesNode, CppFW::Callback* callback)
+		{
+			if(seriesNode->type() != CppFW::CVMatTree::Type::List)
+			{
+				BOOST_LOG_TRIVIAL(trace) << "Serie node not found or false datatype";
+				return false;
+			}
+
+			const CppFW::CVMatTree* patDataNode    = getDirNodeOptCamelCase(octtree, "patientData");
+			const CppFW::CVMatTree* studyDataNode  = getDirNodeOptCamelCase(octtree, "studyData"  );
+			const CppFW::CVMatTree* seriesDataNode = getDirNodeOptCamelCase(octtree, "seriesData" );
+
+			int patId    = CppFW::CVMatTreeExtra::getCvScalar(patDataNode   , "ID", 1);
+			int studyId  = CppFW::CVMatTreeExtra::getCvScalar(studyDataNode , "ID", 1);
+			int seriesId = CppFW::CVMatTreeExtra::getCvScalar(seriesDataNode, "ID", 1);
+
+			Patient& pat    = oct  .getPatient(patId   );
+			Study&   study  = pat  .getStudy  (studyId );
+			Series&  series = study.getSeries (seriesId);
+
+			if(patDataNode)
+			{
+				CppFW::GetFromCVMatTree patientReader(*patDataNode);
+				pat.getSetParameter(patientReader);
+			}
+
+			if(studyDataNode)
+			{
+				CppFW::GetFromCVMatTree studyReader(*studyDataNode);
+				study.getSetParameter(studyReader);
+			}
+
+			if(seriesDataNode)
+			{
+				CppFW::GetFromCVMatTree seriesReader(*seriesDataNode);
+				series.getSetParameter(seriesReader);
+			}
+
+			const CppFW::CVMatTree* sloNode = octtree.getDirNodeOpt("slo");
+			series.takeSloImage(readSlo(sloNode));
+
+			const CppFW::CVMatTree::NodeList& seriesList = seriesNode->getNodeList();
+			return readBScanList(seriesList, series, callback);
 		}
 
 	}
@@ -278,7 +391,7 @@ namespace OctData
 	{
 	}
 
-	bool CvBinRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
+	bool CvBinRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
 	{
 		const boost::filesystem::path& file = filereader.getFilepath();
 //
@@ -289,12 +402,13 @@ namespace OctData
 //     BOOST_LOG_TRIVIAL(error)   << "An error severity message";
 //     BOOST_LOG_TRIVIAL(fatal)   << "A fatal severity message";
 
-		if(file.extension() != ".octbin")
+		if(file.extension() != ".octbin" && file.extension() != ".bin")
 			return false;
 
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as bins";
 
 		CppFW::CVMatTree octtree = CppFW::CVMatTreeStructBin::readBin(file.generic_string());
+		callback->callback(0.5);
 
 		if(octtree.type() != CppFW::CVMatTree::Type::Dir)
 		{
@@ -302,117 +416,12 @@ namespace OctData
 			return false;
 		}
 
-
-		const CppFW::CVMatTree* seriesNode = octtree.getDirNodeOpt("Serie");
-		if(!seriesNode || seriesNode->type() != CppFW::CVMatTree::Type::List)
-		{
-			BOOST_LOG_TRIVIAL(trace) << "Serie node not found or false datatype";
-			return false;
-		}
-
-		const CppFW::CVMatTree* patDataNode    = octtree.getDirNodeOpt("PatientData");
-		const CppFW::CVMatTree* studyDataNode  = octtree.getDirNodeOpt("StudyData"  );
-		const CppFW::CVMatTree* seriesDataNode = octtree.getDirNodeOpt("SeriesData" );
-
-		int patId    = CppFW::CVMatTreeExtra::getCvScalar(patDataNode   , "ID", 1);
-		int studyId  = CppFW::CVMatTreeExtra::getCvScalar(studyDataNode , "ID", 1);
-		int seriesId = CppFW::CVMatTreeExtra::getCvScalar(seriesDataNode, "ID", 1);
-
-		Patient& pat    = oct  .getPatient(patId   );
-		Study&   study  = pat  .getStudy  (studyId );
-		Series&  series = study.getSeries (seriesId);
-
-		if(patDataNode)
-		{
-			CppFW::GetFromCVMatTree patientReader(*patDataNode);
-			pat.getSetParameter(patientReader);
-		}
-
-		if(studyDataNode)
-		{
-			CppFW::GetFromCVMatTree studyWriter(*studyDataNode);
-			study.getSetParameter(studyWriter);
-		}
-
-		if(seriesDataNode)
-		{
-			CppFW::GetFromCVMatTree seriesWriter(*seriesDataNode);
-			series.getSetParameter(seriesWriter);
-		}
-
-// 		series.setRefSeriesUID(CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "RefUID"));
-// 		series.setSeriesUID   (CppFW::CVMatTreeExtra::getStringOrEmpty(seriesDataNode, "UID"   ));
-// 		pat   .setId          (CppFW::CVMatTreeExtra::getStringOrEmpty(patDataNode   , "PatID" ));
-
-
-		bool fillStatus = false;
-
-		const CppFW::CVMatTree::NodeList& seriesList = seriesNode->getNodeList();
-
-		bool internalImgData = true;
-		const CppFW::CVMatTree* imgFileNameNode = octtree.getDirNodeOpt("imgFileName" );
-		if(imgFileNameNode)
-			internalImgData = (imgFileNameNode->type() != CppFW::CVMatTree::Type::String);
-
-		bool sloIsSet = false;
-		const CppFW::CVMatTree* sloNode = octtree.getDirNodeOpt("slo");
-		if(sloNode && sloNode->type() == CppFW::CVMatTree::Type::Mat)
-		{
-			SloImage* sloImage = new SloImage();
-			sloImage->setImage(sloNode->getMat());
-			sloImage->setScaleFactor(ScaleFactor(CppFW::CVMatTreeExtra::getCvScalar<double>(seriesDataNode, "SloScale", 1.0, 0)
-			                                   , CppFW::CVMatTreeExtra::getCvScalar<double>(seriesDataNode, "SloScale", 1.0, 1)));
-			series.takeSloImage(sloImage);
-			sloIsSet = true;
-		}
-
-
-		if(internalImgData || !op.loadRefFiles)
-			fillStatus = fillSeries(seriesList, series, TreeImgGetter(), callback);
+		bool fillStatus;
+		const CppFW::CVMatTree* seriesNode = getDirNodeOptCamelCase(octtree, "serie");
+		if(seriesNode)
+			fillStatus = readFlatData(oct, octtree, seriesNode, callback);
 		else
-		{
-			// *************
-			// read ref file
-			// *************
-			CppFW::Callback callbackFake;
-			if(!callback)
-				callback = &callbackFake; // ensure that callback is not nullptr
-
-			CppFW::Callback callbackRefLoad    = callback->createSubTask(80,  0);
-			CppFW::Callback callbackFillSeries = callback->createSubTask(20, 80);
-
-			FileReadOptions refFileOptions = op;
-			refFileOptions.loadRefFiles = false;
-// 			OCT refOct = OctFileRead::openFile(imgFileNameNode->getString(), refFileOptions, &callbackRefLoad);
-			OCT refOct = tryOpenFile(file, imgFileNameNode->getString(), refFileOptions, callbackRefLoad);
-
-			// TODO: multible files
-			if(refOct.size() > 0)
-			{
-				const Patient* refPat = refOct.begin()->second;
-				if(refPat && refPat->size() > 0)
-				{
-					const Study* refStudy  = refPat->begin()->second;
-					if(refStudy && refStudy->size() > 0)
-					{
-						const Series* refSeries = refStudy->begin()->second;
-						if(refSeries)
-						{
-							OctDataImgGetter imgGetter(*refSeries);
-							fillStatus = fillSeries(seriesList, series, imgGetter, &callbackFillSeries);
-
-							if(!sloIsSet)
-							{
-								SloImage* sloImage = new SloImage();
-								sloImage->setImage(refSeries->getSloImage().getImage());
-								sloImage->setScaleFactor(refSeries->getSloImage().getScaleFactor());
-								series.takeSloImage(sloImage);
-							}
-						}
-					}
-				}
-			}
-		}
+			fillStatus = readTreeData(oct, octtree, callback);
 
 
 
@@ -422,6 +431,7 @@ namespace OctData
 			BOOST_LOG_TRIVIAL(debug) << "read bin file \"" << file.generic_string() << "\" failed";
 
 		return fillStatus;
+
 	}
 
 

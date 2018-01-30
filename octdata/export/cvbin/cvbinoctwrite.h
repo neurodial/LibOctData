@@ -9,12 +9,13 @@ namespace OctData
 	class Study;
 	class Series;
 	class Patient;
+	class FileWriteOptions;
 
 	class CvBinOctWrite
 	{
 	public:
 
-		static bool writeFile(const boost::filesystem::path& file, const OCT& oct);
+		static bool writeFile(const boost::filesystem::path& file, const OCT& oct, const FileWriteOptions& opt);
 	};
 }
 

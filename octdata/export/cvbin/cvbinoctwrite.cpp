@@ -10,7 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <filereadoptions.h>
+#include <filewriteoptions.h>
 
 
 #include <boost/log/trivial.hpp>
@@ -30,6 +30,7 @@ namespace OctData
 {
 	namespace
 	{
+		// general export methods
 		void writeSlo(CppFW::CVMatTree& sloNode, const SloImage& slo)
 		{
 			CppFW::SetToCVMatTree sloWriter(sloNode);
@@ -37,7 +38,39 @@ namespace OctData
 			sloNode.getDirNode("img").getMat() = slo.getImage();
 		}
 
+		void writeImage(CppFW::CVMatTree& tree, const cv::Mat& image, const std::string& nodeName)
+		{
+			if(image.empty())
+				return;
 
+			CppFW::CVMatTree& imgNode = tree.getDirNode(nodeName);
+			imgNode.getMat() = image;
+		}
+
+		void writeBScan(CppFW::CVMatTree& seriesNode, const BScan* bscan)
+		{
+			if(!bscan)
+				return;
+
+			CppFW::CVMatTree& bscanNode = seriesNode.newListNode();
+			writeImage(bscanNode, bscan->getImage()     , "img"     );
+			writeImage(bscanNode, bscan->getAngioImage(), "angioImg");
+
+			CppFW::CVMatTree& bscanDataNode = bscanNode.getDirNode("data");
+			CppFW::SetToCVMatTree bscanWriter(bscanDataNode);
+			bscan->getSetParameter(bscanWriter);
+
+			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("segmentations");
+
+			for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
+			{
+				const Segmentationlines::Segmentline& seg = bscan->getSegmentLine(type);
+				if(!seg.empty())
+					bscanSegNode.getDirNode(Segmentationlines::getSegmentlineName(type)).getMat() = cv::Mat(1, static_cast<int>(seg.size()), cv::DataType<Segmentationlines::SegmentlineDataType>::type, const_cast<Segmentationlines::SegmentlineDataType*>(seg.data())).clone();
+			}
+		}
+
+		// deep file format (support many scans per file, tree structure)
 		template<typename S>
 		bool writeStructure(CppFW::CVMatTree& tree, const S& structure)
 		{
@@ -55,14 +88,6 @@ namespace OctData
 			return result;
 		}
 
-		void writeImage(CppFW::CVMatTree& tree, const cv::Mat& image, const std::string& nodeName)
-		{
-			if(image.empty())
-				return;
-
-			CppFW::CVMatTree& imgNode = tree.getDirNode(nodeName);
-			imgNode.getMat() = image;
-		}
 
 		template<>
 		bool writeStructure<Series>(CppFW::CVMatTree& tree, const Series& series)
@@ -77,36 +102,56 @@ namespace OctData
 			CppFW::CVMatTree& seriesNode = tree.getDirNode("bscans");
 
 			for(BScan* bscan : series.getBScans())
-			{
-				if(!bscan)
-					continue;
-
-				CppFW::CVMatTree& bscanNode = seriesNode.newListNode();
-				writeImage(bscanNode, bscan->getImage()     , "img"     );
-				writeImage(bscanNode, bscan->getAngioImage(), "angioImg");
-
-// 				CppFW::CVMatTree& bscanImgNode = bscanNode.getDirNode("img");
-// 				bscanImgNode.getMat() = bscan->getImage();
-
-
-
-				CppFW::CVMatTree& bscanDataNode = bscanNode.getDirNode("data");
-				CppFW::SetToCVMatTree bscanWriter(bscanDataNode);
-				bscan->getSetParameter(bscanWriter);
-
-
-				CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("Segmentations");
-
-
-				for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
-				{
-					const Segmentationlines::Segmentline& seg = bscan->getSegmentLine(type);
-					if(!seg.empty())
-						bscanSegNode.getDirNode(Segmentationlines::getSegmentlineName(type)).getMat() = cv::Mat(1, static_cast<int>(seg.size()), cv::DataType<Segmentationlines::SegmentlineDataType>::type, const_cast<Segmentationlines::SegmentlineDataType*>(seg.data())).clone();
-				}
-			}
+				writeBScan(seriesNode, bscan);
 
 			return true;
+		}
+
+
+		// flat file format (only one scan per file)
+		bool writeFlatFile(CppFW::CVMatTree& octtree, const Patient& pat, const Study& study, const Series& series)
+		{
+			CppFW::CVMatTree& patDataNode    = octtree.getDirNode("patientData");
+			CppFW::CVMatTree& studyDataNode  = octtree.getDirNode("studyData"  );
+			CppFW::CVMatTree& seriesDataNode = octtree.getDirNode("seriesData" );
+
+			CppFW::CVMatTreeExtra::setCvScalar(patDataNode   , "ID", pat   .getInternalId());
+			CppFW::CVMatTreeExtra::setCvScalar(studyDataNode , "ID", study .getInternalId());
+			CppFW::CVMatTreeExtra::setCvScalar(seriesDataNode, "ID", series.getInternalId());
+
+			CppFW::SetToCVMatTree patientWriter(patDataNode);
+			pat.getSetParameter(patientWriter);
+
+			CppFW::SetToCVMatTree studyWriter(studyDataNode);
+			study.getSetParameter(studyWriter);
+
+			CppFW::SetToCVMatTree seriesWriter(seriesDataNode);
+			series.getSetParameter(seriesWriter);
+
+			writeSlo(octtree.getDirNode("slo"), series.getSloImage());
+
+			CppFW::CVMatTree& seriesNode = octtree.getDirNode("serie");
+			for(BScan* bscan : series.getBScans())
+				writeBScan(seriesNode, bscan);
+
+			return true;
+		}
+
+		bool writeFlatFile(CppFW::CVMatTree& octtree, const OCT& oct)
+		{
+			OCT::SubstructureCIterator pat = oct.begin();
+			const Patient* p = pat->second;
+
+			Patient::SubstructureCIterator study = p->begin();
+			const Study* s = study->second;
+
+			Study::SubstructureCIterator series = s->begin();
+			const Series* ser = series->second;
+
+			if(!p || !s || !ser)
+				return false;
+
+			return writeFlatFile(octtree, *p, *s, *ser);
 		}
 
 	}
@@ -117,15 +162,20 @@ namespace OctData
 			tree.getDirNode(nodeName).getString() = value;
 	}
 
-	bool CvBinOctWrite::writeFile(const boost::filesystem::path& file, const OCT& oct)
+	bool CvBinOctWrite::writeFile(const boost::filesystem::path& file, const OCT& oct, const FileWriteOptions& opt)
 	{
 		CppFW::CVMatTree octtree;
 
-		bool result = writeStructure(octtree, oct);
+		bool result;
+		if(opt.octBinFlat)
+			result = writeFlatFile(octtree, oct);
+		else
+			result = writeStructure(octtree, oct);
 
 // 		if(result)
 			CppFW::CVMatTreeStructBin::writeBin(file.generic_string(), octtree);
 
 		return result;
 	}
+
 }

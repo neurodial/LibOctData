@@ -3,6 +3,7 @@
 #include <datastruct/oct.h>
 #include "import/octfilereader.h"
 #include "filereadoptions.h"
+#include "filewriteoptions.h"
 #include<export/cvbin/cvbinoctwrite.h>
 
 #include<opencv/cv.hpp>
@@ -142,12 +143,18 @@ namespace OctData
 
 	void OctFileRead::writeFile(const std::string& filename, const OCT& octdata)
 	{
-		getInstance().writeFilePrivat(filename, octdata);
+		getInstance().writeFilePrivat(filename, octdata, FileWriteOptions());
 	}
 
-	void OctFileRead::writeFilePrivat(const std::string& filename, const OCT& octdata)
+	void OctFileRead::writeFile(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
 	{
-		CvBinOctWrite::writeFile(filename, octdata);
+		getInstance().writeFilePrivat(filename, octdata, opt);
+	}
+
+
+	void OctFileRead::writeFilePrivat(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
+	{
+		CvBinOctWrite::writeFile(filename, octdata, opt);
 	}
 
 }
