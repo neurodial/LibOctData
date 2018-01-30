@@ -342,8 +342,27 @@ namespace OctData
 			}
 		}
 
+		void transformImage(const E2E::ImageRegistration* reg, cv::Mat& image, bool fillWhite, int interpolMethod = cv::INTER_LINEAR)
+		{
+			if(!reg)
+				return;
+
+			// std::cout << "shift X: " << reg->values[9] << std::endl;
+			double shiftY = -reg->values[3];
+			double degree = -reg->values[7];
+			double shiftX = -reg->values[9];
+			// std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
+			cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, shiftY, degree, 1, shiftX - degree*image.cols/2.);
+
+			uint8_t fillValue = 0;
+			if(fillWhite)
+				fillValue = 255;
+			cv::warpAffine(image, image, trans_mat, image.size(), interpolMethod, cv::BORDER_CONSTANT, cv::Scalar(fillValue));
+		}
+
 		void copyBScan(Series& series, const E2E::BScan& e2eBScan, const FileReadOptions& op)
 		{
+			const E2E::Image* e2eAngioImg = e2eBScan.getAngioImage();
 			const E2E::Image* e2eBScanImg = e2eBScan.getImage();
 			if(!e2eBScanImg)
 				return;
@@ -443,25 +462,19 @@ namespace OctData
 			if(!op.fillEmptyPixelWhite)
 				fillEmptyBroderCols<uint8_t>(bscanImageConv, 255, 0);
 
-			// testcode
-			if(reg)
-			{
-				// std::cout << "shift X: " << reg->values[9] << std::endl;
-				double shiftY = -reg->values[3];
-				double degree = -reg->values[7];
-				double shiftX = -reg->values[9];
-				// std::cout << "shift X: " << shiftX << "\tdegree: " << degree << "\t" << (degree*bscanImageConv.cols/2) << std::endl;
-				cv::Mat trans_mat = (cv::Mat_<double>(2,3) << 1, 0, shiftY, degree, 1, shiftX - degree*bscanImageConv.cols/2.);
-
-				uint8_t fillValue = 0;
-				if(op.fillEmptyPixelWhite)
-					fillValue = 255;
-				cv::warpAffine(bscanImageConv, bscanImageConv, trans_mat, bscanImageConv.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(fillValue));
-			}
+			transformImage(reg, bscanImageConv, op.fillEmptyPixelWhite);
 
 			BScan* bscan = new BScan(bscanImageConv, bscanData);
 			if(op.holdRawData)
 				bscan->setRawImage(e2eImage);
+			if(e2eAngioImg)
+			{
+				cv::Mat angioImg = e2eAngioImg->getImage();
+// 				std::transform(angioImg.begin<uint8_t>(), angioImg.end<uint8_t>(), angioImg.begin<uint8_t>(), [](uint8_t v){ return v==255?0:v; });
+				if(reg)
+					transformImage(reg, angioImg, false, cv::INTER_NEAREST);
+				bscan->setAngioImage(angioImg);
+			}
 			series.takeBScan(bscan);
 		}
 	}

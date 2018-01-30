@@ -8,9 +8,10 @@ namespace OctData
 {
 
 	BScan::BScan(const cv::Mat& img, const BScan::Data& data)
-	: image   (new cv::Mat(img))
-	, rawImage(new cv::Mat)
-	, data    (data)
+	: image     (new cv::Mat(img))
+	, angioImage(new cv::Mat)
+	, rawImage  (new cv::Mat)
+	, data      (data)
 	{
 
 	}
@@ -18,6 +19,7 @@ namespace OctData
 	BScan::~BScan()
 	{
 		delete image;
+		delete angioImage;
 		delete rawImage;
 	}
 
@@ -34,6 +36,11 @@ namespace OctData
 	void BScan::setRawImage(const cv::Mat& img)
 	{
 		*rawImage = img;
+	}
+
+	void BScan::setAngioImage(const cv::Mat& img)
+	{
+		*angioImage = img;
 	}
 
 

@@ -62,9 +62,12 @@ namespace OctData
 		BScan& operator=(const BScan& other) = delete;
 
 		const cv::Mat& getImage()           const                   { return *image                      ; }
+		const cv::Mat& getAngioImage()      const                   { return *angioImage                 ; }
 		const cv::Mat& getRawImage()        const                   { return *rawImage                   ; }
 
 		void setRawImage(const cv::Mat& img);
+		void setAngioImage(const cv::Mat& img);
+
 
 		const std::string getFilename()     const                   { return data.filename               ; }
 
@@ -99,8 +102,9 @@ namespace OctData
 
 
 	private:
-		cv::Mat*                                image    = nullptr;
-		cv::Mat*                                rawImage = nullptr;
+		cv::Mat*                                image      = nullptr;
+		cv::Mat*                                angioImage = nullptr;
+		cv::Mat*                                rawImage   = nullptr;
 		Data                                    data;
 
 

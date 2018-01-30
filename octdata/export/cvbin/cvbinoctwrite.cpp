@@ -55,6 +55,15 @@ namespace OctData
 			return result;
 		}
 
+		void writeImage(CppFW::CVMatTree& tree, const cv::Mat& image, const std::string& nodeName)
+		{
+			if(image.empty())
+				return;
+
+			CppFW::CVMatTree& imgNode = tree.getDirNode(nodeName);
+			imgNode.getMat() = image;
+		}
+
 		template<>
 		bool writeStructure<Series>(CppFW::CVMatTree& tree, const Series& series)
 		{
@@ -73,8 +82,12 @@ namespace OctData
 					continue;
 
 				CppFW::CVMatTree& bscanNode = seriesNode.newListNode();
-				CppFW::CVMatTree& bscanImgNode = bscanNode.getDirNode("img");
-				bscanImgNode.getMat() = bscan->getImage();
+				writeImage(bscanNode, bscan->getImage()     , "img"     );
+				writeImage(bscanNode, bscan->getAngioImage(), "angioImg");
+
+// 				CppFW::CVMatTree& bscanImgNode = bscanNode.getDirNode("img");
+// 				bscanImgNode.getMat() = bscan->getImage();
+
 
 
 				CppFW::CVMatTree& bscanDataNode = bscanNode.getDirNode("data");
