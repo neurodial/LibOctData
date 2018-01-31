@@ -408,7 +408,8 @@ namespace OctData
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as bins";
 
 		CppFW::CVMatTree octtree = CppFW::CVMatTreeStructBin::readBin(file.generic_string());
-		callback->callback(0.5);
+		if(callback)
+			callback->callback(0.5);
 
 		if(octtree.type() != CppFW::CVMatTree::Type::Dir)
 		{
