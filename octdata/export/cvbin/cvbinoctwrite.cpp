@@ -173,7 +173,7 @@ namespace OctData
 			result = writeStructure(octtree, oct);
 
 // 		if(result)
-			CppFW::CVMatTreeStructBin::writeBin(file.generic_string(), octtree);
+		result &= CppFW::CVMatTreeStructBin::writeBin(file.generic_string(), octtree);
 
 		return result;
 	}

@@ -34,7 +34,7 @@ namespace OctData
 		ScaleFactor  operator* (double factor) const                   { return ScaleFactor(x*factor, y*factor, z*factor); }
 		ScaleFactor& operator*=(double factor)                         { x *= factor; y *= factor; z*= factor; return *this; }
 
-		void print(std::ostream& stream) const                         { stream << "(" << x << " | " << y << ")"; }
+		void print(std::ostream& stream) const                         { stream << "(" << x << " | " << y << " | " << z << ")"; }
 
 		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
 		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }

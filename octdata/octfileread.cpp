@@ -141,20 +141,20 @@ namespace OctData
 	}
 
 
-	void OctFileRead::writeFile(const std::string& filename, const OCT& octdata)
+	bool OctFileRead::writeFile(const std::string& filename, const OCT& octdata)
 	{
-		getInstance().writeFilePrivat(filename, octdata, FileWriteOptions());
+		return getInstance().writeFilePrivat(filename, octdata, FileWriteOptions());
 	}
 
-	void OctFileRead::writeFile(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
+	bool OctFileRead::writeFile(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
 	{
-		getInstance().writeFilePrivat(filename, octdata, opt);
+		return getInstance().writeFilePrivat(filename, octdata, opt);
 	}
 
 
-	void OctFileRead::writeFilePrivat(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
+	bool OctFileRead::writeFilePrivat(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
 	{
-		CvBinOctWrite::writeFile(filename, octdata, opt);
+		return CvBinOctWrite::writeFile(filename, octdata, opt);
 	}
 
 }
