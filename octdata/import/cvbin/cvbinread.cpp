@@ -1,18 +1,20 @@
 #include "cvbinread.h"
+
+#include<locale>
+
+#include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <opencv2/opencv.hpp>
+
 #include <datastruct/oct.h>
 #include <datastruct/coordslo.h>
 #include <datastruct/sloimage.h>
 #include <datastruct/bscan.h>
 
-#include <opencv2/opencv.hpp>
-
-#include <boost/filesystem.hpp>
-
 #include <filereadoptions.h>
 
-#include<algorithm>
-
-#include <boost/log/trivial.hpp>
 
 #include <cpp_framework/cvmat/cvmattreestruct.h>
 #include <cpp_framework/cvmat/cvmattreestructextra.h>
@@ -22,7 +24,6 @@
 #include <octfileread.h>
 
 #include<filereader/filereader.h>
-#include <boost/lexical_cast.hpp>
 
 namespace bfs = boost::filesystem;
 
@@ -39,7 +40,7 @@ namespace OctData
 			if(!result)
 			{
 				std::string nameFirstUpper(name);
-				nameFirstUpper[0] = static_cast<std::string::value_type>(std::toupper(nameFirstUpper[0]));
+				nameFirstUpper[0] = static_cast<std::string::value_type>(std::toupper(nameFirstUpper[0], std::locale()));
 				result = node.getDirNodeOpt(nameFirstUpper.c_str());
 			}
 			return result;

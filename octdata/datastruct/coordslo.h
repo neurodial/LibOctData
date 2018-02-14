@@ -71,7 +71,8 @@ namespace OctData
 		double operator*(const CoordSLOpx& v) const                 { return x*v.x + y*v.y; }
 		double normquadrat()                  const                 { return x*x + y*y; }
 
-		double abs(const CoordSLOpx& o) const                       { return std::sqrt((x-o.x)*(x-o.x) + (y-o.y)*(y-o.y)); }
+		double absQuad(const CoordSLOpx& o) const                   { return (x-o.x)*(x-o.x) + (y-o.y)*(y-o.y); }
+		double abs(const CoordSLOpx& o) const                       { return std::sqrt(absQuad(o)); }
 
 		void print(std::ostream& stream) const                      { stream << "(" << x << " | " << y << ")"; }
 
@@ -158,6 +159,20 @@ namespace OctData
 
 		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
 		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
+
+		CoordTransform inv() const
+		{
+			double det = a11*a22 - a12*a21;
+			if(det < 1e-7)
+				return CoordTransform();
+			double invDet = 1./det;
+			return CoordTransform( a22*invDet
+			                    , -a12*invDet
+			                    , -a21*invDet
+			                    ,  a11*invDet
+			                    , -b1
+			                    , -b2);
+		}
 	};
 
 
