@@ -1,6 +1,7 @@
 
 #include <cstdint>
 #include <limits>
+#include<cmath>
 
 #include "he_gray_transform.h"
 
@@ -17,6 +18,40 @@ namespace OctData
 			++lutXmlIt;
 		}
 	}
+
+
+	HeGrayTransformUFloat16::HeGrayTransformUFloat16()
+	: lut(new uint8_t[1 << sizeof(uint16_t)*8])
+	{
+		uint8_t* lutIt = lut;
+		for(int i = 0; i <= std::numeric_limits<char16_t>::max(); ++i)
+		{
+			*lutIt = getUint8Value(static_cast<char16_t>(i));
+			++lutIt;
+		}
+	}
+
+	double HeGrayTransformUFloat16::getDoubleValue(uint16_t val)
+	{
+		int mat = val & ((1<<10)-1);
+		int exp = (val >> 10);
+
+		if(exp == 0)
+			return 0.;
+		if(exp == 63)
+			return 1.;
+		return ldexp((1<<10) + mat, exp - 73);
+
+	}
+
+	uint8_t HeGrayTransformUFloat16::getUint8Value(uint16_t val)
+	{
+		const double v = getDoubleValue(val);
+		if(v > 1 || v < 0)
+			return 0;
+		return static_cast<uint8_t>(std::sqrt(std::sqrt(v))*255.);
+	}
+
 
 
 	HeGrayTransformVol::HeGrayTransformVol()

@@ -51,6 +51,24 @@ namespace OctData
 		}
 
 		uint8_t getValue(uint16_t val) const                     { return lutVol[val]; }
+	};
+
+	class HeGrayTransformUFloat16
+	{
+		uint8_t* lut = nullptr;
+
+		HeGrayTransformUFloat16();
+		~HeGrayTransformUFloat16()                                    { delete[] lut; }
+
+		HeGrayTransformUFloat16(const HeGrayTransformXml&)            = delete;
+		HeGrayTransformUFloat16& operator=(const HeGrayTransformXml&) = delete;
+
+	public:
+		static HeGrayTransformUFloat16& getInstance()                 { static HeGrayTransformUFloat16 instance; return instance; }
+		static uint8_t getUint8Value(uint16_t val);
+		static double  getDoubleValue(uint16_t val);
+
+		uint8_t getValue(uint16_t val) const                     { return lut[val]; }
 
 	};
 

@@ -5,7 +5,7 @@ namespace OctData
 	class FileReadOptions
 	{
 	public:
-		enum class E2eGrayTransform { nativ, xml, vol };
+		enum class E2eGrayTransform { nativ, xml, vol, u16 };
 
 		bool fillEmptyPixelWhite = true;
 		bool registerBScanns     = true;

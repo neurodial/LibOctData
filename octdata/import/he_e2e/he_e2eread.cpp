@@ -451,6 +451,9 @@ namespace OctData
 				case FileReadOptions::E2eGrayTransform::vol:
 					useLUTBScan<uint16_t, uint8_t, HeGrayTransformVol>(e2eImage, bscanImageConv);
 					break;
+				case FileReadOptions::E2eGrayTransform::u16:
+					useLUTBScan<uint16_t, uint8_t, HeGrayTransformUFloat16>(e2eImage, bscanImageConv);
+					break;
 				}
 				if(bscanImageConv.empty())
 				{
