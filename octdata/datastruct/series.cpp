@@ -77,8 +77,8 @@ namespace OctData
 
 		if(bscans.size() == 1) // first scan, init points
 		{
-			leftUpper  = bscan->getCenter();
-			rightLower = bscan->getCenter();
+			leftUpper  = bscan->getStart();
+			rightLower = bscan->getStart();
 		}
 
 		switch(bscan->getBScanType())
