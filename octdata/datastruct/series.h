@@ -121,6 +121,7 @@ namespace OctData
 		CoordSLOmm                              rightLower;
 		void calculateSLOConvexHull();
 		void updateCornerCoords();
+		void updateCornerCoords(const CoordSLOmm& point);
 
 		template<typename T, typename ParameterSet>
 		static void getSetParameter(T& getSet, ParameterSet& p)

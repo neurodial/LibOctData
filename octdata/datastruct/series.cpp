@@ -56,43 +56,48 @@ namespace OctData
 		}
 	}
 
+
+
+	void Series::updateCornerCoords(const CoordSLOmm& point)
+	{
+		double minX = std::min(point.getX(), leftUpper .getX());
+		double maxX = std::max(point.getX(), rightLower.getX());
+		double minY = std::min(point.getY(), leftUpper .getY());
+		double maxY = std::max(point.getY(), rightLower.getY());
+
+		leftUpper  = CoordSLOmm(minX, minY);
+		rightLower = CoordSLOmm(maxX, maxY);
+	}
+
 	void Series::updateCornerCoords()
 	{
 		BScan* bscan = bscans.back();
 		if(!bscan)
 			return;
 
-		CoordSLOmm p1;
-		CoordSLOmm p2;
+		if(bscans.size() == 1) // first scan, init points
+		{
+			leftUpper  = bscan->getCenter();
+			rightLower = bscan->getCenter();
+		}
+
 		switch(bscan->getBScanType())
 		{
 			case BScan::BScanType::Circle:
 			{
 				double radius = bscan->getCenter().abs(bscan->getStart());
-				p1 = bscan->getCenter() + CoordSLOmm(radius, 0);
-				p2 = bscan->getCenter() + CoordSLOmm(0, radius);
+				updateCornerCoords(bscan->getCenter() + CoordSLOmm( radius, 0));
+				updateCornerCoords(bscan->getCenter() + CoordSLOmm(-radius, 0));
+				updateCornerCoords(bscan->getCenter() + CoordSLOmm(0,  radius));
+				updateCornerCoords(bscan->getCenter() + CoordSLOmm(0, -radius));
 				break;
 			}
 			case BScan::BScanType::Line:
 			case BScan::BScanType::Unknown:
-				p1 = bscan->getStart();
-				p2 = bscan->getEnd();
+				updateCornerCoords(bscan->getStart());
+				updateCornerCoords(bscan->getEnd());
 				break;
 		}
-		double minX = std::min(p1.getX(), p2.getX());
-		double maxX = std::max(p1.getX(), p2.getX());
-		double minY = std::min(p1.getY(), p2.getY());
-		double maxY = std::max(p1.getY(), p2.getY());
-
-		if(bscans.size() > 1)
-		{
-			minX = std::min(minX, leftUpper .getX());
-			maxX = std::max(maxX, rightLower.getX());
-			minY = std::min(minY, leftUpper .getY());
-			maxY = std::max(maxY, rightLower.getY());
-		}
-		leftUpper  = CoordSLOmm(minX, minY);
-		rightLower = CoordSLOmm(maxX, maxY);
 	}
 
 	void Series::calculateSLOConvexHull()
