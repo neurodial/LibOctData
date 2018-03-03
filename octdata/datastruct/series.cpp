@@ -37,6 +37,7 @@ namespace OctData
 	{
 		bscans.push_back(bscan);
 		calculateSLOConvexHull();
+		updateCornerCoords();
 	}
 
 	const BScan* Series::getBScan(std::size_t pos) const
@@ -55,8 +56,46 @@ namespace OctData
 		}
 	}
 
+	void Series::updateCornerCoords()
+	{
+		BScan* bscan = bscans.back();
+		if(!bscan)
+			return;
 
-	void OctData::Series::calculateSLOConvexHull()
+		CoordSLOmm p1;
+		CoordSLOmm p2;
+		switch(bscan->getBScanType())
+		{
+			case BScan::BScanType::Circle:
+			{
+				double radius = bscan->getCenter().abs(bscan->getStart());
+				p1 = bscan->getCenter() + CoordSLOmm(radius, 0);
+				p2 = bscan->getCenter() + CoordSLOmm(0, radius);
+				break;
+			}
+			case BScan::BScanType::Line:
+			case BScan::BScanType::Unknown:
+				p1 = bscan->getStart();
+				p2 = bscan->getEnd();
+				break;
+		}
+		double minX = std::min(p1.getX(), p2.getX());
+		double maxX = std::max(p1.getX(), p2.getX());
+		double minY = std::min(p1.getY(), p2.getY());
+		double maxY = std::max(p1.getY(), p2.getY());
+
+		if(bscans.size() > 1)
+		{
+			minX = std::min(minX, leftUpper .getX());
+			maxX = std::max(maxX, rightLower.getX());
+			minY = std::min(minY, leftUpper .getY());
+			maxY = std::max(maxY, rightLower.getY());
+		}
+		leftUpper  = CoordSLOmm(minX, minY);
+		rightLower = CoordSLOmm(maxX, maxY);
+	}
+
+	void Series::calculateSLOConvexHull()
 	{
 		convexHullSLOBScans.clear();
 

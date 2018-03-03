@@ -86,6 +86,8 @@ namespace OctData
 		Octdata_EXPORTS const AnalyseGrid& getAnalyseGrid()      const { return analyseGrid; }
 
 		Octdata_EXPORTS const BScanSLOCoordList& getConvexHull() const { return convexHullSLOBScans; }
+		Octdata_EXPORTS const CoordSLOmm& getLeftUpperCoord()    const { return leftUpper; }
+		Octdata_EXPORTS const CoordSLOmm& getRightLowerCoord()   const { return rightLower; }
 
 
 		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
@@ -115,7 +117,10 @@ namespace OctData
 		AnalyseGrid                             analyseGrid;
 
 		BScanSLOCoordList                       convexHullSLOBScans;
+		CoordSLOmm                              leftUpper;
+		CoordSLOmm                              rightLower;
 		void calculateSLOConvexHull();
+		void updateCornerCoords();
 
 		template<typename T, typename ParameterSet>
 		static void getSetParameter(T& getSet, ParameterSet& p)
