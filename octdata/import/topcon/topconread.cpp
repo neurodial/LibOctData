@@ -208,6 +208,24 @@ namespace
 		series.setScanDate(scanDate);
 	}
 
+	void readParamScan04(std::istream& stream, BScanList& list)
+	{
+		uint32_t unknown1[3];
+		readFStream(stream, unknown1, sizeof(unknown1)/sizeof(unknown1[0]));
+		double scanSizeXmm = readFStream<double>(stream);
+		double scanSizeYmm = readFStream<double>(stream);
+		double scanSizeZmm = readFStream<double>(stream);
+
+		double resY = scanSizeYmm/static_cast<double>(list.size());
+		for(BScanPair& bscan : list)
+		{
+			double resX = scanSizeXmm/static_cast<double>(bscan.image.cols);
+			double resZ = scanSizeZmm/static_cast<double>(bscan.image.rows);
+			OctData::ScaleFactor sf(resX, resY, resZ);
+			bscan.data.scaleFactor = sf;
+		}
+	}
+
 	bool cmpString(const char* strA, const std::string& strB)
 	{
 		std::size_t strLenA = strlen(strA);
@@ -237,9 +255,9 @@ namespace
 		else if(cmpString("MULTILAYERS_4", id)) lineType = OctData::Segmentationlines::SegmentlineType::IPL;
 		else if(cmpString("MULTILAYERS_5", id)) lineType = OctData::Segmentationlines::SegmentlineType::INL;
 		else if(cmpString("MULTILAYERS_6", id)) lineType = OctData::Segmentationlines::SegmentlineType::OPL;
-		else if(cmpString("MULTILAYERS_7", id)) lineType = OctData::Segmentationlines::SegmentlineType::ELM;
+		else if(cmpString("MULTILAYERS_7", id)) lineType = OctData::Segmentationlines::SegmentlineType::BM;
 		else if(cmpString("MULTILAYERS_8", id)) lineType = OctData::Segmentationlines::SegmentlineType::PR1;
-		else if(cmpString("MULTILAYERS_9", id)) lineType = OctData::Segmentationlines::SegmentlineType::BM;
+		else if(cmpString("MULTILAYERS_9", id)) lineType = OctData::Segmentationlines::SegmentlineType::ELM;
 		else
 		{
 			BOOST_LOG_TRIVIAL(error) << "unhandled id: " << id    ;
@@ -404,6 +422,8 @@ namespace OctData
 				readCaptureInfo02(stream, series);
 			else if(chunkName == "@REGIST_INFO")
 				readRegistInfo(stream, bscanList);
+			else if(chunkName == "@PARAM_SCAN_04")
+				readParamScan04(stream, bscanList);
 
 			stream.seekg(chunkBegin + chunkSize);
 		}
