@@ -136,6 +136,9 @@ namespace
 
 	void readImgTrc(std::istream& stream, OctData::Series& series)
 	{
+		if(series.getSloImage().hasImage())
+			return;
+
 		const uint32_t width  = readFStream<uint32_t>(stream);
 		const uint32_t height = readFStream<uint32_t>(stream);
 		const uint32_t bits   = readFStream<uint32_t>(stream);
@@ -163,6 +166,41 @@ namespace
 		OctData::SloImage* sloImage = new OctData::SloImage;
 		sloImage->setImage(image);
 		series.takeSloImage(sloImage);
+
+		delete[] encodedData;
+	}
+
+	void readImgFundus(std::istream& stream, OctData::Series& series)
+	{
+		const uint32_t width  = readFStream<uint32_t>(stream);
+		const uint32_t height = readFStream<uint32_t>(stream);
+		const uint32_t bits   = readFStream<uint32_t>(stream);
+		const uint32_t frames = readFStream<uint32_t>(stream);
+		const uint32_t u1     = readFStream<uint32_t>(stream);
+
+		BOOST_LOG_TRIVIAL(debug) << "width  : " << width ;
+		BOOST_LOG_TRIVIAL(debug) << "height : " << height;
+		BOOST_LOG_TRIVIAL(debug) << "bits   : " << bits  ;
+		BOOST_LOG_TRIVIAL(debug) << "frames : " << frames;
+		BOOST_LOG_TRIVIAL(debug) << "u1     : " << static_cast<int>(u1)    ;
+
+		// use only the first image
+
+		const uint32_t size = readFStream<uint32_t>(stream);
+		char* encodedData = new char[size];
+
+		stream.read(encodedData, size);
+
+		cv::Mat image;
+		ReadJPEG2K reader;
+		reader.openJpeg(encodedData, size);
+		reader.getImage(image, false);
+
+		OctData::SloImage* sloImage = new OctData::SloImage;
+		sloImage->setImage(image);
+		series.takeSloImage(sloImage);
+
+		delete[] encodedData;
 	}
 
 	void readPatientInfo02(std::istream& stream, OctData::Patient& pat)
@@ -292,7 +330,6 @@ namespace
 				}
 			}
 			delete[] tmpVec;
-
 		}
 	}
 
@@ -316,8 +353,11 @@ namespace
 		{
 			double pos = static_cast<double>(bscanNum)/static_cast<double>(numBScans);
 
-			bscan.data.start = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[1]);
-			bscan.data.end   = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[3]);
+// 			bscan.data.start = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[1]);
+// 			bscan.data.end   = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[3]);
+
+			bscan.data.start = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[1]);
+			bscan.data.end   = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[3]);
 
 			++bscanNum;
 		}
@@ -420,6 +460,8 @@ namespace OctData
 				readConturInfo(stream, bscanList);
 			else if(chunkName == "@CAPTURE_INFO_02")
 				readCaptureInfo02(stream, series);
+			else if(chunkName == "@IMG_FUNDUS")
+				readImgFundus(stream, series);
 			else if(chunkName == "@REGIST_INFO")
 				readRegistInfo(stream, bscanList);
 			else if(chunkName == "@PARAM_SCAN_04")

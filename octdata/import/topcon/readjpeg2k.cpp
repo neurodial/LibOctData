@@ -391,7 +391,7 @@ bool ReadJPEG2K::copyMatrix(cv::Mat& cvImage, bool flip)
 	}
 
 	if(!image->comps[0].data)
-		return false;;
+		return false;
 
 	cvImage.create(rows, cols, type);
 

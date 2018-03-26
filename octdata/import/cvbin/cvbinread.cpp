@@ -21,6 +21,7 @@
 #include <cpp_framework/cvmat/cvmattreegetset.h>
 #include <cpp_framework/cvmat/treestructbin.h>
 #include <cpp_framework/callback.h>
+#include <cpp_framework/matcompress/simplematcompress.h>
 #include <octfileread.h>
 
 #include<filereader/filereader.h>
@@ -233,23 +234,38 @@ namespace OctData
 
 			BScan* bscan = nullptr;
 			const CppFW::CVMatTree* imgNode = bscanNode->getDirNodeOpt("img");
-			if(imgNode && imgNode->type() == CppFW::CVMatTree::Type::Mat)
+			if(imgNode)
 			{
-				const cv::Mat& img = imgNode->getMat();
-				BScan::Data bscanData;
+				cv::Mat img;
 
-				const CppFW::CVMatTree* seriesSegNode = getDirNodeOptCamelCase(*bscanNode, "segmentations");
-				fillSegmentationsLines(seriesSegNode, bscanData);
+				if(imgNode->type() == CppFW::CVMatTree::Type::Dir)
+				{
+					CppFW::SimpleMatCompress matcompress;
+					matcompress.fromCVMatTree(*imgNode);
+					img = cv::Mat(matcompress.getRows(), matcompress.getCols(), cv::DataType<uint8_t>::type);
+					matcompress.writeToMat(img.ptr<uint8_t>(), img.rows, img.cols);
+				}
 
-				bscan = new BScan(img, bscanData);
+				if(imgNode->type() == CppFW::CVMatTree::Type::Mat)
+					img = imgNode->getMat();
 
-				CppFW::GetFromCVMatTree bscanReader(bscanNode->getDirNodeOpt("data"));
-				bscan->getSetParameter(bscanReader);
+				if(!img.empty())
+				{
+					BScan::Data bscanData;
+
+					const CppFW::CVMatTree* seriesSegNode = getDirNodeOptCamelCase(*bscanNode, "segmentations");
+					fillSegmentationsLines(seriesSegNode, bscanData);
+
+					bscan = new BScan(img, bscanData);
+
+					CppFW::GetFromCVMatTree bscanReader(bscanNode->getDirNodeOpt("data"));
+					bscan->getSetParameter(bscanReader);
 
 
-				const CppFW::CVMatTree* angioNode = bscanNode->getDirNodeOpt("angioImg");
-				if(angioNode && angioNode->type() == CppFW::CVMatTree::Type::Mat)
-					bscan->setAngioImage(angioNode->getMat());
+					const CppFW::CVMatTree* angioNode = bscanNode->getDirNodeOpt("angioImg");
+					if(angioNode && angioNode->type() == CppFW::CVMatTree::Type::Mat)
+						bscan->setAngioImage(angioNode->getMat());
+				}
 			}
 
 			return bscan;
