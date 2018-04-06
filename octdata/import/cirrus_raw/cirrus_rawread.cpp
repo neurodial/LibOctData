@@ -106,7 +106,10 @@ namespace OctData
 		}
 
 		if(filetype.substr(0, 7) != "raw.img" && filetype.substr(0, 5) != "z.img")
+		{
+			BOOST_LOG_TRIVIAL(error) << "wring filetype (not raw.img or z.img): " << filetype.substr(0, 7);
 			return false;
+		}
 
 
 		// split scantype in elements to find the scan size
@@ -115,14 +118,20 @@ namespace OctData
 
 		if(debug)
 			std::cout << "scantypeElements.size(): " << scantypeElements.size() << std::endl;
-		if(scantypeElements.size() != 4)
+		if(scantypeElements.size() < 2)
+		{
+			BOOST_LOG_TRIVIAL(error) << "wrong format of scantype (type volsize) : " << scantype;
 			return false;
+		}
 
 		std::vector<std::string> scanSizeElements;
- 		const std::string& vol_size   = scantypeElements.at(3);
+ 		const std::string& vol_size   = scantypeElements.at(scantypeElements.size()-1);
 		boost::split(scanSizeElements, vol_size, boost::is_any_of("x"), boost::token_compress_on);
 		if(scanSizeElements.size() != 2)
+		{
+			BOOST_LOG_TRIVIAL(error) << "wrong format of scan size : " << vol_size;
 			return false;
+		}
 
 		std::size_t volSizeX = boost::lexical_cast<std::size_t>(scanSizeElements[0]);
 		std::size_t volSizeY = boost::lexical_cast<std::size_t>(scanSizeElements[1]);
@@ -153,6 +162,8 @@ end
 		Patient& pat    = oct.getPatient(0);
 		Series&  series = pat.getStudy(0).getSeries(0);
 
+		std::vector<BScan*> bscanList;
+
 		for(std::size_t i = 0; i<volSizeY; ++i)
 		{
 			if(callback)
@@ -164,11 +175,13 @@ end
 			cv::Mat bscanImage;
 // 			readCVImage<uint8_t>(stream, bscanImage, volSizeZ, volSizeX);
 			filereader.readCVImage<uint8_t>(bscanImage, volSizeZ, volSizeX);
-			cv::flip(bscanImage, bscanImage, 0);
+			cv::flip(bscanImage, bscanImage, -1);
 
-			BScan* bscan = new BScan(bscanImage, BScan::Data());
-			series.takeBScan(bscan);
+			bscanList.push_back(new BScan(bscanImage, BScan::Data()));
 		}
+
+		for(std::vector<BScan*>::reverse_iterator it = bscanList.rbegin(); it != bscanList.rend(); ++it)
+			series.takeBScan(*it);
 
 		//------------
 		// load slo

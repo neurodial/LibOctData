@@ -4,7 +4,6 @@
 #include "import/octfilereader.h"
 #include "filereadoptions.h"
 #include "filewriteoptions.h"
-#include<export/cvbin/cvbinoctwrite.h>
 
 #include<opencv/cv.hpp>
 
@@ -18,6 +17,8 @@ namespace bfs = boost::filesystem;
 #include<filereader/filereader.h>
 
 #include "import/platform_helper.h"
+#include<export/cirrus_raw/cirrusrawexport.h>
+#include<export/cvbin/cvbinoctwrite.h>
 
 namespace OctData
 {
@@ -154,6 +155,9 @@ namespace OctData
 
 	bool OctFileRead::writeFilePrivat(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
 	{
+		bfs::path filepath(filename);
+		if(filepath.extension() == ".img")
+			return CirrusRawExport::writeFile(filename, octdata, opt);
 		return CvBinOctWrite::writeFile(filename, octdata, opt);
 	}
 

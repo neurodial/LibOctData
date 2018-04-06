@@ -358,7 +358,6 @@ namespace OctData
 // 	void ReadDICOM::readFile(const std::string& filename, CScan* cscan)
 	{
 		const std::string filename = filereader.getFilepath().generic_string();
-		std::cout << "ReadDICOM: " << filename << std::endl;
 
 
 
@@ -368,6 +367,7 @@ namespace OctData
 		&& ext != ".dcm")
 			return false;
 
+		std::cout << "ReadDICOM: " << filename << std::endl;
 
 		/* Load file and get pixel data element */
 		DcmFileFormat dfile;

@@ -141,14 +141,18 @@ namespace OctData
 		{
 			OCT::SubstructureCIterator pat = oct.begin();
 			const Patient* p = pat->second;
+			if(!p)
+				return false;
 
 			Patient::SubstructureCIterator study = p->begin();
 			const Study* s = study->second;
+			if(!s)
+				return false;
 
 			Study::SubstructureCIterator series = s->begin();
 			const Series* ser = series->second;
 
-			if(!p || !s || !ser)
+			if(!ser)
 				return false;
 
 			return writeFlatFile(octtree, *p, *s, *ser);

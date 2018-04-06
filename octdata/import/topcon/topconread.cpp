@@ -126,6 +126,8 @@ namespace
 			reader.openJpeg(encodedData, size);
 			reader.getImage(image, false);
 
+			image.convertTo(image, cv::DataType<uint8_t>::type, 2, -128);
+
 			BScanPair pair;
 			pair.image = image;
 			bscanList.push_back(pair);

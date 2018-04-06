@@ -69,6 +69,8 @@ namespace OctData
 		bool isEmpty()                                     const { return !decoded;         }
 
 		std::string str(char trenner = '.') const;
+		std::string strTime(char timeTrenner = ':') const;
+		std::string strUsDate(char trenner = ':') const;
 		std::string timeDateStr(char datetrenner = '.', char timeTrenner = ':', bool showMs = false) const;
 
 		void decodeString(const std::string& str);
@@ -84,6 +86,26 @@ namespace OctData
 
 		std::ostringstream datesstring;
 		datesstring << year() << trenner << std::setw(2) << std::setfill('0') << month() << trenner << std::setw(2) << day();
+		return datesstring.str();
+	}
+
+	inline std::string Date::strUsDate(char trenner) const
+	{
+		if(!decoded)
+			return "-";
+
+		std::ostringstream datesstring;
+		datesstring << std::setw(2) << std::setfill('0') << month() << trenner << std::setw(2) << day() << trenner << year();
+		return datesstring.str();
+	}
+
+	inline std::string Date::strTime(char timeTrenner) const
+	{
+		if(!decoded)
+			return "-";
+
+		std::ostringstream datesstring;
+		datesstring << hour() << timeTrenner << std::setw(2) << min() << timeTrenner << std::setw(2) << sec();
 		return datesstring.str();
 	}
 
