@@ -216,3 +216,4 @@ add_definitions(-DOCTDATA_EXPORT)
 add_executable(liboctdata_test main.cpp)
 target_link_libraries(liboctdata_test octdata ${OpenCV_LIBRARIES} )
 
+

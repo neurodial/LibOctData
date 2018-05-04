@@ -40,6 +40,7 @@ namespace bfs = boost::filesystem;
 #include <filereadoptions.h>
 
 #include <boost/log/trivial.hpp>
+#include<boost/lexical_cast.hpp>
 
 
 #include<string.h>
@@ -352,6 +353,17 @@ namespace OctData
 			item.findAndGetOFString(tagKey, string, pos);
 			return std::string(string.begin(), string.end());
 		}
+
+		Date convertStr2Date(const std::string& str)
+		{
+			Date d;
+			d.setYear (boost::lexical_cast<int>(str.substr(0,4)));
+			d.setMonth(boost::lexical_cast<int>(str.substr(4,2)));
+			d.setDay  (boost::lexical_cast<int>(str.substr(6,2)));
+			d.setDateAsValid();
+
+			return d;
+		}
 	}
 
 	bool DicomRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
@@ -415,6 +427,15 @@ namespace OctData
 
 		study.setStudyOperator(getStdString(*data, DCM_OperatorsName));
 		study.setStudyUID(getStdString(*data, DCM_StudyInstanceUID));
+
+		std::cout << getStdString(*data, DCM_PatientBirthDate) << std::endl;
+		std::cout << getStdString(*data, DCM_StudyDate) << std::endl;
+		std::cout << getStdString(*data, DCM_AcquisitionDateTime) << std::endl;
+
+		pat.setBirthdate(convertStr2Date(getStdString(*data, DCM_PatientBirthDate)));
+		study.setStudyDate(convertStr2Date(getStdString(*data, DCM_StudyDate)));
+		series.setScanDate(convertStr2Date(getStdString(*data, DCM_AcquisitionDateTime)));
+
 
 		series.setSeriesUID(getStdString(*data, DCM_SeriesInstanceUID));
 

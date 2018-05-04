@@ -141,9 +141,7 @@ namespace OctData
 		}
 
 		scantype += " ";
-
 		scantype += boost::lexical_cast<std::string>(cubeSizeX) + "x" + boost::lexical_cast<std::string>(cubeSizeZ);
-
 
 		std::string filename = file.branch_path().generic_string() + '/'
 		                     + patient_id + '_'
@@ -183,6 +181,4 @@ namespace OctData
 
 		return true;
 	}
-
-
 }
