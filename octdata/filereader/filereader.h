@@ -1,8 +1,14 @@
 #pragma once
 
+#include<type_traits>
+
 #include<boost/filesystem.hpp>
+#include<boost/endian/arithmetic.hpp>
 
 #include<opencv/cv.hpp>
+
+
+#include<iostream>
 
 namespace OctData
 {
@@ -31,6 +37,21 @@ namespace OctData
 
 		FileStreamInterface* fileStream = nullptr;
 
+		template<typename T>
+		void readFStreamBigInt(T* dest, std::size_t num, std::true_type)
+		{
+			fileStream->read(reinterpret_cast<char*>(dest), sizeof(T)*num);
+			for(std::size_t i = 0; i<num; ++i)
+				boost::endian::big_to_native_inplace(dest[i]);
+		}
+
+		template<typename T>
+		void readFStreamBigInt(T* dest, std::size_t num, std::false_type) // TODO: correct endian for floating types
+		{
+			readFStream(dest, num);
+		}
+
+
 	public:
 		FileReader(const boost::filesystem::path& filepath);
 		~FileReader();
@@ -47,6 +68,17 @@ namespace OctData
 
 		template<typename T>
 		void readFStream(T* dest, std::size_t num = 1) { fileStream->read(reinterpret_cast<char*>(dest), sizeof(T)*num); }
+
+		template<typename T>
+		void readFStreamBig(T* dest, std::size_t num = 1) { readFStreamBigInt<T>(dest, num, std::is_integral<T>()); }
+
+
+		void readString(std::string& dest, std::size_t num = 1)
+		{
+			dest.resize(num);
+			fileStream->read(const_cast<char*>(dest.data()), sizeof(std::string::value_type)*num); // TODO: c++17: remove const_cast
+		}
+
 
 		template<typename T>
 		void readCVImage(cv::Mat& image, std::size_t sizeX, std::size_t sizeY)
