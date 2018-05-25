@@ -45,10 +45,6 @@ const unsigned GIPL_MAGIC2 = 4026526128U;
 #define GIPL_C_FLOAT    192
 #define GIPL_C_DOUBLE   193
 
-template<typename T> struct GIPLFilterType;
-template<> struct GIPLFilterType<uint8_t >{ constexpr static const int typeId = 8 ; };
-template<> struct GIPLFilterType<uint16_t>{ constexpr static const int typeId = 15; };
-
 
 namespace OctData
 {
@@ -110,102 +106,60 @@ namespace OctData
 		};
 		template<> void ReadFromStream::readOb(std::string& v, std::size_t size) { filereader.readString(v, size); }
 
+	}
 
-		class GiplHeader
-		{
-		public:
-			struct RawData
-			{
-				uint16_t    sizes        [ 4];
-				uint16_t    image_type       ;
-				float       scales       [ 4];
-				std::string patient          ;
-				float       matrix       [20];
-				uint8_t     orientation      ;
-				uint8_t     par2             ;
-				double      voxmin           ;
-				double      voxmax           ;
-				double      origin       [ 4];
-				float       pixval_offset    ;
-				float       pixval_cal       ;
-				float       interslicegap    ;
-				float       user_def2        ;
-				uint32_t    magic_number     ;
-			};
+	void GIPLRead::GiplHeader::print(std::ostream& stream) const
+	{
+		PrintObj p(stream);
+		getSetParameter(p, *this);
+	}
 
-
-			uint16_t getSizeX () const                                     { return header.sizes[0]  ; }
-			uint16_t getSizeY () const                                     { return header.sizes[1]  ; }
-			uint16_t getSizeZ () const                                     { return header.sizes[2]  ; }
-			uint16_t getType  () const                                     { return header.image_type; }
-			void print(std::ostream& stream) const
-			{
-				PrintObj p(stream);
-				getSetParameter(p, *this);
-			}
-
-			void readInfo(FileReader& filereader)
-			{
-				ReadFromStream r(filereader);
-				getSetParameter(r, *this);
-			}
-
-			bool numberCheck() const
-			{
-				return header.magic_number == 4026526128;
-			}
-
-		private:
-			RawData header;
-
-			template<typename T, typename VI>
-			static void getSetParameter(T& getset, VI& data)
-			{
-				getset.template op<uint16_t>("sizes        ", data.header.sizes        , 4);
-				getset.template op<uint16_t>("image_type   ", data.header.image_type   , 1);
-				getset.template op<float   >("scales       ", data.header.scales       , 4);
-				getset.template op<char    >("patient      ", data.header.patient      ,80);
-				getset.template op<float   >("matrix       ", data.header.matrix       ,20);
-				getset.template op<uint8_t >("orientation  ", data.header.orientation  , 1);
-				getset.template op<uint8_t >("par2         ", data.header.par2         , 1);
-				getset.template op<double  >("voxmin       ", data.header.voxmin       , 1);
-				getset.template op<double  >("voxmax       ", data.header.voxmax       , 1);
-				getset.template op<double  >("origin       ", data.header.origin       , 4);
-				getset.template op<float   >("pixval_offset", data.header.pixval_offset, 1);
-				getset.template op<float   >("pixval_cal   ", data.header.pixval_cal   , 1);
-				getset.template op<float   >("interslicegap", data.header.interslicegap, 1);
-				getset.template op<float   >("user_def2    ", data.header.user_def2    , 1);
-				getset.template op<uint32_t>("magic_number ", data.header.magic_number , 1);
-			}
-		};
+	void GIPLRead::GiplHeader::readInfo(FileReader& filereader)
+	{
+		ReadFromStream r(filereader);
+		getSetParameter(r, *this);
 	}
 
 	struct ReadUInt8
 	{
 		static void readImg(FileReader& filereader, cv::Mat& image, std::size_t sizeX, std::size_t sizeY) { filereader.readCVImage<uint8_t>(image, sizeY, sizeX); }
+		static void convertImage(cv::Mat& /*image*/) {}
 	};
 	struct ReadUInt16
 	{
-		static void readImg(FileReader& filereader, cv::Mat& image, std::size_t sizeX, std::size_t sizeY)
+		double maxVal = 1;
+
+		void readImg(FileReader& filereader, cv::Mat& image, std::size_t sizeX, std::size_t sizeY)
 		{
-			cv::Mat tmpImg;
-			filereader.readCVImage<uint16_t>(tmpImg, sizeY, sizeX);
-			auto imgIt    = tmpImg.begin<uint16_t>();
-			auto imgItEnd = tmpImg.end  <uint16_t>();
+			filereader.readCVImage<uint16_t>(image, sizeY, sizeX);
+			auto imgIt    = image.begin<uint16_t>();
+			auto imgItEnd = image.end  <uint16_t>();
 
 			for(;imgIt != imgItEnd; ++imgIt)
 				boost::endian::big_to_native_inplace(*imgIt);
 
-			tmpImg.convertTo(image, cv::DataType<uint8_t>::type, 1./4.);
+			double min, max;
+			cv::minMaxLoc(image, &min, &max);
+			if(max > maxVal)
+				maxVal = max;
+// 			tmpImg.convertTo(image, cv::DataType<uint8_t>::type, 1./4.);
+		}
+
+		void convertImage(cv::Mat& image)
+		{
+			image.convertTo(image, cv::DataType<uint8_t>::type, 256./maxVal);
 		}
 	};
 
 	template<typename T>
-	void readBScans(FileReader& filereader, Series& series, const OctData::FileReadOptions& op, const GiplHeader& giplHeader, CppFW::Callback* callback, T reader)
+	void readBScans(FileReader& filereader, Series& series, const OctData::FileReadOptions& op, const GIPLRead::GiplHeader& giplHeader, CppFW::Callback* callback, T reader)
 	{
 		const std::size_t sizeX     = giplHeader.getSizeX();
 		const std::size_t sizeY     = giplHeader.getSizeY();
 		const std::size_t numBScans = giplHeader.getSizeZ();
+
+		std::vector<cv::Mat> bscanTemp;
+		bscanTemp.reserve(numBScans);
 
 		for(std::size_t numBscan = 0; numBscan<numBScans; ++numBscan)
 		{
@@ -216,6 +170,12 @@ namespace OctData
 			reader.readImg(filereader, bscanImage, sizeX, sizeY);
 // 			filereader.readCVImage<uint8_t>(bscanImage, sizeY, sizeX);
 
+			bscanTemp.push_back(bscanImage);
+		}
+
+		for(cv::Mat& bscanImage : bscanTemp)
+		{
+			reader.convertImage(bscanImage);
 
 			BScan::Data bscanData;
 			BScan* bscan = new BScan(bscanImage, bscanData);
@@ -225,7 +185,7 @@ namespace OctData
 		}
 	}
 
-	bool OctData::GIPLRead::readFile(FileReader& filereader, OctData::OCT& oct, const OctData::FileReadOptions& op, CppFW::Callback* callback)
+	bool GIPLRead::readFile(FileReader& filereader, OctData::OCT& oct, const OctData::FileReadOptions& op, CppFW::Callback* callback)
 	{
 		if(filereader.getExtension() != ".gipl")
 			return false;
@@ -277,7 +237,7 @@ namespace OctData
 	}
 
 
-	OctData::GIPLRead::GIPLRead()
+	GIPLRead::GIPLRead()
 	: OctFileReader(OctExtension{".gipl", ".gipl.gz", "Guys Image Processing Lab Format"})
 	{
 	}

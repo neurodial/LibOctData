@@ -45,10 +45,16 @@ namespace OctData
 				boost::endian::big_to_native_inplace(dest[i]);
 		}
 
+
+		void convertFloatType(float & value) { boost::endian::big_to_native_inplace(*(reinterpret_cast<uint32_t*>(&value))); }
+		void convertFloatType(double& value) { boost::endian::big_to_native_inplace(*(reinterpret_cast<uint64_t*>(&value))); }
+
 		template<typename T>
 		void readFStreamBigInt(T* dest, std::size_t num, std::false_type) // TODO: correct endian for floating types
 		{
 			readFStream(dest, num);
+			for(std::size_t i = 0; i<num; ++i)
+				convertFloatType(dest[i]);
 		}
 
 
