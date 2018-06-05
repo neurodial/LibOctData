@@ -63,6 +63,12 @@ namespace
 		return dest;
 	}
 
+	struct ReadProperty
+	{
+		enum class SLOImageType { Unknown, Fundus, TRC };
+		SLOImageType slotype = SLOImageType::Unknown;
+	};
+
 
 	struct BScanPair
 	{
@@ -136,10 +142,11 @@ namespace
 		}
 	}
 
-	void readImgTrc(std::istream& stream, OctData::Series& series)
+	void readImgTrc(std::istream& stream, OctData::Series& series, ReadProperty& property)
 	{
 		if(series.getSloImage().hasImage())
-			return;
+			if(!series.getSloImage().getImage().empty())
+				return;
 
 		const uint32_t width  = readFStream<uint32_t>(stream);
 		const uint32_t height = readFStream<uint32_t>(stream);
@@ -169,10 +176,12 @@ namespace
 		sloImage->setImage(image);
 		series.takeSloImage(sloImage);
 
+		property.slotype = ReadProperty::SLOImageType::TRC;
+
 		delete[] encodedData;
 	}
 
-	void readImgFundus(std::istream& stream, OctData::Series& series)
+	void readImgFundus(std::istream& stream, OctData::Series& series, ReadProperty& property)
 	{
 		const uint32_t width  = readFStream<uint32_t>(stream);
 		const uint32_t height = readFStream<uint32_t>(stream);
@@ -201,6 +210,9 @@ namespace
 		OctData::SloImage* sloImage = new OctData::SloImage;
 		sloImage->setImage(image);
 		series.takeSloImage(sloImage);
+
+
+		property.slotype = ReadProperty::SLOImageType::Fundus;
 
 		delete[] encodedData;
 	}
@@ -335,7 +347,7 @@ namespace
 		}
 	}
 
-	void readRegistInfo(std::istream& stream, BScanList& list)
+	void readRegistInfo(std::istream& stream, BScanList& list, ReadProperty& property)
 	{
 		uint32_t unknown1   [ 2];
 		uint32_t boundFundus[ 4];
@@ -355,11 +367,19 @@ namespace
 		{
 			double pos = static_cast<double>(bscanNum)/static_cast<double>(numBScans);
 
-// 			bscan.data.start = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[1]);
-// 			bscan.data.end   = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[3]);
-
-			bscan.data.start = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[1]);
-			bscan.data.end   = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[3]);
+			switch(property.slotype)
+			{
+				case ReadProperty::SLOImageType::Unknown:
+					break;
+				case ReadProperty::SLOImageType::Fundus:
+					bscan.data.start = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[1]);
+					bscan.data.end   = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[3]);
+					break;
+				case ReadProperty::SLOImageType::TRC:
+					bscan.data.start = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[1]);
+					bscan.data.end   = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[3]);
+					break;
+			}
 
 			++bscanNum;
 		}
@@ -436,6 +456,7 @@ namespace OctData
 
 		BScanList bscanList;
 
+		ReadProperty property;
 
 		while(readFStream(stream, chunkNameSize) > 0)
 		{
@@ -453,7 +474,7 @@ namespace OctData
 			BOOST_LOG_TRIVIAL(debug) << "chunkName "<< " (@" << chunkBegin << " -> " << static_cast<int>(chunkSize) << ") : " << chunkName ;
 
 			if(chunkName == "@IMG_TRC_02")
-				readImgTrc(stream, series);
+				readImgTrc(stream, series, property);
 			else if(chunkName == "@IMG_JPEG")
 				readImgJpeg(stream, series, bscanList, callback);
 			else if(chunkName == "@PATIENT_INFO_02")
@@ -463,9 +484,9 @@ namespace OctData
 			else if(chunkName == "@CAPTURE_INFO_02")
 				readCaptureInfo02(stream, series);
 			else if(chunkName == "@IMG_FUNDUS")
-				readImgFundus(stream, series);
+				readImgFundus(stream, series, property);
 			else if(chunkName == "@REGIST_INFO")
-				readRegistInfo(stream, bscanList);
+				readRegistInfo(stream, bscanList, property);
 			else if(chunkName == "@PARAM_SCAN_04")
 				readParamScan04(stream, bscanList);
 
