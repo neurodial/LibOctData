@@ -379,7 +379,7 @@ namespace OctData
 		&& ext != ".dcm")
 			return false;
 
-		std::cout << "ReadDICOM: " << filename << std::endl;
+		BOOST_LOG_TRIVIAL(info) << "ReadDICOM: " << filename;
 
 		/* Load file and get pixel data element */
 		DcmFileFormat dfile;
@@ -427,10 +427,6 @@ namespace OctData
 
 		study.setStudyOperator(getStdString(*data, DCM_OperatorsName));
 		study.setStudyUID(getStdString(*data, DCM_StudyInstanceUID));
-
-		std::cout << getStdString(*data, DCM_PatientBirthDate) << std::endl;
-		std::cout << getStdString(*data, DCM_StudyDate) << std::endl;
-		std::cout << getStdString(*data, DCM_AcquisitionDateTime) << std::endl;
 
 		pat.setBirthdate(convertStr2Date(getStdString(*data, DCM_PatientBirthDate)));
 		study.setStudyDate(convertStr2Date(getStdString(*data, DCM_StudyDate)));
@@ -612,8 +608,6 @@ namespace OctData
 				else
 					if(!obj.openJpeg(copyPixData, length))
 						std::cerr << "Fehler beim JPEG2K-Einlesen" << std::endl;
-
-				std::cout << "*" << std::flush;
 
 
 				cv::Mat gray_image;

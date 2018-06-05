@@ -199,54 +199,7 @@ ReadJPEG2K::~ReadJPEG2K()
 bool ReadJPEG2K::openJpeg(const char* data, std::size_t dataSize)
 {
 	opj_stream_t* stream = opjStreamCreateDefaultMemoryStream(data, dataSize);
-	
-	/*
-	opj_image_t* image = nullptr;
 
-
-	opj_image_cmptparm_t cmptparm[3];
-	opj_cparameters_t eparams;  // compression parameters
-	// opj_event_mgr_t event_mgr;  // event manager
-	// opj_cinfo_t* cinfo = NULL;  // handle to a compressor
-	opj_codec_t* l_codec = NULL;                  // Handle to a decompressor
-	opj_image_t *image = NULL;
-	// opj_cio_t *cio = NULL;
-	
-	
-	memset(&cmptparm[0], 0, sizeof(opj_image_cmptparm_t) * 3);
-	for(int i = 0; i < dcmData->SamplesPerPixel; i++) {
-		cmptparm[i].bpp  = dcmData->BitsAllocated;
-		cmptparm[i].prec = dcmData->BitsStored;
-		cmptparm[i].sgnd = dcmData->IsSigned ? 1 : 0;
-		cmptparm[i].dx   = eparams.subsampling_dx;
-		cmptparm[i].dy   = eparams.subsampling_dy;
-		cmptparm[i].h    = dcmData->ImageHeight;
-		cmptparm[i].w    = dcmData->ImageWidth;
-	}
-
-	
-	image = opj_image_create(dcmData->SamplesPerPixel, &cmptparm[0], getOpenJpegColorSpace(dcmData.PhotometricInterpretation));
-
-	opj_dparameters_t parameters;
-	opj_set_default_decoder_parameters(&parameters);
-	
-	parameters.cp_layer = 0;
-	parameters.cp_reduce = 0;
-	parameters.DA_x1 = 1024;
-	parameters.DA_y1 = 512;
-//	parameters.
-	
-
-	
-	l_codec = opj_create_decompress(OPJ_CODEC_J2K);
-	if(!opj_setup_decoder(l_codec, &parameters))
-	{
-		opj_destroy_codec(l_codec);
-		std::cout << "opj_setup_decoder" << std::endl;;
-		return;
-	}
-	
-	*/
 	
 	opj_codec_t* l_codec = NULL;                  // Handle to a decompressor
 	opj_image*& image = getJp2tImage(imageVoid);
@@ -262,7 +215,7 @@ bool ReadJPEG2K::openJpeg(const char* data, std::size_t dataSize)
 	parameters.cp_layer = 0;
 	parameters.cp_reduce = 0;
 	parameters.m_verbose = true;
-	parameters.jpwl_exp_comps = 1;
+// 	parameters.jpwl_exp_comps = 1;
 	
 	l_codec = opj_create_decompress(OPJ_CODEC_JP2);
 	if(l_codec == nullptr)
@@ -290,41 +243,6 @@ bool ReadJPEG2K::openJpeg(const char* data, std::size_t dataSize)
 		return false;
 	}
 
-	// std::cout << infoH << warnH << erroH << std::endl;
-	
-// 	unsigned int l_tile_index     ;
-// 	unsigned int l_data_size      ;
-// 	int l_current_tile_x0;
-// 	int l_current_tile_y0;
-// 	int l_current_tile_x1;
-// 	int l_current_tile_y1;
-// 	unsigned int l_nb_comps       ;
-// 	int l_go_on          ;
-//
-// 	opj_read_tile_header(
-//             l_codec,
-//             stream,
-//             &l_tile_index,
-//             &l_data_size,
-//             &l_current_tile_x0,
-//             &l_current_tile_y0,
-//             &l_current_tile_x1,
-//             &l_current_tile_y1,
-//             &l_nb_comps,
-//             &l_go_on);
-//
-// 	std::cout << "l_tile_index      : " << l_tile_index      << '\n'
-// 	          << "l_data_size       : " << l_data_size       << '\n'
-// 	          << "l_current_tile_x0 : " << l_current_tile_x0 << '\n'
-// 	          << "l_current_tile_y0 : " << l_current_tile_y0 << '\n'
-// 	          << "l_current_tile_x1 : " << l_current_tile_x1 << '\n'
-// 	          << "l_current_tile_y1 : " << l_current_tile_y1 << '\n'
-// 	          << "l_nb_comps        : " << l_nb_comps        << '\n'
-// 	          << "l_go_on           : " << l_go_on           << '\n'<< std::endl;
-
-
-
-	/*      */
 
 	bool result = opj_decode(l_codec, stream, image);
 
@@ -332,10 +250,6 @@ bool ReadJPEG2K::openJpeg(const char* data, std::size_t dataSize)
 	opj_destroy_codec(l_codec);
 
 	return result;
-	/*
-	std::cout << "opj_decode: " << opj_decode(l_codec, stream, image) << std::endl;;
-	std::cout << "image: " << image << std::endl;;*/
-
 }
 
 
@@ -346,7 +260,7 @@ bool ReadJPEG2K::getImage(cv::Mat& cvImage, bool flip)
 	if(image == 0)
 		return false;
 
-	const int depth    = image->comps[0].prec;
+	const int depth = image->comps[0].prec;
 
 	switch(depth)
 	{
@@ -405,7 +319,7 @@ bool ReadJPEG2K::copyMatrix(cv::Mat& cvImage, bool flip)
 	for(int i = 0; i < cvImage.rows; i++)
 	{
 		for(int c=0; c<channels; ++c)
-			dataIt[c] = image->comps[0].data + i*rowAdd;
+			dataIt[c] = image->comps[c].data + i*rowAdd;
 
 		T* mi = cvImage.ptr<T>(i);
 		for(int j = 0; j < cvImage.cols; j++)
