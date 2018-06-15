@@ -1,5 +1,7 @@
 #pragma once
 
+#include<string>
+
 namespace OctData
 {
 	class FileReadOptions
@@ -18,5 +20,7 @@ namespace OctData
 		bool readBScans          = true;
 
 		E2eGrayTransform e2eGray = E2eGrayTransform::xml;
+
+		std::string libPath;
 	};
 }

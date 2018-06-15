@@ -4,6 +4,7 @@
 #include <ostream>
 #include <fstream>
 #include <iomanip>
+#include<array>
 
 #include <boost/log/trivial.hpp>
 #include <boost/lexical_cast.hpp>
@@ -53,13 +54,22 @@ namespace
 		return dest;
 	}
 
+	std::string& readFStreamFull(std::istream& stream, std::string& dest, std::size_t nums)
+	{
+		dest.assign(nums, '\0');
+		stream.read(&dest[0], nums);
+		return dest;
+	}
+
+	void stripZeroCaracters(std::string& dest)
+	{
+		dest = std::string(dest.c_str()); // strip zero caracters
+	}
+
 	std::string& readFStream(std::istream& stream, std::string& dest, std::size_t nums)
 	{
-		std::string tmp;
-		tmp.assign(nums, '\0');
-		stream.read(&tmp[0], nums);
-
-		dest = std::string(tmp.c_str()); // strip zero caracters
+		readFStreamFull(stream, dest, nums);
+		stripZeroCaracters(dest);
 		return dest;
 	}
 
@@ -154,11 +164,11 @@ namespace
 		const uint32_t frames = readFStream<uint32_t>(stream);
 		const uint8_t  u1     = readFStream<uint8_t >(stream);
 
-		BOOST_LOG_TRIVIAL(debug) << "width  : " << width ;
-		BOOST_LOG_TRIVIAL(debug) << "height : " << height;
-		BOOST_LOG_TRIVIAL(debug) << "bits   : " << bits  ;
-		BOOST_LOG_TRIVIAL(debug) << "frames : " << frames;
-		BOOST_LOG_TRIVIAL(debug) << "u1     : " << static_cast<int>(u1)    ;
+		BOOST_LOG_TRIVIAL(debug) << "width  : " << width
+		                 << '\t' << "height : " << height
+		                 << '\t' << "bits   : " << bits
+		                 << '\t' << "frames : " << frames
+		                 << '\t' << "u1     : " << static_cast<int>(u1);
 
 		// use only the first image
 
@@ -189,11 +199,11 @@ namespace
 		const uint32_t frames = readFStream<uint32_t>(stream);
 		const uint32_t u1     = readFStream<uint32_t>(stream);
 
-		BOOST_LOG_TRIVIAL(debug) << "width  : " << width ;
-		BOOST_LOG_TRIVIAL(debug) << "height : " << height;
-		BOOST_LOG_TRIVIAL(debug) << "bits   : " << bits  ;
-		BOOST_LOG_TRIVIAL(debug) << "frames : " << frames;
-		BOOST_LOG_TRIVIAL(debug) << "u1     : " << static_cast<int>(u1)    ;
+		BOOST_LOG_TRIVIAL(debug) << "width  : " << width
+		                 << '\t' << "height : " << height
+		                 << '\t' << "bits   : " << bits
+		                 << '\t' << "frames : " << frames
+		                 << '\t' << "u1     : " << static_cast<int>(u1);
 
 		// use only the first image
 
@@ -240,6 +250,72 @@ namespace
 		pat.setForename (patForeName);
 		pat.setSurname  (patSureName);
 		pat.setBirthdate(birthDate  );
+	}
+
+	void decriptString(std::string& str, const std::array<unsigned char, 32>& key)
+	{
+		const std::size_t cryptLen = std::min(key.size(), str.size());
+		for(std::size_t i = 0; i < cryptLen; ++i)
+			str[i] = key[i]^static_cast<unsigned char>(str[i]);
+
+		stripZeroCaracters(str);
+	}
+
+	class EncryptKeyPatientInfo03
+	{
+		std::array<unsigned char, 32> keyID      ;
+		std::array<unsigned char, 32> keyForename;
+		std::array<unsigned char, 32> keySurename;
+
+		static void readKey(std::array<unsigned char, 32>& key, std::fstream& stream)
+		{
+			int c;
+			for(std::size_t i = 0; i<32 && stream.good(); ++i)
+			{
+				stream >> c;
+				key[i] = static_cast<unsigned char>(c);
+			}
+		}
+
+	public:
+		EncryptKeyPatientInfo03(const OctData::FileReadOptions& op)
+		{
+			BOOST_LOG_TRIVIAL(info) << "read topcon keys from :" << op.libPath << "/topcon_key.txt";
+			std::fstream stream(op.libPath + "/topcon_key.txt");
+
+			readKey(keyID      , stream);
+			readKey(keyForename, stream);
+			readKey(keySurename, stream);
+		}
+
+		const std::array<unsigned char, 32>& getKeyID      ()         { return keyID      ; }
+		const std::array<unsigned char, 32>& getKeyForename()         { return keyForename; }
+		const std::array<unsigned char, 32>& getKeySurename()         { return keySurename; }
+	};
+
+	void readPatientInfo03(std::istream& stream, OctData::Patient& pat, const OctData::FileReadOptions& op)
+	{
+		EncryptKeyPatientInfo03 keys(op);
+
+		std::string patId;
+		std::string patForeName;
+		std::string patSureName;
+		std::string zeros;
+		readFStreamFull(stream, patId      , 32);
+		readFStreamFull(stream, patForeName, 32);
+		readFStreamFull(stream, patSureName, 32);
+		readFStream(stream, zeros      , 8);
+
+		readFStream<uint8_t>(stream);
+
+		decriptString(patId      , keys.getKeyID      ());
+		decriptString(patForeName, keys.getKeyForename());
+		decriptString(patSureName, keys.getKeySurename());
+
+
+		pat.setId       (patId      );
+		pat.setForename (patForeName);
+		pat.setSurname  (patSureName);
 	}
 
 	void readCaptureInfo02(std::istream& stream, OctData::Series& series)
@@ -403,7 +479,7 @@ namespace OctData
 	{
 	}
 
-	bool TopconFileFormatRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& /*op*/, CppFW::Callback* callback)
+	bool TopconFileFormatRead::readFile(FileReader& filereader, OCT& oct, const FileReadOptions& op, CppFW::Callback* callback)
 	{
 		const boost::filesystem::path& file = filereader.getFilepath();
 //
@@ -483,6 +559,8 @@ namespace OctData
 				readImgJpeg(stream, series, bscanList, callback);
 			else if(chunkName == "@PATIENT_INFO_02")
 				readPatientInfo02(stream, pat);
+			else if(chunkName == "@PATIENT_INFO_03")
+				readPatientInfo03(stream, pat, op);
 			else if(chunkName == "@CONTOUR_INFO")
 				readConturInfo(stream, bscanList);
 			else if(chunkName == "@CAPTURE_INFO_02")
