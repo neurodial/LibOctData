@@ -278,18 +278,36 @@ namespace
 		}
 	}
 
-	bool cmpString(const char* strA, const std::string& strB)
-	{
-		std::size_t strLenA = strlen(strA);
-		std::size_t strLenB = strB.size();
-		if(strLenA > strLenB)
-			return false;
-
-		return memcmp(strA, strB.c_str(), strLenA) == 0;
-	}
-
 	void readConturInfo(std::istream& stream, BScanList& list)
 	{
+		class ConturInfo : public std::map<std::string, OctData::Segmentationlines::SegmentlineType>
+		{
+		public:
+			ConturInfo() // TODO Reihenfolge anpassen
+			{
+				emplace("MULTILAYERS_1", OctData::Segmentationlines::SegmentlineType::ILM );
+				emplace("MULTILAYERS_2", OctData::Segmentationlines::SegmentlineType::RNFL);
+				emplace("MULTILAYERS_3", OctData::Segmentationlines::SegmentlineType::GCL );
+				emplace("MULTILAYERS_4", OctData::Segmentationlines::SegmentlineType::IPL );
+				emplace("MULTILAYERS_5", OctData::Segmentationlines::SegmentlineType::INL );
+				emplace("MULTILAYERS_6", OctData::Segmentationlines::SegmentlineType::OPL );
+				emplace("MULTILAYERS_7", OctData::Segmentationlines::SegmentlineType::BM  );
+				emplace("MULTILAYERS_8", OctData::Segmentationlines::SegmentlineType::PR1 );
+				emplace("MULTILAYERS_9", OctData::Segmentationlines::SegmentlineType::ELM );
+
+				emplace("RETINA_1", OctData::Segmentationlines::SegmentlineType::ILM );
+				emplace("RETINA_2", OctData::Segmentationlines::SegmentlineType::RNFL);
+				emplace("RETINA_3", OctData::Segmentationlines::SegmentlineType::INL );
+				emplace("RETINA_4", OctData::Segmentationlines::SegmentlineType::BM  );
+
+				emplace("NFL_1", OctData::Segmentationlines::SegmentlineType::GCL );
+				emplace("NFL_2", OctData::Segmentationlines::SegmentlineType::IPL );
+				emplace("NFL_3", OctData::Segmentationlines::SegmentlineType::OPL );
+			}
+		};
+
+		static ConturInfo conturInfo;
+
 		std::string id;
 		readFStream(stream, id, 20);
 		const uint16_t type   = readFStream<uint16_t>(stream);
@@ -297,24 +315,14 @@ namespace
 		const uint32_t frames = readFStream<uint32_t>(stream);
 		const uint32_t size   = readFStream<uint32_t>(stream);
 
-		OctData::Segmentationlines::SegmentlineType lineType = OctData::Segmentationlines::SegmentlineType::RPE;
 
-
-// 		enum class SegmentlineType{ ILM, NFL, I3T1, I4T1, I5T1, I6T1, I8T3, I14T1, I15T1, I16T1, BM, NR_OF_ELEMENTS };
-		     if(cmpString("MULTILAYERS_1", id)) lineType = OctData::Segmentationlines::SegmentlineType::ILM;
-		else if(cmpString("MULTILAYERS_2", id)) lineType = OctData::Segmentationlines::SegmentlineType::RNFL;
-		else if(cmpString("MULTILAYERS_3", id)) lineType = OctData::Segmentationlines::SegmentlineType::GCL;
-		else if(cmpString("MULTILAYERS_4", id)) lineType = OctData::Segmentationlines::SegmentlineType::IPL;
-		else if(cmpString("MULTILAYERS_5", id)) lineType = OctData::Segmentationlines::SegmentlineType::INL;
-		else if(cmpString("MULTILAYERS_6", id)) lineType = OctData::Segmentationlines::SegmentlineType::OPL;
-		else if(cmpString("MULTILAYERS_7", id)) lineType = OctData::Segmentationlines::SegmentlineType::BM;
-		else if(cmpString("MULTILAYERS_8", id)) lineType = OctData::Segmentationlines::SegmentlineType::PR1;
-		else if(cmpString("MULTILAYERS_9", id)) lineType = OctData::Segmentationlines::SegmentlineType::ELM;
-		else
+		const ConturInfo::const_iterator contId = conturInfo.find(id);
+		if(contId == conturInfo.end())
 		{
 			BOOST_LOG_TRIVIAL(error) << "unhandled id: " << id    ;
 			return; // TODO: unhandled
 		}
+		const OctData::Segmentationlines::SegmentlineType lineType =contId->second;
 
 
 		BOOST_LOG_TRIVIAL(debug) << "id     : " << id    ;
@@ -336,10 +344,7 @@ namespace
 					OctData::Segmentationlines::Segmentline line;
 					readFStream(stream, tmpVec, width);
 					for(uint32_t ascan = 0; ascan < width; ++ascan)
-					{
-// 						std::cout << tmpVec[ascan] << std::endl;
 						line.push_back(imgHeight - static_cast<OctData::Segmentationlines::SegmentlineDataType>(tmpVec[ascan]));
-					}
 					bscanPair.data.getSegmentLine(lineType) = std::move(line);
 				}
 			}
@@ -447,8 +452,6 @@ namespace OctData
 		readFStream(stream, version1);
 		readFStream(stream, version2);
 
-		uint8_t chunkNameSize;
-
 
 		Patient& pat    = oct.getPatient(1);
 		Study&   study  = pat.getStudy(1);
@@ -458,6 +461,7 @@ namespace OctData
 
 		ReadProperty property;
 
+		uint8_t chunkNameSize;
 		while(readFStream(stream, chunkNameSize) > 0)
 		{
 			std::string chunkName;
