@@ -1,9 +1,8 @@
 #include "topconread.h"
 
-
-#include <ostream>
-#include <fstream>
-#include <iomanip>
+#include<ostream>
+#include<fstream>
+#include<iomanip>
 #include<array>
 
 #include <boost/log/trivial.hpp>
@@ -401,11 +400,11 @@ namespace
 		const OctData::Segmentationlines::SegmentlineType lineType =contId->second;
 
 
-		BOOST_LOG_TRIVIAL(debug) << "id     : " << id    ;
-		BOOST_LOG_TRIVIAL(debug) << "type   : " << type  ;
-		BOOST_LOG_TRIVIAL(debug) << "width  : " << width ;
-		BOOST_LOG_TRIVIAL(debug) << "frames : " << frames;
-		BOOST_LOG_TRIVIAL(debug) << "size   : " << size  ;
+		BOOST_LOG_TRIVIAL(debug) <<   "id     : " << id
+		                         << "\ttype   : " << type
+		                         << "\twidth  : " << width
+		                         << "\tframes : " << frames
+		                         << "\tsize   : " << size  ;
 		if(type == 0)
 		{
 			uint16_t* tmpVec = new uint16_t[width];
