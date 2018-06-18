@@ -370,12 +370,12 @@ namespace
 				emplace("MULTILAYERS_8", OctData::Segmentationlines::SegmentlineType::PR1 );
 				emplace("MULTILAYERS_9", OctData::Segmentationlines::SegmentlineType::ELM );
 
-				emplace("RETINA_1", OctData::Segmentationlines::SegmentlineType::ILM );
-				emplace("RETINA_2", OctData::Segmentationlines::SegmentlineType::RNFL);
-				emplace("RETINA_3", OctData::Segmentationlines::SegmentlineType::INL );
-				emplace("RETINA_4", OctData::Segmentationlines::SegmentlineType::BM  );
+				emplace("RETINA_1", OctData::Segmentationlines::SegmentlineType::ILM);
+				emplace("RETINA_2", OctData::Segmentationlines::SegmentlineType::PR1);
+				emplace("RETINA_3", OctData::Segmentationlines::SegmentlineType::PR2);
+				emplace("RETINA_4", OctData::Segmentationlines::SegmentlineType::BM );
 
-				emplace("NFL_1", OctData::Segmentationlines::SegmentlineType::GCL );
+				emplace("NFL_1", OctData::Segmentationlines::SegmentlineType::RNFL);
 				emplace("NFL_2", OctData::Segmentationlines::SegmentlineType::IPL );
 				emplace("NFL_3", OctData::Segmentationlines::SegmentlineType::OPL );
 			}
