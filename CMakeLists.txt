@@ -16,6 +16,7 @@ option(BUILD_WITH_SUPPORT_HE_XML    "build support for heidelberg spectralis xml
 option(BUILD_WITH_SUPPORT_DICOM     "build support for dicom format" OFF)
 option(BUILD_WITH_SUPPORT_TIFFSTACK "build support for tiffstack" ON)
 option(BUILD_WITH_SUPPORT_CVBIN     "build support for cvbin import" ON)
+# option(BUILD_WITH_SUPPORT_XOCT      "build support for xoct import" ON)
 option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
 option(BUILD_WITH_SUPPORT_OCT_FILE  "build support for oct format" ON)
 option(BUILD_WITH_SUPPORT_TOPCON    "build support for topcon format" ON)
@@ -138,6 +139,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
+add_definitions(-DNOCRYPT) # no crypt in zip
 
 include_directories(SYSTEM ${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/octdata/)
@@ -162,9 +164,9 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/octdata/buildconstants.cpp.in" "${CM
 list(APPEND liboctdata_SRCS "${CMAKE_CURRENT_BINARY_DIR}/buildconstants.cpp")
 
 
-set(srcs_directories datastruct ${import_srcs} "export/cvbin" "export/cirrus_raw")
+set(srcs_directories datastruct ${import_srcs} "export/cvbin" "export/cirrus_raw" "export/xoct")
 foreach(loop_var ${srcs_directories})
-	file(GLOB sources_base "${CMAKE_CURRENT_SOURCE_DIR}/octdata/${loop_var}/*.cpp")
+	file(GLOB sources_base "${CMAKE_CURRENT_SOURCE_DIR}/octdata/${loop_var}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/octdata/${loop_var}/*.c")
 	list(APPEND liboctdata_SRCS ${sources} ${sources_base})
 endforeach(loop_var)
 
@@ -215,5 +217,4 @@ add_definitions(-DOCTDATA_EXPORT)
 
 add_executable(liboctdata_test main.cpp)
 target_link_libraries(liboctdata_test octdata ${OpenCV_LIBRARIES} )
-
 

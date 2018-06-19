@@ -18,6 +18,7 @@ namespace bfs = boost::filesystem;
 
 #include "import/platform_helper.h"
 #include<export/cirrus_raw/cirrusrawexport.h>
+#include<export/xoct/xoctwrite.h>
 #include<export/cvbin/cvbinoctwrite.h>
 
 namespace OctData
@@ -158,6 +159,8 @@ namespace OctData
 		bfs::path filepath(filename);
 		if(filepath.extension() == ".img")
 			return CirrusRawExport::writeFile(filename, octdata, opt);
+		if(filepath.extension() == ".xoct")
+			return XOctWrite::writeFile(filepath, octdata, opt);
 		return CvBinOctWrite::writeFile(filename, octdata, opt);
 	}
 

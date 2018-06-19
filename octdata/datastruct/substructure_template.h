@@ -23,6 +23,7 @@ namespace OctData
 
 		SubstructureTemplate& operator=(SubstructureTemplate&& o)               { swapSubstructure(o); return *this; }
 
+		typedef Type                                     SubstructureType;
 		typedef std::pair<const IndexType, Type*>        SubstructurePair;
 		typedef std::map<IndexType, Type*>               SubstructureMap;
 		typedef typename SubstructureMap::iterator       SubstructureIterator;
