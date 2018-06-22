@@ -1,6 +1,8 @@
 #include "date.h"
 
-#include <cmath>
+#include<cmath>
+// #include<boost/spirit/include/qi.hpp>
+// #include<boost/phoenix/phoenix.hpp>
 
 #ifdef _MSC_VER
 	#define timegm _mkgmtime
@@ -61,9 +63,45 @@ namespace OctData
 		return time;
 	}
 
-	void Date::decodeString(const std::string& /*str*/)
+	void Date::decodeString(const std::string& str)
 	{
-		// TODO
+		unixtime = 0;
+		decodeUnixTime();
+		decoded = false;
+
+		if(str.empty() || str == "-")
+			return;
+
+		std::istringstream datesstring(str);
+
+		int year  = -1;
+		int month = -1;
+		int day   = -1;
+		char trenner;
+		datesstring >> year >> trenner >> month >> trenner >> day;
+		if(day < 0)
+			return;
+
+		decoded = true;
+		setYear(year);
+		setMonth(month);
+		setDay(day);
+
+		int hour = -1;
+		int min  = -1;
+		int sec  = -1;
+		datesstring >> hour >> trenner >> min >> trenner >> sec;
+		if(sec < 0)
+			return;
+
+		setHour(hour);
+		setMin(min);
+		setSec(sec);
+
+		int ms = -1;
+		datesstring >> trenner >> ms;
+		if(trenner == '.' && ms > 0)
+			setMs(ms);
 	}
 
 
