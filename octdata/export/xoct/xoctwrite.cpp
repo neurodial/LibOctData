@@ -1,27 +1,27 @@
 #include "xoctwrite.h"
 
-#include <datastruct/oct.h>
-#include <datastruct/coordslo.h>
-#include <datastruct/sloimage.h>
-#include <datastruct/bscan.h>
+#include<fstream>
 
-#include <opencv2/opencv.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/property_tree/ptree.hpp>
-
 #include<boost/property_tree/xml_parser.hpp>
-#include<fstream>
-
-#include <filewriteoptions.h>
 #include <boost/type_index.hpp>
 
+#include <opencv2/opencv.hpp>
 
+#include <filewriteoptions.h>
+
+
+#include <datastruct/oct.h>
+#include <datastruct/coordslo.h>
+#include <datastruct/sloimage.h>
+#include <datastruct/bscan.h>
 #include <octfileread.h>
 
-#include"zipcpp.h"
+#include<cpp_framework/zip/zipcpp.h>
 
 namespace bpt = boost::property_tree;
 
@@ -58,7 +58,7 @@ namespace OctData
 
 
 
-		void writeImage(bpt::ptree& node, ZipCpp& zipfile, const cv::Mat& image, const std::string& filename, const std::string& imageName)
+		void writeImage(bpt::ptree& node, CppFW::ZipCpp& zipfile, const cv::Mat& image, const std::string& filename, const std::string& imageName)
 		{
 			if(image.empty())
 				return;
@@ -69,17 +69,23 @@ namespace OctData
 			node.add(imageName, filename);
 		}
 
-		// general export methods
-		void writeSlo(bpt::ptree& sloNode, ZipCpp& zipfile, const SloImage& slo, const std::string& dataPath)
+		template<typename S>
+		void writeParameter(bpt::ptree& tree, const S& structure)
 		{
-			SetToPTree sloWriter(sloNode);
-			slo.getSetParameter(sloWriter);
+			bpt::ptree& dataNode = tree.add("data", "");
+			SetToPTree parameterWriter(dataNode);
+			structure.getSetParameter(parameterWriter);
+		}
 
+		// general export methods
+		void writeSlo(bpt::ptree& sloNode, CppFW::ZipCpp& zipfile, const SloImage& slo, const std::string& dataPath)
+		{
+			writeParameter(sloNode, slo);
 			writeImage(sloNode, zipfile, slo.getImage(), dataPath + "/slo.png", "image");
 		}
 
 
-		void writeBScan(bpt::ptree& seriesNode, ZipCpp& zipfile, const BScan* bscan, std::size_t bscanNum, const std::string& dataPath)
+		void writeBScan(bpt::ptree& seriesNode, CppFW::ZipCpp& zipfile, const BScan* bscan, std::size_t bscanNum, const std::string& dataPath)
 		{
 			if(!bscan)
 				return;
@@ -87,12 +93,10 @@ namespace OctData
 			std::string numString = boost::lexical_cast<std::string>(bscanNum);
 
 			bpt::ptree& bscanNode = seriesNode.add("BScan", "");
+			writeParameter(bscanNode, *bscan);
 			writeImage(bscanNode, zipfile, bscan->getImage()     , dataPath + "/bscan_"      + numString + ".png", "image"     );
 			writeImage(bscanNode, zipfile, bscan->getAngioImage(), dataPath + "/bscanAngio_" + numString + ".png", "angioImage");
 
-			bpt::ptree& bscanDataNode = bscanNode.add("data", "");
-			SetToPTree bscanWriter(bscanDataNode);
-			bscan->getSetParameter(bscanWriter);
 
 // 			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("segmentations");
 //
@@ -107,12 +111,10 @@ namespace OctData
 
 		// deep file format (support many scans per file, tree structure)
 		template<typename S>
-		bool writeStructure(bpt::ptree& tree, ZipCpp& zipfile, const std::string& dataPath, const S& structure)
+		bool writeStructure(bpt::ptree& tree, CppFW::ZipCpp& zipfile, const std::string& dataPath, const S& structure)
 		{
 			bool result = true;
-			bpt::ptree& dataNode    = tree.add("data", "");
-			SetToPTree structureWriter(dataNode);
-			structure.getSetParameter(structureWriter);
+			writeParameter(tree, structure);
 
 			for(typename S::SubstructurePair const& subStructPair : structure)
 			{
@@ -132,12 +134,9 @@ namespace OctData
 
 
 		template<>
-		bool writeStructure<Series>(bpt::ptree& tree, ZipCpp& zipfile, const std::string& dataPath, const Series& series)
+		bool writeStructure<Series>(bpt::ptree& tree, CppFW::ZipCpp& zipfile, const std::string& dataPath, const Series& series)
 		{
-			bpt::ptree& dataNode    = tree.add("data", "");
-			SetToPTree structureWriter(dataNode);
-			series.getSetParameter(structureWriter);
-
+			writeParameter(tree, series);
 			writeSlo(tree.add("slo", ""), zipfile, series.getSloImage(), dataPath);
 
 			std::size_t bscanNum = 0;
@@ -152,7 +151,7 @@ namespace OctData
 
 	bool XOctWrite::writeFile(const boost::filesystem::path& file, const OctData::OCT& oct, const OctData::FileWriteOptions& /*opt*/)
 	{
-		ZipCpp zipfile(file.generic_string());
+		CppFW::ZipCpp zipfile(file.generic_string());
 
 		bpt::ptree xmlTree;
 		std::string dataPath;

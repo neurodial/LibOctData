@@ -16,7 +16,7 @@ option(BUILD_WITH_SUPPORT_HE_XML    "build support for heidelberg spectralis xml
 option(BUILD_WITH_SUPPORT_DICOM     "build support for dicom format" OFF)
 option(BUILD_WITH_SUPPORT_TIFFSTACK "build support for tiffstack" ON)
 option(BUILD_WITH_SUPPORT_CVBIN     "build support for cvbin import" ON)
-# option(BUILD_WITH_SUPPORT_XOCT      "build support for xoct import" ON)
+option(BUILD_WITH_SUPPORT_XOCT      "build support for xoct import" ON)
 option(BUILD_WITH_SUPPORT_CI_RAW    "build support for cirrus raw files" ON)
 option(BUILD_WITH_SUPPORT_OCT_FILE  "build support for oct format" ON)
 option(BUILD_WITH_SUPPORT_TOPCON    "build support for topcon format" ON)
@@ -127,6 +127,14 @@ if(BUILD_WITH_SUPPORT_TIFFSTACK)
 	add_definitions(-DTIFFSTACK_SUPPORT)
 endif()
 
+if(BUILD_WITH_SUPPORT_XOCT)
+	if(!BUILD_WITH_ZLIB)
+		message(FATAL_ERROR, "xoct need zlib")
+	endif()
+	list(APPEND import_srcs import/xoct)
+
+	add_definitions(-DXOCT_SUPPORT)
+endif()
 
 if(BUILD_WITH_ZLIB)
 	find_package(ZLIB REQUIRED)

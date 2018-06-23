@@ -13,6 +13,7 @@
 #include "tiffstack/tiffstackread.h"
 #include "cvbin/cvbinread.h"
 #include "gipl/giplread.h"
+#include "xoct/xoctread.h"
 
 namespace OctData
 {
@@ -65,6 +66,9 @@ namespace OctData
 #endif
 #ifdef GIPL_SUPPORT
 		fileRead.registerFileRead(new GIPLRead);
+#endif
+#ifdef XOCT_SUPPORT
+		fileRead.registerFileRead(new XOctRead);
 #endif
 	}
 
