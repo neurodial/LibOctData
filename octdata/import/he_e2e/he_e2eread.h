@@ -11,10 +11,6 @@ namespace OctData
 	
 	class HeE2ERead : public OctFileReader
 	{
-
-		boost::filesystem::path xmlFilename;
-		boost::filesystem::path xmlPath;
-
 	public:
 		HeE2ERead();
 

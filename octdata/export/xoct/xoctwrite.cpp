@@ -109,7 +109,6 @@ namespace OctData
 		}
 
 
-		// deep file format (support many scans per file, tree structure)
 		template<typename S>
 		bool writeStructure(bpt::ptree& tree, CppFW::ZipCpp& zipfile, const std::string& dataPath, const S& structure)
 		{

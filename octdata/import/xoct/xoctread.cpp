@@ -149,9 +149,10 @@ namespace OctData
 				return nullptr;
 
 
-			const CppFW::CVMatTree* angioNode = bscanNode->getDirNodeOpt("angioImg");
-			if(angioNode && angioNode->type() == CppFW::CVMatTree::Type::Mat)
-				bscan->setAngioImage(angioNode->getMat());
+// 			const CppFW::CVMatTree* angioNode = bscanNode->getDirNodeOpt("angioImg");
+// 			if(angioNode && angioNode->type() == CppFW::CVMatTree::Type::Mat)
+// 				bscan->setAngioImage(angioNode->getMat());
+
 
 			cv::Mat bscanImg = cv::imdecode(bscanImageContent, cv::IMREAD_UNCHANGED);
 

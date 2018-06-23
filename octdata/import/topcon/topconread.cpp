@@ -276,25 +276,33 @@ namespace
 			}
 		}
 
+		bool keyLoaded = false;
+
 	public:
 		EncryptKeyPatientInfo03(const OctData::FileReadOptions& op)
 		{
 			BOOST_LOG_TRIVIAL(info) << "read topcon keys from :" << op.libPath << "/topcon_key.txt";
 			std::fstream stream(op.libPath + "/topcon_key.txt");
+			keyLoaded = stream.good();
 
 			readKey(keyID      , stream);
 			readKey(keyForename, stream);
 			readKey(keySurename, stream);
 		}
 
-		const std::array<unsigned char, 32>& getKeyID      ()         { return keyID      ; }
-		const std::array<unsigned char, 32>& getKeyForename()         { return keyForename; }
-		const std::array<unsigned char, 32>& getKeySurename()         { return keySurename; }
+		const std::array<unsigned char, 32>& getKeyID      ()          { return keyID      ; }
+		const std::array<unsigned char, 32>& getKeyForename()          { return keyForename; }
+		const std::array<unsigned char, 32>& getKeySurename()          { return keySurename; }
+
+		bool isKeyLoaded()                                       const { return keyLoaded; }
 	};
 
 	void readPatientInfo03(std::istream& stream, OctData::Patient& pat, const OctData::FileReadOptions& op)
 	{
 		EncryptKeyPatientInfo03 keys(op);
+
+		if(!keys.isKeyLoaded())
+			return;
 
 		std::string patId;
 		std::string patForeName;

@@ -3,6 +3,7 @@
 #include<iostream>
 #include<fstream>
 #include<iomanip>
+#include<memory>
 
 #include<opencv2/opencv.hpp>
 
@@ -76,7 +77,7 @@ namespace OctData
 	bool CirrusRawExport::writeFile(const boost::filesystem::path&   file
 	                              , const OCT&              /*oct*/
 	                              , const Patient&          pat
-	                              , const Study&            /*study*/
+	                              , const Study&            study
 	                              , const Series&           series
 	                              , const FileWriteOptions& /*opt*/)
 	{
@@ -93,14 +94,23 @@ namespace OctData
 		Series::Laterality eyeSide = series.getLaterality();
 		Series::LateralityEnumWrapper lateralityWrapper(eyeSide);
 
+		Date date = series.getScanDate();
+		if(date.isEmpty())
+			date = study.getStudyDate();
+		if(date.isEmpty())
+			date = Date::fromUnixTime(0);
+
 		const std::string patient_id = pat.getId();
 		      std::string scantype   = "";
-		const std::string scan_date1 = series.getScanDate().strUsDate('-');
-		const std::string scan_date2 = series.getScanDate().strTime('-');
-		const std::string eye_side   = static_cast<std::string&>(lateralityWrapper);
+		const std::string scan_date1 = date.strUsDate('-');
+		const std::string scan_date2 = date.strTime('-');
+		      std::string eye_side   = static_cast<std::string&>(lateralityWrapper);
 		const std::string sn         = "sn1234";
 		      std::string cube       = "";
 		const std::string filetype   = "raw";
+
+		if(eye_side.empty())
+			eye_side = "undef";
 
 		switch(series.getExaminedStructure())
 		{
@@ -156,8 +166,8 @@ namespace OctData
 
 		std::ofstream stream(filename);
 
-		uint8_t* const cache = new uint8_t[cubeSizeX*cubeSizeY*cubeSizeZ];
-		uint8_t* cacheIt = cache;
+		std::unique_ptr<uint8_t> cache(new uint8_t[cubeSizeX*cubeSizeY*cubeSizeZ]);
+		uint8_t* cacheIt = cache.get();
 
 		const OctData::Series::BScanList& bscans = series.getBScans();
 		      OctData::Series::BScanList::const_reverse_iterator beginIt = bscans.crbegin();
@@ -175,9 +185,8 @@ namespace OctData
 			++beginIt;
 		}
 
-		stream.write(reinterpret_cast<char*>(cache), cubeSizeX*cubeSizeY*cubeSizeZ);
+		stream.write(reinterpret_cast<char*>(cache.get()), cubeSizeX*cubeSizeY*cubeSizeZ);
 
-		delete[] cache;
 
 		return true;
 	}
