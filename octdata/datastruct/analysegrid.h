@@ -11,10 +11,18 @@ namespace OctData
 		CoordSLOmm center;
 		std::vector<double> diametersMM;
 
+
+		template<typename T, typename ParameterSet>
+		static void callSubset(T& getSet, ParameterSet& p, const std::string& name)
+		{
+			T subSetGetSet = getSet.subSet(name);
+			p.getSetParameter(subSetGetSet);
+		}
+
 		template<typename T, typename ParameterSet>
 		static void getSetParameter(T& getSet, ParameterSet& p)
 		{
-			getSet("center"     , p.center     );
+			callSubset(getSet, p.center, "center");
 			getSet("diametersMM", p.diametersMM);
 		}
 	public:
@@ -23,6 +31,10 @@ namespace OctData
 
 		void setCenter(const CoordSLOmm& c)                             { center = c; }
 		void addDiameterMM(double diameter)                             { diametersMM.push_back(diameter); }
+
+
+		template<typename T> void getSetParameter(T& getSet)           { getSetParameter(getSet, *this); }
+		template<typename T> void getSetParameter(T& getSet)     const { getSetParameter(getSet, *this); }
 	};
 
 }

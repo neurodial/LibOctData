@@ -43,6 +43,15 @@ namespace OctData
 				tree.add(name, value);
 			}
 
+			template<typename T>
+			void operator()(const std::string& name, const std::vector<T>& value)
+			{
+				std::ostringstream sstream;
+				for(const T& val : value)
+					sstream << val << ' ';
+				tree.add(name, sstream.str());
+			}
+
 			void operator()(const std::string& name, const std::string& value)
 			{
 				if(value.empty())
@@ -81,7 +90,7 @@ namespace OctData
 		void writeSlo(bpt::ptree& sloNode, CppFW::ZipCpp& zipfile, const SloImage& slo, const std::string& dataPath)
 		{
 			writeParameter(sloNode, slo);
-			writeImage(sloNode, zipfile, slo.getImage(), dataPath + "/slo.png", "image");
+			writeImage(sloNode, zipfile, slo.getImage(), dataPath + "slo.png", "image");
 		}
 
 
@@ -94,8 +103,8 @@ namespace OctData
 
 			bpt::ptree& bscanNode = seriesNode.add("BScan", "");
 			writeParameter(bscanNode, *bscan);
-			writeImage(bscanNode, zipfile, bscan->getImage()     , dataPath + "/bscan_"      + numString + ".png", "image"     );
-			writeImage(bscanNode, zipfile, bscan->getAngioImage(), dataPath + "/bscanAngio_" + numString + ".png", "angioImage");
+			writeImage(bscanNode, zipfile, bscan->getImage()     , dataPath + "bscan_"      + numString + ".png", "image"     );
+			writeImage(bscanNode, zipfile, bscan->getAngioImage(), dataPath + "bscanAngio_" + numString + ".png", "angioImage");
 
 
 // 			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("segmentations");
@@ -125,7 +134,7 @@ namespace OctData
 				bpt::ptree& subNode = tree.add(structureName, "");
 				subNode.add("id", boost::lexical_cast<std::string>(subStructPair.first));
 
-				std::string subDataPath = dataPath + '/' + structureName + '_' + boost::lexical_cast<std::string>(subStructPair.first);
+				std::string subDataPath = dataPath + structureName + '_' + boost::lexical_cast<std::string>(subStructPair.first) + '/';
 				result &= writeStructure(subNode, zipfile, subDataPath, *subStructPair.second);
 			}
 			return result;

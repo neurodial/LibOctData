@@ -123,6 +123,15 @@ namespace OctData
 		void updateCornerCoords();
 		void updateCornerCoords(const CoordSLOmm& point);
 
+
+		template<typename T, typename ParameterSet>
+		static void callSubset(T& getSet, ParameterSet& p, const std::string& name)
+		{
+			T subSetGetSet = getSet.subSet(name);
+			p.getSetParameter(subSetGetSet);
+		}
+
+
 		template<typename T, typename ParameterSet>
 		static void getSetParameter(T& getSet, ParameterSet& p)
 		{
@@ -143,6 +152,8 @@ namespace OctData
 			getSet("laterality"           , static_cast<std::string&>(lateralityWrapper       ));
 			getSet("scanPattern"          , static_cast<std::string&>(scanPatternWrapper      ));
 			getSet("examinedStructure"    , static_cast<std::string&>(examinedStructureWrapper));
+
+			callSubset(getSet, p.analyseGrid, "analyseGrid");
 		}
 
 	};

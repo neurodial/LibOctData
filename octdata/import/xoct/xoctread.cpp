@@ -2,6 +2,7 @@
 
 #include<locale>
 #include<vector>
+#include<sstream>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -50,6 +51,26 @@ namespace OctData
 					boost::optional<T> t = tree->get_optional<T>(name);
 					if(t)
 						value = std::move(*t);
+				}
+			}
+
+			template<typename T>
+			void operator()(const std::string& name, std::vector<T>& value)
+			{
+				value.clear();
+				if(tree)
+				{
+					boost::optional<std::string> t = tree->get_optional<std::string>(name);
+					if(t)
+					{
+						std::istringstream sstream(*t);
+						T tmp;
+						while(sstream.good())
+						{
+							sstream >> tmp;
+							value.push_back(tmp);
+						}
+					}
 				}
 			}
 
