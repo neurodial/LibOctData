@@ -10,6 +10,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include<boost/property_tree/xml_parser.hpp>
 #include<boost/interprocess/streams/bufferstream.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include <opencv2/opencv.hpp>
 
@@ -30,6 +31,7 @@
 namespace bfs = boost::filesystem;
 namespace bpt = boost::property_tree;
 namespace bip = boost::interprocess;
+namespace qi = boost::spirit::qi;
 
 namespace OctData
 {
@@ -39,6 +41,19 @@ namespace OctData
 		class GetFromPTree
 		{
 			const bpt::ptree* tree;
+
+			template<typename T>
+			void unserializeVector(const std::string& str, std::vector<T>& vec)
+			{
+				std::istringstream sstream(str);
+				T tmp;
+				while(sstream.good())
+				{
+					sstream >> tmp;
+					vec.push_back(tmp);
+				}
+			}
+
 		public:
 			GetFromPTree(const bpt::ptree& tree) : tree(&tree) {}
 			GetFromPTree(const bpt::ptree* tree) : tree(tree) {}
@@ -62,15 +77,7 @@ namespace OctData
 				{
 					boost::optional<std::string> t = tree->get_optional<std::string>(name);
 					if(t)
-					{
-						std::istringstream sstream(*t);
-						T tmp;
-						while(sstream.good())
-						{
-							sstream >> tmp;
-							value.push_back(tmp);
-						}
-					}
+						unserializeVector(*t, value);
 				}
 			}
 
@@ -86,24 +93,19 @@ namespace OctData
 			}
 		};
 
-// 		const CppFW::CVMatTree* getDirNodeOptCamelCase(const CppFW::CVMatTree& node, const char* name)
+		template<>
+		void GetFromPTree::unserializeVector(const std::string& str, std::vector<double>& vec)
+		{
+			std::string::const_iterator f(str.begin()), l(str.end());
+			qi::parse(f,l,qi::double_ % ' ',vec);
+		}
+// 		template<>
+// 		void GetFromPTree::unserializeVector(const std::string& str, std::vector<float>& vec)
 // 		{
-// 			const CppFW::CVMatTree* result = node.getDirNodeOpt(name);
-// 			if(!result)
-// 			{
-// 				std::string nameFirstUpper(name);
-// 				nameFirstUpper[0] = static_cast<std::string::value_type>(std::toupper(nameFirstUpper[0], std::locale()));
-// 				result = node.getDirNodeOpt(nameFirstUpper.c_str());
-// 			}
-// 			return result;
+// 			std::string::const_iterator f(str.begin()), l(str.end());
+// 			qi::parse(f,l,qi::float_ % ' ',vec);
 // 		}
 
-
-// 		const CppFW::CVMatTree* getDirNodeOptCamelCase(const CppFW::CVMatTree* node, const char* name)
-// 		{
-// 			if(node) return getDirNodeOptCamelCase(*node, name);
-// 			return nullptr;
-// 		}
 
 		template<typename S>
 		void readDataNode(const bpt::ptree& tree, S& structure)
@@ -114,6 +116,15 @@ namespace OctData
 				GetFromPTree structureReader(*dataNode);
 				structure.getSetParameter(structureReader);
 			}
+		}
+
+		bpt::ptree readXml(CppFW::UnzipCpp& zipfile, const std::string& filename)
+		{
+			bpt::ptree xmlTree;
+			std::vector<char> xmlRaw = zipfile.readFile(filename);
+			bip::bufferstream input_stream(xmlRaw.data(), xmlRaw.size());
+			bpt::read_xml(input_stream, xmlTree);
+			return xmlTree;
 		}
 
 		// general import methods
@@ -158,6 +169,15 @@ namespace OctData
 			}
 		}
 */
+		void readSegmentation(const bpt::ptree& segNode, Segmentationlines& seglines)
+		{
+			GetFromPTree get(segNode);
+			for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
+			{
+				Segmentationlines::Segmentline& seg = seglines.getSegmentLine(type);
+				get(Segmentationlines::getSegmentlineName(type), seg);
+			}
+		}
 
 		BScan* readBScan(const bpt::ptree& bscanNode, CppFW::UnzipCpp& zipfile)
 		{
@@ -181,6 +201,14 @@ namespace OctData
 			BScan::Data bscanData;
 
 			// seglines
+			try
+			{
+				std::string layerSegmentationPath = bscanNode.get<std::string>("LayerSegmentationFile");
+				bpt::ptree xmlTree = readXml(zipfile, layerSegmentationPath);
+				bpt::ptree segNode = xmlTree.get_child("LayerSegmentation");
+				readSegmentation(segNode, bscanData.segmentationslines);
+			}
+			catch(...) {}
 
 			BScan* bscan = new BScan(bscanImg, bscanData);
 			readDataNode(bscanNode, *bscan);
@@ -221,7 +249,7 @@ namespace OctData
 
 		// deep file format (support many scans per file, tree structure)
 		template<typename S>
-		bool readStructure(const bpt::ptree& tree, CppFW::UnzipCpp& zipfile, S& structure, CppFW::Callback* callback)
+		bool readStructure(const bpt::ptree& tree, CppFW::UnzipCpp& zipfile, S& structure, const OctData::FileReadOptions& op, CppFW::Callback* callback)
 		{
 			static const std::string subStructureName = getSubStructureName<S>();
 
@@ -241,14 +269,14 @@ namespace OctData
 
 				const bpt::ptree& subTreeNode = subTreePair.second;
 				const int id = subTreeNode.get<int>("id", 1);
-				result &= readStructure(subTreeNode, zipfile, structure.getInsertId(id), callback);
+				result &= readStructure(subTreeNode, zipfile, structure.getInsertId(id), op, callback);
 			}
 			return result;
 		}
 
 
 		template<>
-		bool readStructure<Series>(const bpt::ptree& tree, CppFW::UnzipCpp& zipfile, Series& series, CppFW::Callback* callback)
+		bool readStructure<Series>(const bpt::ptree& tree, CppFW::UnzipCpp& zipfile, Series& series, const OctData::FileReadOptions& op, CppFW::Callback* callback)
 		{
 			readDataNode(tree, series);
 
@@ -256,17 +284,10 @@ namespace OctData
 			if(sloNode)
 				series.takeSloImage(readSlo(*sloNode, zipfile));
 
-
-
-// 			const CppFW::CVMatTree* sloNode = tree.getDirNodeOpt("slo");
-//
-// 			const CppFW::CVMatTree* bscansNode = getDirNodeOptCamelCase(tree, "bscans");
-// 			if(!bscansNode)
-// 				return false;
-//
-// 			const CppFW::CVMatTree::NodeList& seriesList = bscansNode->getNodeList();
-			return readBScanList(tree, zipfile, series, callback);
-// 			return true;
+			if(op.readBScans)
+				return readBScanList(tree, zipfile, series, callback);
+			else
+				return true;
 		}
 	}
 
@@ -275,7 +296,7 @@ namespace OctData
 	{
 	}
 
-	bool OctData::XOctRead::readFile(OctData::FileReader& filereader, OctData::OCT& oct, const OctData::FileReadOptions& /*op*/, CppFW::Callback* callback)
+	bool OctData::XOctRead::readFile(OctData::FileReader& filereader, OctData::OCT& oct, const OctData::FileReadOptions& op, CppFW::Callback* callback)
 	{
 		const boost::filesystem::path& file = filereader.getFilepath();
 		if(file.extension() != ".xoct")
@@ -285,10 +306,10 @@ namespace OctData
 
 		CppFW::UnzipCpp zipfile(file.generic_string());
 
-		bpt::ptree xmlTree;
-		std::vector<char> xmlRaw = zipfile.readFile("xoct.xml");
-		bip::bufferstream input_stream(xmlRaw.data(), xmlRaw.size());
-		bpt::read_xml(input_stream, xmlTree);
+		bpt::ptree xmlTree = readXml(zipfile, "xoct.xml");
+// 		std::vector<char> xmlRaw = zipfile.readFile("xoct.xml");
+// 		bip::bufferstream input_stream(xmlRaw.data(), xmlRaw.size());
+// 		bpt::read_xml(input_stream, xmlTree);
 
 		if(callback)
 			callback->callback(0.01);
@@ -296,37 +317,12 @@ namespace OctData
 		boost::optional<bpt::ptree&> xoctTree = xmlTree.get_child_optional("XOCT");
 
 		if(xoctTree)
-			readStructure(*xoctTree, zipfile, oct, callback);
+			readStructure(*xoctTree, zipfile, oct, op, callback);
 		else
 		{
 			BOOST_LOG_TRIVIAL(error) << "XOCT node in xml not found";
 			return false;
 		}
-
-/*
-		CppFW::CVMatTree octtree = CppFW::CVMatTreeStructBin::readBin(file.generic_string());
-		if(callback)
-			callback->callback(0.5);
-
-		if(octtree.type() != CppFW::CVMatTree::Type::Dir)
-		{
-			BOOST_LOG_TRIVIAL(trace) << "false internal structure of bin";
-			return false;
-		}
-
-		bool fillStatus;
-		const CppFW::CVMatTree* seriesNode = getDirNodeOptCamelCase(octtree, "serie");
-		if(seriesNode)
-			fillStatus = readFlatData(oct, octtree, seriesNode, callback);
-		else
-			fillStatus = readTreeData(oct, octtree, callback);
-
-
-
-		if(fillStatus)
-			BOOST_LOG_TRIVIAL(debug) << "read bin file \"" << file.generic_string() << "\" finished";
-		else
-			BOOST_LOG_TRIVIAL(debug) << "read bin file \"" << file.generic_string() << "\" failed";*/
 
 		return true;
 	}

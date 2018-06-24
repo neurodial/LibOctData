@@ -78,6 +78,15 @@ namespace OctData
 			node.add(imageName, filename);
 		}
 
+		void writeXml(CppFW::ZipCpp& zipfile, const std::string& filename, bpt::ptree& xmlTree)
+		{
+			std::stringstream stream;
+			bpt::write_xml(stream, xmlTree, bpt::xml_writer_make_settings<bpt::ptree::key_type>('\t', 1u));
+			std::string xmlString = stream.str();
+			zipfile.addFile(filename, xmlString.data(), static_cast<unsigned>(xmlString.size()));
+		}
+
+
 		template<typename S>
 		void writeParameter(bpt::ptree& tree, const S& structure)
 		{
@@ -94,6 +103,18 @@ namespace OctData
 		}
 
 
+		void writeSegmentation(bpt::ptree& segNode, const Segmentationlines& seglines)
+		{
+			SetToPTree set(segNode);
+			for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
+			{
+				const Segmentationlines::Segmentline& seg = seglines.getSegmentLine(type);
+				if(!seg.empty())
+					set(Segmentationlines::getSegmentlineName(type), seg);
+			}
+		}
+
+
 		void writeBScan(bpt::ptree& seriesNode, CppFW::ZipCpp& zipfile, const BScan* bscan, std::size_t bscanNum, const std::string& dataPath)
 		{
 			if(!bscan)
@@ -107,6 +128,13 @@ namespace OctData
 			writeImage(bscanNode, zipfile, bscan->getAngioImage(), dataPath + "bscanAngio_" + numString + ".png", "angioImage");
 
 
+			bpt::ptree seglinesTree;
+			writeSegmentation(seglinesTree.add("LayerSegmentation", ""), bscan->getSegmentLines());
+
+			std::string segmentationFile = dataPath + "segmentation_" + numString + ".xml";
+			writeXml(zipfile, segmentationFile, seglinesTree);
+			bscanNode.add("LayerSegmentationFile", segmentationFile);
+
 // 			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("segmentations");
 //
 // 			for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
@@ -116,7 +144,6 @@ namespace OctData
 // 					bscanSegNode.getDirNode(Segmentationlines::getSegmentlineName(type)).getMat() = cv::Mat(1, static_cast<int>(seg.size()), cv::DataType<Segmentationlines::SegmentlineDataType>::type, const_cast<Segmentationlines::SegmentlineDataType*>(seg.data())).clone();
 // 			}
 		}
-
 
 		template<typename S>
 		bool writeStructure(bpt::ptree& tree, CppFW::ZipCpp& zipfile, const std::string& dataPath, const S& structure)
@@ -168,10 +195,11 @@ namespace OctData
 		if(!writeStructure(octTree, zipfile, dataPath, oct))
 			return false;
 
-		std::stringstream stream;
-		bpt::write_xml(stream, xmlTree, bpt::xml_writer_make_settings<bpt::ptree::key_type>('\t', 1u));
-		std::string xmlString = stream.str();
-		zipfile.addFile("xoct.xml", xmlString.data(), static_cast<unsigned>(xmlString.size()));
+		writeXml(zipfile, "xoct.xml", xmlTree);
+// 		std::stringstream stream;
+// 		bpt::write_xml(stream, xmlTree, bpt::xml_writer_make_settings<bpt::ptree::key_type>('\t', 1u));
+// 		std::string xmlString = stream.str();
+// 		zipfile.addFile("xoct.xml", xmlString.data(), static_cast<unsigned>(xmlString.size()));
 
 		return true;
 	}
