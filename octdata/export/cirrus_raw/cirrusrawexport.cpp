@@ -35,13 +35,16 @@ namespace OctData
 			if(bscan.type() != cv::DataType<uint8_t>::type || bscan.channels() != 1)
 				return;
 
+			if(bscan.cols != static_cast<int>(sizeX)) BOOST_LOG_TRIVIAL(warning) << "CirrusRawExport: cols != sizeX " << bscan.cols << " != " << sizeX;
+			if(bscan.rows != static_cast<int>(sizeY)) BOOST_LOG_TRIVIAL(warning) << "CirrusRawExport: cols != sizeX " << bscan.rows << " != " << sizeY;
+
 			const int cols = std::min(bscan.cols, static_cast<int>(sizeX));
 			const int rows = std::min(bscan.rows, static_cast<int>(sizeY));
 
 			for(int r = 0; r < rows; ++r)
 			{
 				const uint8_t* sourceIt = bscan.ptr<uint8_t>(r);
-				uint8_t* destIt = dest+(rows-r)*sizeX;
+				      uint8_t* destIt   = dest+(rows-r)*sizeX;
 				for(int c = 0; c < cols; ++c)
 				{
 					--destIt;
@@ -81,7 +84,7 @@ namespace OctData
 	}
 
 
-	bool CirrusRawExport::writeFile(const boost::filesystem::path&   file
+	bool CirrusRawExport::writeFile(const boost::filesystem::path& file
 	                              , const OCT&              /*oct*/
 	                              , const Patient&          pat
 	                              , const Study&            study
@@ -157,8 +160,7 @@ namespace OctData
 		scantype += " ";
 		scantype += boost::lexical_cast<std::string>(cubeSizeX) + "x" + boost::lexical_cast<std::string>(cubeSizeZ);
 
-		std::string filename = file.branch_path().generic_string() + '/'
-		                     + patient_id + '_'
+		std::string filename = patient_id + '_'
 		                     + scantype   + '_'
 		                     + scan_date1 + '_'
 		                     + scan_date2 + '_'
@@ -167,8 +169,9 @@ namespace OctData
 		                     + cube       + '_'
 		                     + filetype   + ".img";
 
+		bfs::path exportpath = file.branch_path() / filename;
 
-		std::ofstream stream(filename);
+		std::ofstream stream(exportpath.generic_string(), std::ios_base::binary);
 
 		std::unique_ptr<uint8_t> cache(new uint8_t[cubeSizeX*cubeSizeY*cubeSizeZ]);
 		uint8_t* cacheIt = cache.get();
