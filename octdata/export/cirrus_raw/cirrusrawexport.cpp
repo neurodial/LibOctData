@@ -50,6 +50,13 @@ namespace OctData
 				}
 			}
 		}
+
+		inline std::string avoidEmptyString(const std::string& str)
+		{
+			if(str.empty())
+				return "undef";
+			return str;
+		}
 	}
 
 	bool CirrusRawExport::writeFile(const boost::filesystem::path& file, const OctData::OCT& oct, const OctData::FileWriteOptions& opt)
@@ -100,17 +107,14 @@ namespace OctData
 		if(date.isEmpty())
 			date = Date::fromUnixTime(0);
 
-		const std::string patient_id = pat.getId();
+		const std::string patient_id = avoidEmptyString(pat.getId());
 		      std::string scantype   = "";
-		const std::string scan_date1 = date.strUsDate('-');
-		const std::string scan_date2 = date.strTime('-');
-		      std::string eye_side   = static_cast<std::string&>(lateralityWrapper);
+		const std::string scan_date1 = avoidEmptyString(date.strUsDate('-'));
+		const std::string scan_date2 = avoidEmptyString(date.strTime('-')  );
+		      std::string eye_side   = avoidEmptyString(static_cast<std::string&>(lateralityWrapper));
 		const std::string sn         = "sn1234";
 		      std::string cube       = "";
 		const std::string filetype   = "raw";
-
-		if(eye_side.empty())
-			eye_side = "undef";
 
 		switch(series.getExaminedStructure())
 		{
