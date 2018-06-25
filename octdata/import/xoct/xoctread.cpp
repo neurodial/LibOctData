@@ -128,47 +128,30 @@ namespace OctData
 		}
 
 		// general import methods
+		cv::Mat readImage(const bpt::ptree& tree, CppFW::UnzipCpp& zipfile, const std::string& imageStr)
+		{
+			const boost::optional<std::string> imagePath = tree.get_optional<std::string>(imageStr);
+			if(imagePath)
+			{
+				const std::vector<char> imageContent = zipfile.readFile(*imagePath);
+				if(imageContent.size() > 0)
+					return cv::imdecode(imageContent, cv::IMREAD_UNCHANGED);
+			}
+			return cv::Mat();
+		}
+
 		SloImage* readSlo(const bpt::ptree& sloNode, CppFW::UnzipCpp& zipfile)
 		{
-			boost::optional<std::string> imagePath = sloNode.get_optional<std::string>("image");
-			if(!imagePath)
-				return nullptr;
-
-			std::vector<char> sloContent = zipfile.readFile(*imagePath);
-			if(sloContent.size() == 0)
+			cv::Mat sloImage = readImage(sloNode, zipfile, "image");
+			if(sloImage.empty())
 				return nullptr;
 
 			SloImage* slo = new SloImage();
-			slo->setImage(cv::imdecode(sloContent, cv::IMREAD_UNCHANGED));
+			slo->setImage(sloImage);
 			readDataNode(sloNode, *slo);
 			return slo;
 		}
-		/*
 
-		void fillSegmentationsLines(const CppFW::CVMatTree* segNode, BScan::Data& bscanData)
-		{
-			if(segNode)
-			{
-				for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
-				{
-					const char* segLineName = Segmentationlines::getSegmentlineName(type);
-
-					const CppFW::CVMatTree* seriesSegILMNode = segNode->getDirNodeOpt(segLineName);
-					if(seriesSegILMNode && seriesSegILMNode->type() == CppFW::CVMatTree::Type::Mat)
-					{
-						const cv::Mat& segMat = seriesSegILMNode->getMat();
-						cv::Mat convertedSegMat;
-						segMat.convertTo(convertedSegMat, cv::DataType<double>::type);
-
-						const double* p = convertedSegMat.ptr<double>(0);
-						std::vector<double> segVec(p, p + convertedSegMat.rows*convertedSegMat.cols);
-
-						bscanData.getSegmentLine(type) = std::move(segVec);
-					}
-				}
-			}
-		}
-*/
 		void readSegmentation(const bpt::ptree& segNode, Segmentationlines& seglines)
 		{
 			GetFromPTree get(segNode);
@@ -181,27 +164,14 @@ namespace OctData
 
 		BScan* readBScan(const bpt::ptree& bscanNode, CppFW::UnzipCpp& zipfile)
 		{
-			boost::optional<std::string> imagePath = bscanNode.get_optional<std::string>("image");
-			if(!imagePath)
+			cv::Mat bscanImg = readImage(bscanNode, zipfile, "image");
+			if(bscanImg.empty())
 				return nullptr;
 
-			std::vector<char> bscanImageContent = zipfile.readFile(*imagePath);
-			if(bscanImageContent.size() == 0)
-				return nullptr;
-
-
-// 			const CppFW::CVMatTree* angioNode = bscanNode->getDirNodeOpt("angioImg");
-// 			if(angioNode && angioNode->type() == CppFW::CVMatTree::Type::Mat)
-// 				bscan->setAngioImage(angioNode->getMat());
-
-
-			cv::Mat bscanImg = cv::imdecode(bscanImageContent, cv::IMREAD_UNCHANGED);
-
+			cv::Mat imageAngio = readImage(bscanNode, zipfile, "angioImage");
 
 			BScan::Data bscanData;
-
-			// seglines
-			try
+			try// seglines
 			{
 				std::string layerSegmentationPath = bscanNode.get<std::string>("LayerSegmentationFile");
 				bpt::ptree xmlTree = readXml(zipfile, layerSegmentationPath);
@@ -211,6 +181,10 @@ namespace OctData
 			catch(...) {}
 
 			BScan* bscan = new BScan(bscanImg, bscanData);
+
+			if(!imageAngio.empty())
+				bscan->setAngioImage(imageAngio);
+
 			readDataNode(bscanNode, *bscan);
 			return bscan;
 		}
@@ -235,6 +209,7 @@ namespace OctData
 			return true;
 		}
 
+
 		template<typename S>
 		std::string getSubStructureName()
 		{
@@ -246,8 +221,6 @@ namespace OctData
 		}
 
 
-
-		// deep file format (support many scans per file, tree structure)
 		template<typename S>
 		bool readStructure(const bpt::ptree& tree, CppFW::UnzipCpp& zipfile, S& structure, const OctData::FileReadOptions& op, CppFW::Callback* callback)
 		{
@@ -307,9 +280,6 @@ namespace OctData
 		CppFW::UnzipCpp zipfile(file.generic_string());
 
 		bpt::ptree xmlTree = readXml(zipfile, "xoct.xml");
-// 		std::vector<char> xmlRaw = zipfile.readFile("xoct.xml");
-// 		bip::bufferstream input_stream(xmlRaw.data(), xmlRaw.size());
-// 		bpt::read_xml(input_stream, xmlTree);
 
 		if(callback)
 			callback->callback(0.01);

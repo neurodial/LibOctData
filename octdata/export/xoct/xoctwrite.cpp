@@ -134,15 +134,6 @@ namespace OctData
 			std::string segmentationFile = dataPath + "segmentation_" + numString + ".xml";
 			writeXml(zipfile, segmentationFile, seglinesTree);
 			bscanNode.add("LayerSegmentationFile", segmentationFile);
-
-// 			CppFW::CVMatTree& bscanSegNode = bscanNode.getDirNode("segmentations");
-//
-// 			for(OctData::Segmentationlines::SegmentlineType type : OctData::Segmentationlines::getSegmentlineTypes())
-// 			{
-// 				const Segmentationlines::Segmentline& seg = bscan->getSegmentLine(type);
-// 				if(!seg.empty())
-// 					bscanSegNode.getDirNode(Segmentationlines::getSegmentlineName(type)).getMat() = cv::Mat(1, static_cast<int>(seg.size()), cv::DataType<Segmentationlines::SegmentlineDataType>::type, const_cast<Segmentationlines::SegmentlineDataType*>(seg.data())).clone();
-// 			}
 		}
 
 		template<typename S>
