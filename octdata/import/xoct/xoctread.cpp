@@ -227,7 +227,7 @@ namespace OctData
 			static const std::string subStructureName = getSubStructureName<S>();
 
 			const std::size_t numSubStructure = tree.count(subStructureName);
-			CppFW::CallbackStepper bscanCallbackStepper(callback, numSubStructure);
+			CppFW::CallbackSubTaskCreator bscanCallbackCreator(callback, numSubStructure);
 
 			bool result = true;
 			readDataNode(tree, structure);
@@ -237,12 +237,10 @@ namespace OctData
 				if(subTreePair.first != subStructureName)
 					continue;
 
-				if(++bscanCallbackStepper == false)
-					return false;
-
 				const bpt::ptree& subTreeNode = subTreePair.second;
 				const int id = subTreeNode.get<int>("id", 1);
-				result &= readStructure(subTreeNode, zipfile, structure.getInsertId(id), op, callback);
+				CppFW::Callback subCallback = bscanCallbackCreator.getSubTaskCallback();
+				result &= readStructure(subTreeNode, zipfile, structure.getInsertId(id), op, &subCallback);
 			}
 			return result;
 		}
