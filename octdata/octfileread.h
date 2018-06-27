@@ -39,6 +39,7 @@ namespace OctData
 
 		Octdata_EXPORTS static bool writeFile(const std::string& filename, const OCT& octdata);
 		Octdata_EXPORTS static bool writeFile(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt);
+		Octdata_EXPORTS static bool writeFile(const boost::filesystem::path& filepath, const OCT& octdata, const FileWriteOptions& opt);
 
 	private:
 		OctFileRead();
@@ -48,7 +49,7 @@ namespace OctData
 		OCT openFilePrivat(const std::string& filename, const FileReadOptions& op, CppFW::Callback* callback);
 		OCT openFilePrivat(const boost::filesystem::path& file, const FileReadOptions& op, CppFW::Callback* callback);
 
-		bool writeFilePrivat(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt);
+		bool writeFilePrivat(const boost::filesystem::path& filepath, const OCT& octdata, const FileWriteOptions& opt);
 
 		bool openFileFromExt(OCT& oct, FileReader& filename, const FileReadOptions& op, CppFW::Callback* callback);
 		bool tryOpenFile(OCT& oct, FileReader& filename, const FileReadOptions& op, CppFW::Callback* callback);

@@ -153,15 +153,19 @@ namespace OctData
 		return getInstance().writeFilePrivat(filename, octdata, opt);
 	}
 
-
-	bool OctFileRead::writeFilePrivat(const std::string& filename, const OCT& octdata, const FileWriteOptions& opt)
+	bool OctFileRead::writeFile(const bfs::path& filepath, const OCT& octdata, const FileWriteOptions& opt)
 	{
-		bfs::path filepath(filename);
+		return getInstance().writeFilePrivat(filepath, octdata, opt);
+	}
+
+
+	bool OctFileRead::writeFilePrivat(const bfs::path& filepath, const OCT& octdata, const FileWriteOptions& opt)
+	{
 		if(filepath.extension() == ".img")
-			return CirrusRawExport::writeFile(filename, octdata, opt);
+			return CirrusRawExport::writeFile(filepath, octdata, opt);
 		if(filepath.extension() == ".xoct")
 			return XOctWrite::writeFile(filepath, octdata, opt);
-		return CvBinOctWrite::writeFile(filename, octdata, opt);
+		return CvBinOctWrite::writeFile(filepath, octdata, opt);
 	}
 
 }
