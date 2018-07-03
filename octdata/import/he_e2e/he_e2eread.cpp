@@ -244,6 +244,10 @@ namespace OctData
 					else
 						segVec.assign(segData->begin(), segData->end());
 
+					std::transform(segVec.begin(), segVec.end(), segVec.begin()
+					            , [](Segmentationlines::SegmentlineDataType value) { if(value > 1e20) return std::numeric_limits<double>::quiet_NaN(); return value; });
+
+
 					bscanData.getSegmentLine(segType) = std::move(segVec);
 				}
 			}
