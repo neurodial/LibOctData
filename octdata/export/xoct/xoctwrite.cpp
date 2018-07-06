@@ -66,6 +66,16 @@ namespace OctData
 		};
 
 
+		template<typename S>
+		std::string getSubStructureName()
+		{
+			std::string name = boost::typeindex::type_id<typename S::SubstructureType>().pretty_name();
+			std::size_t namePos = name.rfind(':');
+			if(namePos > 0)
+				++namePos;
+			return name.substr(namePos, name.size() - namePos);
+		}
+
 
 		void writeImage(bpt::ptree& node, CppFW::ZipCpp& zipfile, const cv::Mat& image, const std::string& filename, const std::string& imageName)
 		{
@@ -144,11 +154,7 @@ namespace OctData
 
 			for(typename S::SubstructurePair const& subStructPair : structure)
 			{
-				std::string name = boost::typeindex::type_id<typename S::SubstructureType>().pretty_name();
-				std::size_t namePos = name.rfind(':');
-				if(namePos > 0)
-					++namePos;
-				std::string structureName = name.substr(namePos, name.size() - namePos);
+				std::string structureName = getSubStructureName<S>();
 				bpt::ptree& subNode = tree.add(structureName, "");
 				subNode.add("id", boost::lexical_cast<std::string>(subStructPair.first));
 
