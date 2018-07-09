@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef OCTDATA_EXPORT
+	#include "octdata_EXPORTS.h"
+#else
+	#define Octdata_EXPORTS
+#endif
+
 
 #include<string>
 
@@ -11,8 +17,8 @@ namespace OctData
 		T constObj; // temporary for const usage
 		T& obj;
 
-		void toString();
-		void fromString();
+		Octdata_EXPORTS void toString();
+		Octdata_EXPORTS void fromString();
 
 	public:
 		ObjectWrapper(const T& o)

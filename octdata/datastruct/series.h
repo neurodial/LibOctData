@@ -42,14 +42,14 @@ namespace OctData
 		Octdata_EXPORTS ~Series();
 
 		Octdata_EXPORTS const SloImage& getSloImage()            const { return *sloImage; }
-		void takeSloImage(SloImage* sloImage);
+		Octdata_EXPORTS void takeSloImage(SloImage* sloImage);
 
 		Octdata_EXPORTS const BScanList getBScans()              const { return bscans;    }
 		Octdata_EXPORTS const BScan* getBScan(std::size_t pos) const;
 		Octdata_EXPORTS std::size_t bscanCount()                 const { return bscans.size(); }
 
 		Octdata_EXPORTS Laterality getLaterality()               const { return laterality; }
-		void setLaterality(Laterality l)                               { laterality = l; }
+		Octdata_EXPORTS  void setLaterality(Laterality l)              { laterality = l; }
 
 		Octdata_EXPORTS ScanPattern getScanPattern()             const { return scanPattern; }
 		Octdata_EXPORTS void setScanPattern(ScanPattern p)             { scanPattern = p;    }
@@ -63,21 +63,22 @@ namespace OctData
 		Octdata_EXPORTS void setExaminedStructureText(const std::string& str)
 		                                                               { examinedStructureText = str;  }
 
-		void setScanDate(const Date& time)                             { scanDate = time; }
+		Octdata_EXPORTS void setScanDate(const Date& time)             { scanDate = time; }
+
 		Octdata_EXPORTS const Date& getScanDate()                const { return scanDate; }
 
-		void setSeriesUID(const std::string& uid)                      { seriesUID = uid;  }
+		Octdata_EXPORTS void setSeriesUID(const std::string& uid)      { seriesUID = uid;  }
 		Octdata_EXPORTS const std::string& getSeriesUID()        const { return seriesUID; }
 		
-		void setRefSeriesUID(const std::string& uid)                   { refSeriesID = uid;  }
+		Octdata_EXPORTS void setRefSeriesUID(const std::string& uid)   { refSeriesID = uid;  }
 		Octdata_EXPORTS const std::string& getRefSeriesUID()     const { return refSeriesID; }
 
-		void setScanFocus(double focus)                                { scanFocus = focus; }
-		Octdata_EXPORTS   double getScanFocus()                  const { return scanFocus;  }
+		Octdata_EXPORTS void setScanFocus(double focus)                { scanFocus = focus; }
+		Octdata_EXPORTS double getScanFocus()                    const { return scanFocus;  }
 
-		void takeBScan(BScan* bscan);
+		Octdata_EXPORTS void takeBScan(BScan* bscan);
 
-		void setDescription(const std::string& text)                   { description = text; }
+		Octdata_EXPORTS void setDescription(const std::string& text)   { description = text; }
 		Octdata_EXPORTS const std::string& getDescription()      const { return description; }
 
 		Octdata_EXPORTS int getInternalId()                      const { return internalId; }
