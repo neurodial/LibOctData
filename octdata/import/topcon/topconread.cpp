@@ -100,8 +100,11 @@ namespace
 
 	typedef std::vector<BScanPair> BScanList;
 
-	void readImgJpeg(std::istream& stream, OctData::Series& series, BScanList& bscanList, CppFW::Callback* callback)
+	void readImgJpeg(std::istream& stream, OctData::Series& series, BScanList& bscanList, CppFW::Callback* callback, const OctData::FileReadOptions& op)
 	{
+		if(!op.readBScans)
+			return;
+
 		const uint8_t  type   = readFStream<uint8_t >(stream);
 		const uint32_t u1     = readFStream<uint32_t>(stream);
 		const uint32_t u2     = readFStream<uint32_t>(stream);
@@ -347,6 +350,9 @@ namespace
 
 	void readParamScan04(std::istream& stream, BScanList& list)
 	{
+		if(list.size() == 0)
+			return;
+
 		uint32_t unknown1[3];
 		readFStream(stream, unknown1, sizeof(unknown1)/sizeof(unknown1[0]));
 		double scanSizeXmm = readFStream<double>(stream);
@@ -363,7 +369,7 @@ namespace
 		}
 	}
 
-	void readConturInfo(std::istream& stream, BScanList& list)
+	void readConturInfo(std::istream& stream, BScanList& list, const OctData::FileReadOptions& op)
 	{
 		class ConturInfo : public std::map<std::string, OctData::Segmentationlines::SegmentlineType>
 		{
@@ -392,6 +398,9 @@ namespace
 		};
 
 		static ConturInfo conturInfo;
+
+		if(!op.readBScans)
+			return;
 
 		std::string id;
 		readFStream(stream, id, 20);
@@ -559,19 +568,19 @@ namespace OctData
 			uint32_t chunkSize;
 			readFStream(stream, chunkSize);
 
-			const std::size_t chunkBegin  = stream.tellg();
+			const std::streamoff chunkBegin  = stream.tellg();
 			BOOST_LOG_TRIVIAL(debug) << "chunkName "<< " (@" << chunkBegin << " -> " << static_cast<int>(chunkSize) << ") : " << chunkName ;
 
 			if(chunkName == "@IMG_TRC_02")
 				readImgTrc(stream, series, property);
 			else if(chunkName == "@IMG_JPEG")
-				readImgJpeg(stream, series, bscanList, callback);
+				readImgJpeg(stream, series, bscanList, callback, op);
 			else if(chunkName == "@PATIENT_INFO_02")
 				readPatientInfo02(stream, pat);
 			else if(chunkName == "@PATIENT_INFO_03")
 				readPatientInfo03(stream, pat, op);
 			else if(chunkName == "@CONTOUR_INFO")
-				readConturInfo(stream, bscanList);
+				readConturInfo(stream, bscanList, op);
 			else if(chunkName == "@CAPTURE_INFO_02")
 				readCaptureInfo02(stream, series);
 			else if(chunkName == "@IMG_FUNDUS")
