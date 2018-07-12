@@ -72,6 +72,19 @@ namespace
 		return dest;
 	}
 
+	cv::Mat readAndEncodeJPEG2kData(std::istream& stream, uint32_t size)
+	{
+		std::unique_ptr<char> encodedData(new char[size]);
+		stream.read(encodedData.get(), size);
+
+		cv::Mat image;
+		ReadJPEG2K reader;
+		reader.openJpeg(encodedData.get(), size);
+		reader.getImage(image, false);
+
+		return image;
+	}
+
 	struct ReadProperty
 	{
 		enum class SLOImageType { Unknown, Fundus, TRC };
@@ -110,12 +123,15 @@ namespace
 			case 0:
 				series.setScanPattern(OctData::Series::ScanPattern::SingleLine);
 				break;
+			case 1:
+				series.setScanPattern(OctData::Series::ScanPattern::Circular);
+				break;
 			case 2:
 				series.setScanPattern(OctData::Series::ScanPattern::Volume);
 				break;
-			case 3:
-				series.setScanPattern(OctData::Series::ScanPattern::Circular);
-				break;
+// 			case 3:
+// 				series.setScanPattern(OctData::Series::ScanPattern::Circular);
+// 				break;
 // 			case 7:
 // 				series.setScanPattern(7 line scan (h or v));
 // 				break;
@@ -131,15 +147,9 @@ namespace
 				if(!callback->callback(static_cast<double>(frame)/static_cast<double>(frames)))
 					break;
 			}
+
 			const uint32_t size = readFStream<uint32_t>(stream);
-			char* encodedData = new char[size];
-
-			stream.read(encodedData, size);
-
-			cv::Mat image;
-			ReadJPEG2K reader;
-			reader.openJpeg(encodedData, size);
-			reader.getImage(image, false);
+			cv::Mat image = readAndEncodeJPEG2kData(stream, size);
 
 			image.convertTo(image, cv::DataType<uint8_t>::type, 2, -128);
 
@@ -147,9 +157,9 @@ namespace
 			pair.image = image;
 			bscanList.push_back(pair);
 
-			delete[] encodedData;
 		}
 	}
+
 
 	void readImgTrc(std::istream& stream, OctData::Series& series, ReadProperty& property)
 	{
@@ -172,14 +182,7 @@ namespace
 		// use only the first image
 
 		const uint32_t size = readFStream<uint32_t>(stream);
-		char* encodedData = new char[size];
-
-		stream.read(encodedData, size);
-
-		cv::Mat image;
-		ReadJPEG2K reader;
-		reader.openJpeg(encodedData, size);
-		reader.getImage(image, false);
+		cv::Mat image = readAndEncodeJPEG2kData(stream, size);
 
 		OctData::SloImage* sloImage = new OctData::SloImage;
 		sloImage->setImage(image);
@@ -187,7 +190,6 @@ namespace
 
 		property.slotype = ReadProperty::SLOImageType::TRC;
 
-		delete[] encodedData;
 	}
 
 	void readImgFundus(std::istream& stream, OctData::Series& series, ReadProperty& property)
@@ -207,23 +209,14 @@ namespace
 		// use only the first image
 
 		const uint32_t size = readFStream<uint32_t>(stream);
-		char* encodedData = new char[size];
 
-		stream.read(encodedData, size);
-
-		cv::Mat image;
-		ReadJPEG2K reader;
-		reader.openJpeg(encodedData, size);
-		reader.getImage(image, false);
+		cv::Mat image = readAndEncodeJPEG2kData(stream, size);
 
 		OctData::SloImage* sloImage = new OctData::SloImage;
 		sloImage->setImage(image);
 		series.takeSloImage(sloImage);
 
-
 		property.slotype = ReadProperty::SLOImageType::Fundus;
-
-		delete[] encodedData;
 	}
 
 	void readPatientInfo02(std::istream& stream, OctData::Patient& pat)
@@ -327,7 +320,10 @@ namespace
 
 	void readCaptureInfo02(std::istream& stream, OctData::Series& series)
 	{
-		readFStream<uint16_t>(stream);
+		uint8_t lateralityByte = readFStream<uint8_t>(stream);
+		uint8_t unknownByte    = readFStream<uint8_t>(stream);
+
+		BOOST_LOG_TRIVIAL(info) << "unknownByte: " << static_cast<int>(unknownByte);
 
 		stream.seekg(52*sizeof(uint16_t), std::ios_base::cur);
 
@@ -341,6 +337,12 @@ namespace
 		scanDate.setDateAsValid();
 
 		series.setScanDate(scanDate);
+
+		switch(lateralityByte)
+		{
+			case 0: series.setLaterality(OctData::Series::Laterality::OD); break;
+			case 1: series.setLaterality(OctData::Series::Laterality::OS); break;
+		}
 	}
 
 	void readParamScan04(std::istream& stream, BScanList& list)
