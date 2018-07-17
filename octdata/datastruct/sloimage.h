@@ -45,14 +45,14 @@ namespace OctData
 		}
 
 	public:
-		SloImage();
-		~SloImage();
+		Octdata_EXPORTS SloImage();
+		Octdata_EXPORTS ~SloImage();
 
 		SloImage(const SloImage& other)            = delete;
 		SloImage& operator=(const SloImage& other) = delete;
 
 		const cv::Mat& getImage()                   const           { return *image                 ; }
-		void           setImage(const cv::Mat& image);
+		Octdata_EXPORTS void setImage(const cv::Mat& image);
 
 // 		const std::string& getFilename()             const          { return filename               ; }
 // 		void               setFilename(const std::string& s)        {        filename = s           ; }

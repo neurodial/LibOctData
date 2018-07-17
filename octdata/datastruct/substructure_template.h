@@ -33,6 +33,8 @@ namespace OctData
 
 		Octdata_EXPORTS SubstructureCIterator begin() const                     { return substructureMap.begin(); }
 		Octdata_EXPORTS SubstructureCIterator end()   const                     { return substructureMap.end();   }
+		Octdata_EXPORTS SubstructureIterator  begin()                           { return substructureMap.begin(); }
+		Octdata_EXPORTS SubstructureIterator  end()                             { return substructureMap.end();   }
 		Octdata_EXPORTS std::size_t size()            const                     { return substructureMap.size();  }
 
 	protected:

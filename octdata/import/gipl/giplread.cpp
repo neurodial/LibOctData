@@ -8,7 +8,7 @@ namespace bfs = boost::filesystem;
 
 #include <opencv2/opencv.hpp>
 
-#include <cpp_framework/callback.h>
+#include <oct_cpp_framework/callback.h>
 
 #include "../platform_helper.h"
 #include "../../octdata_packhelper.h"

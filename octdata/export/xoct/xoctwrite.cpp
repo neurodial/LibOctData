@@ -21,7 +21,7 @@
 #include <datastruct/bscan.h>
 #include <octfileread.h>
 
-#include<cpp_framework/zip/zipcpp.h>
+#include<oct_cpp_framework/zip/zipcpp.h>
 
 namespace bpt = boost::property_tree;
 
@@ -88,7 +88,7 @@ namespace OctData
 						break;
 					case FileWriteOptions::XoctImageFormat::zippedBMP:
 						compressImage = true;
-						[[fallthrough]];
+// 						[[fallthrough]];
 					case FileWriteOptions::XoctImageFormat::bmp:
 						imageExtention = ".bmp";
 						break;

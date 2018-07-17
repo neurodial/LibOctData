@@ -7,13 +7,18 @@ set( CMAKE_CXX_STANDARD 11 )
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+
+set(liboctdata_VERSION 1.0.0)
+set(CMAKE_DEBUG_POSTFIX "-d")
+
+
 #
 # Build options
 #
 option(BUILD_WITH_SUPPORT_HE_E2E    "build support for nativ heidelberg spectralis format (E2E, SDB)" ON)
 option(BUILD_WITH_SUPPORT_HE_VOL    "build support for heidelberg spectralis vol format" ON)
 option(BUILD_WITH_SUPPORT_HE_XML    "build support for heidelberg spectralis xml export" ON)
-option(BUILD_WITH_SUPPORT_DICOM     "build support for dicom format" OFF)
+option(BUILD_WITH_SUPPORT_DICOM     "build support for dicom format (cirrus, experimental)" OFF)
 option(BUILD_WITH_SUPPORT_TIFFSTACK "build support for tiffstack" ON)
 option(BUILD_WITH_SUPPORT_CVBIN     "build support for cvbin import" ON)
 option(BUILD_WITH_SUPPORT_XOCT      "build support for xoct import" ON)
@@ -29,8 +34,8 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options a
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_module/)
 
-find_package(CppFramework REQUIRED)
-include_directories(${CppFramework_INCLUDE_DIRS})
+
+find_package(OctCppFramework REQUIRED)
 
 
 if(${WIN32})
@@ -153,7 +158,6 @@ include_directories(SYSTEM ${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/octdata/)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(SYSTEM ${TIFF_INCLUDE_DIRS})
-include_directories(${LibE2E_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -206,11 +210,13 @@ ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 
 if(DEFINED DCMTK_FOUND)
 	add_definitions(-DUSE_DCMTK)
-	target_link_libraries(octdata ${DCMTK_LIBRARIES})
+	target_link_libraries(octdata PUBLIC ${DCMTK_LIBRARIES})
 endif()
-# target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(octdata ${LibE2E_LIBRARIES} ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
-target_link_libraries(octdata ${CppFramework_LIBRARIES})
+
+target_link_libraries(octdata PUBLIC ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+
+target_link_libraries(octdata PRIVATE OctCppFramework::oct_cpp_framework)
+target_link_libraries(octdata PRIVATE LibE2E::libe2e)
 
 
 
@@ -225,3 +231,72 @@ add_definitions(-DOCTDATA_EXPORT)
 
 add_executable(liboctdata_test main.cpp)
 target_link_libraries(liboctdata_test octdata ${OpenCV_LIBRARIES} )
+
+
+
+set_property(TARGET octdata PROPERTY VERSION ${liboctdata_VERSION})
+set_property(TARGET octdata PROPERTY SOVERSION 1)
+set_property(TARGET octdata PROPERTY INTERFACE_liboctdata_MAJOR_VERSION 1)
+set_property(TARGET octdata APPEND PROPERTY COMPATIBLE_INTERFACE_STRING liboctdata_MAJOR_VERSION)
+
+install(TARGETS octdata EXPORT LibOctDataTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+file(GLOB liboctdata_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/octdata/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/octdata/datastruct/*.h")
+install(
+  FILES
+    ${liboctdata_HEADERS}
+    "${CMAKE_CURRENT_BINARY_DIR}/octdata_export.h"
+  DESTINATION
+    include
+  COMPONENT
+    Devel
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/liboctdata/LibOctDataConfigVersion.cmake"
+  VERSION ${liboctdata_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+export(EXPORT LibOctDataTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/liboctdata/LibOctDataTargets.cmake"
+  NAMESPACE LibOctData::
+)
+configure_file(cmake/LibOctDataConfig.cmake
+  "${CMAKE_CURRENT_BINARY_DIR}/liboctdata/LibOctDataConfig.cmake"
+  COPY_ONLY
+)
+
+target_include_directories(
+    octdata PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/>"
+    "$<BUILD_INTERFACE:${generated_headers}>"
+)
+
+set(ConfigPackageLocation lib/cmake/liboctdata)
+
+install(EXPORT LibOctDataTargets
+  FILE
+    LibOctDataTargets.cmake
+  NAMESPACE
+    LibOctData::
+  DESTINATION
+    ${ConfigPackageLocation}
+)
+install(
+  FILES
+    cmake/LibOctDataConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/liboctdata/LibOctDataConfigVersion.cmake"
+  DESTINATION
+    ${ConfigPackageLocation}
+  COMPONENT
+    Devel
+)
+
+export(PACKAGE LibOctData)
