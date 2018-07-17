@@ -35,6 +35,7 @@ namespace OctData
 	bool OctData::FileReader::openFile()
 	{
 		delete fileStream;
+		fileStream = nullptr;
 		switch(compressType)
 		{
 			case Compressed::none:
@@ -43,12 +44,10 @@ namespace OctData
 			case Compressed::gzip:
 #ifdef WITH_ZLIB
 				fileStream = new FileStreamGZip(filepath);
-#else
-				fileStream = new FileStreamDircet(filepath);
 #endif
 				break;
 		}
-		return true;
+		return fileStream != nullptr;
 	}
 
 	std::size_t FileReader::file_size() const

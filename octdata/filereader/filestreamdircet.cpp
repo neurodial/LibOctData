@@ -18,8 +18,8 @@ namespace OctData
 		stream.open(filepathConv(filepath), std::ios::binary | std::ios::in);
 		if(!stream.good())
 		{
-			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << filepathConv(filepath);
-			throw(""); // TODO
+			BOOST_LOG_TRIVIAL(error) << "Can't open file stream " << filepathConv(filepath);
+			throw("Can't open file stream"); // TODO
 		}
 	}
 }
