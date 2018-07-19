@@ -128,6 +128,8 @@ namespace
 		BOOST_LOG_TRIVIAL(debug) << "frames: " << frames;
 		BOOST_LOG_TRIVIAL(debug) << "u3    : " << u3    ;
 
+		OctData::BScan::BScanType bscanType = OctData::BScan::BScanType::Line;
+
 		switch(type)
 		{
 			case 0:
@@ -135,6 +137,7 @@ namespace
 				break;
 			case 1:
 				series.setScanPattern(OctData::Series::ScanPattern::Circular);
+				bscanType = OctData::BScan::BScanType::Circle;
 				break;
 			case 2:
 				series.setScanPattern(OctData::Series::ScanPattern::Volume);
@@ -165,6 +168,7 @@ namespace
 
 			BScanPair pair;
 			pair.image = image;
+			pair.data.bscanType = bscanType;
 			bscanList.push_back(pair);
 
 		}
@@ -369,13 +373,18 @@ namespace
 		if(list.size() == 0)
 			return;
 
-		double resYmm = para.scanSizeYmm/static_cast<double>(list.size());
-		double resZmm = para.resZum/1000;
+		const double resYmm = para.scanSizeYmm/static_cast<double>(list.size());
+		const double resZmm = para.resZum/1000;
 		for(BScanPair& bscan : list)
 		{
 			double resXmm = para.scanSizeXmm/static_cast<double>(bscan.image.cols);
-			OctData::ScaleFactor sf(resXmm, resYmm, resZmm);
-			bscan.data.scaleFactor = sf;
+			switch(bscan.data.bscanType)
+			{
+				case OctData::BScan::BScanType::Circle: bscan.data.scaleFactor = OctData::ScaleFactor(resXmm*M_PI, resYmm, resZmm); break;
+				case OctData::BScan::BScanType::Line  : bscan.data.scaleFactor = OctData::ScaleFactor(resXmm     , resYmm, resZmm); break;
+				case OctData::BScan::BScanType::Unknown: break;
+			}
+
 		}
 	}
 
@@ -456,6 +465,17 @@ namespace
 		}
 	}
 
+	void applyRegistInfoVol(const uint32_t bound[4], BScanPair& bscan, double pos)
+	{
+		bscan.data.start = OctData::CoordSLOmm(bound[0]*pos + bound[2]*(1.-pos), bound[1]);
+		bscan.data.end   = OctData::CoordSLOmm(bound[0]*pos + bound[2]*(1.-pos), bound[3]);
+	}
+	void applyRegistInfoCircle(const uint32_t bound[4], BScanPair& bscan)
+	{
+		bscan.data.start  = OctData::CoordSLOmm(bound[0] + bound[2], bound[1]);
+		bscan.data.center = OctData::CoordSLOmm(bound[0]           , bound[1]);
+	}
+
 	void readRegistInfo(std::istream& stream, BScanList& list, ReadProperty& property)
 	{
 		uint32_t unknown1   [ 2];
@@ -475,24 +495,54 @@ namespace
 		for(BScanPair& bscan : list)
 		{
 			double pos = static_cast<double>(bscanNum)/static_cast<double>(numBScans);
-
-			switch(property.slotype)
+			switch(bscan.data.bscanType)
 			{
-				case ReadProperty::SLOImageType::Unknown:
+				case OctData::BScan::BScanType::Circle:
+					switch(property.slotype)
+					{
+						case ReadProperty::SLOImageType::Unknown: break;
+						case ReadProperty::SLOImageType::Fundus: applyRegistInfoCircle(boundFundus, bscan); break;
+						case ReadProperty::SLOImageType::TRC:    applyRegistInfoCircle(boundTrc   , bscan); break;
+					}
 					break;
-				case ReadProperty::SLOImageType::Fundus:
-					bscan.data.start = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[1]);
-					bscan.data.end   = OctData::CoordSLOmm(boundFundus[0]*pos + boundFundus[2]*(1.-pos), boundFundus[3]);
+				case OctData::BScan::BScanType::Line:
+					switch(property.slotype)
+					{
+						case ReadProperty::SLOImageType::Unknown: break;
+						case ReadProperty::SLOImageType::Fundus: applyRegistInfoVol(boundFundus, bscan, pos); break;
+						case ReadProperty::SLOImageType::TRC:    applyRegistInfoVol(boundTrc   , bscan, pos); break;
+					}
 					break;
-				case ReadProperty::SLOImageType::TRC:
-					bscan.data.start = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[1]);
-					bscan.data.end   = OctData::CoordSLOmm(boundTrc[0]*pos + boundTrc[2]*(1.-pos), boundTrc[3]);
+				case OctData::BScan::BScanType::Unknown:
 					break;
 			}
 
 			++bscanNum;
 		}
 	}
+
+	/*
+	void dumpChunk(std::istream& stream, const uint32_t chunkSize, const std::string& chunkName)
+	{
+		const std::streamoff chunkBegin  = stream.tellg();
+		std::ofstream outStream(chunkName.substr(1), std::ios::binary);
+
+		constexpr static const std::size_t buffSize = 2048;
+		std::unique_ptr<char> buffer(new char[buffSize]);
+
+		std::size_t bytesForCopy = chunkSize;
+
+		while(bytesForCopy > 0)
+		{
+			std::size_t readBytes = std::min(bytesForCopy, buffSize);
+			stream.read(buffer.get(), readBytes);
+			outStream.write(buffer.get(), readBytes);
+			bytesForCopy -= readBytes;
+		}
+
+		stream.seekg(chunkBegin);
+	}
+	*/
 
 }
 
@@ -578,6 +628,8 @@ namespace OctData
 			}
 			uint32_t chunkSize;
 			readFStream(stream, chunkSize);
+
+// 			dumpChunk(stream, chunkSize, chunkName);
 
 			const std::streamoff chunkBegin  = stream.tellg();
 			BOOST_LOG_TRIVIAL(debug) << "chunkName "<< " (@" << chunkBegin << " -> " << static_cast<int>(chunkSize) << ") : " << chunkName ;
