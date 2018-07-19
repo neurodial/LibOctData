@@ -98,6 +98,13 @@ namespace
 		OctData::BScan::Data data;
 	};
 
+	struct ScanParameter
+	{
+		double scanSizeXmm = 0;
+		double scanSizeYmm = 0;
+		double resZum      = 0;
+	};
+
 	typedef std::vector<BScanPair> BScanList;
 
 	void readImgJpeg(std::istream& stream, OctData::Series& series, BScanList& bscanList, CppFW::Callback* callback, const OctData::FileReadOptions& op)
@@ -348,23 +355,26 @@ namespace
 		}
 	}
 
-	void readParamScan04(std::istream& stream, BScanList& list)
+	void readParamScan04(std::istream& stream, ScanParameter& para)
+	{
+		uint32_t unknown1[3];
+		readFStream(stream, unknown1, sizeof(unknown1)/sizeof(unknown1[0]));
+		para.scanSizeXmm = readFStream<double>(stream);
+		para.scanSizeYmm = readFStream<double>(stream);
+		para.resZum      = readFStream<double>(stream);
+	}
+
+	void applyParamScan(const ScanParameter& para, BScanList& list)
 	{
 		if(list.size() == 0)
 			return;
 
-		uint32_t unknown1[3];
-		readFStream(stream, unknown1, sizeof(unknown1)/sizeof(unknown1[0]));
-		double scanSizeXmm = readFStream<double>(stream);
-		double scanSizeYmm = readFStream<double>(stream);
-		double scanSizeZmm = readFStream<double>(stream);
-
-		double resY = scanSizeYmm/static_cast<double>(list.size());
+		double resYmm = para.scanSizeYmm/static_cast<double>(list.size());
+		double resZmm = para.resZum/1000;
 		for(BScanPair& bscan : list)
 		{
-			double resX = scanSizeXmm/static_cast<double>(bscan.image.cols);
-			double resZ = scanSizeZmm/static_cast<double>(bscan.image.rows);
-			OctData::ScaleFactor sf(resX, resY, resZ);
+			double resXmm = para.scanSizeXmm/static_cast<double>(bscan.image.cols);
+			OctData::ScaleFactor sf(resXmm, resYmm, resZmm);
 			bscan.data.scaleFactor = sf;
 		}
 	}
@@ -552,6 +562,7 @@ namespace OctData
 		Series&  series = study.getSeries(1);
 
 		BScanList bscanList;
+		ScanParameter scanParameter;
 
 		ReadProperty property;
 
@@ -588,10 +599,12 @@ namespace OctData
 			else if(chunkName == "@REGIST_INFO")
 				readRegistInfo(stream, bscanList, property);
 			else if(chunkName == "@PARAM_SCAN_04")
-				readParamScan04(stream, bscanList);
+				readParamScan04(stream, scanParameter);
 
 			stream.seekg(chunkBegin + chunkSize);
 		}
+
+		applyParamScan(scanParameter, bscanList);
 
 		for(BScanPair& pair : bscanList)
 		{
