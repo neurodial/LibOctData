@@ -155,6 +155,16 @@ end
 		std::size_t filesize = filereader.file_size();
 		std::size_t volSizeZ = filesize / volSizeX /volSizeY;
 
+		const double cubeSizeX = 6;
+		const double cubeSizeY = 6;
+		const double cubeSizeZ = 2;
+
+		const double scaleX = cubeSizeX/static_cast<double>(volSizeX);
+		const double scaleY = cubeSizeY/static_cast<double>(volSizeY);
+		const double scaleZ = cubeSizeZ/static_cast<double>(volSizeZ);
+
+		ScaleFactor sf(scaleX, scaleY, scaleZ);
+
 // // 		std::fstream stream(file.generic_string(), std::ios::binary | std::ios::in);
 // 		if(!stream.good())
 // 			return false;
@@ -164,6 +174,8 @@ end
 
 		std::vector<BScan*> bscanList;
 
+		BScan::Data data;
+		data.scaleFactor = sf;
 		for(std::size_t i = 0; i<volSizeY; ++i)
 		{
 			if(callback)
@@ -177,7 +189,7 @@ end
 			filereader.readCVImage<uint8_t>(bscanImage, volSizeZ, volSizeX);
 			cv::flip(bscanImage, bscanImage, -1);
 
-			bscanList.push_back(new BScan(bscanImage, BScan::Data()));
+			bscanList.push_back(new BScan(bscanImage, data));
 		}
 
 		for(std::vector<BScan*>::reverse_iterator it = bscanList.rbegin(); it != bscanList.rend(); ++it)

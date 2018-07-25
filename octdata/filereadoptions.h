@@ -19,6 +19,8 @@ namespace OctData
 		bool loadRefFiles        = true;
 		bool readBScans          = true;
 
+		bool dumpFileParts       = false;
+
 		E2eGrayTransform e2eGray = E2eGrayTransform::xml;
 
 		std::string libPath;

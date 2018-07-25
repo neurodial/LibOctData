@@ -337,9 +337,8 @@ namespace
 	void readCaptureInfo02(std::istream& stream, OctData::Series& series)
 	{
 		uint8_t lateralityByte = readFStream<uint8_t>(stream);
-		uint8_t unknownByte    = readFStream<uint8_t>(stream);
+		/*uint8_t unknownByte */ readFStream<uint8_t>(stream);
 
-		BOOST_LOG_TRIVIAL(info) << "unknownByte: " << static_cast<int>(unknownByte);
 
 		stream.seekg(52*sizeof(uint16_t), std::ios_base::cur);
 
@@ -447,7 +446,8 @@ namespace
 		                         << "\tsize   : " << size  ;
 		if(type == 0)
 		{
-			uint16_t* tmpVec = new uint16_t[width];
+			std::unique_ptr<uint16_t[]> tempVector(new uint16_t[width]);
+			uint16_t* tmpVec = tempVector.get();
 			for(uint32_t frame = 0; frame < frames; ++frame)
 			{
 				uint32_t actFrame = frames-frame-1;
@@ -456,15 +456,15 @@ namespace
 					BScanPair& bscanPair = list.at(actFrame);
 					int imgHeight = bscanPair.image.rows;
 
-					OctData::Segmentationlines::Segmentline line;
+					OctData::Segmentationlines::Segmentline line(width);
 					readFStream(stream, tmpVec, width);
-					for(uint32_t ascan = 0; ascan < width; ++ascan)
-						line.push_back(imgHeight - static_cast<OctData::Segmentationlines::SegmentlineDataType>(tmpVec[ascan]));
+					std::transform(tmpVec, tmpVec + width, line.begin(), [imgHeight](uint16_t val){ return imgHeight - static_cast<OctData::Segmentationlines::SegmentlineDataType>(val); });
 					bscanPair.data.getSegmentLine(lineType) = std::move(line);
 				}
 			}
-			delete[] tmpVec;
 		}
+		else
+			BOOST_LOG_TRIVIAL(error) << "Contuer info: unhandled type: " << type;
 	}
 
 	void applyRegistInfoVol(const uint32_t bound[4], BScanPair& bscan, double pos)
@@ -523,7 +523,7 @@ namespace
 		}
 	}
 
-	/*
+
 	void dumpChunk(std::istream& stream, const uint32_t chunkSize, const std::string& chunkName)
 	{
 		const std::streamoff chunkBegin  = stream.tellg();
@@ -544,7 +544,7 @@ namespace
 
 		stream.seekg(chunkBegin);
 	}
-	*/
+
 
 }
 
@@ -631,7 +631,8 @@ namespace OctData
 			uint32_t chunkSize;
 			readFStream(stream, chunkSize);
 
-// 			dumpChunk(stream, chunkSize, chunkName);
+			if(op.dumpFileParts)
+				dumpChunk(stream, chunkSize, chunkName);
 
 			const std::streamoff chunkBegin  = stream.tellg();
 			BOOST_LOG_TRIVIAL(debug) << "chunkName "<< " (@" << chunkBegin << " -> " << static_cast<int>(chunkSize) << ") : " << chunkName ;
