@@ -1,9 +1,11 @@
 #include "topconread.h"
 
+#define _USE_MATH_DEFINES
 #include<ostream>
 #include<fstream>
 #include<iomanip>
 #include<array>
+#include<cmath>
 
 #include <boost/log/trivial.hpp>
 #include <boost/lexical_cast.hpp>
