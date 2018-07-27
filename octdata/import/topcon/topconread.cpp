@@ -26,7 +26,7 @@
 
 #include "../platform_helper.h"
 #include "readjpeg2k.h"
-
+#include "topcondata.h"
 
 namespace bfs = boost::filesystem;
 
@@ -87,29 +87,8 @@ namespace
 		return image;
 	}
 
-	struct ReadProperty
-	{
-		enum class SLOImageType { Unknown, Fundus, TRC };
-		SLOImageType slotype = SLOImageType::Unknown;
-	};
 
-
-	struct BScanPair
-	{
-		cv::Mat image;
-		OctData::BScan::Data data;
-	};
-
-	struct ScanParameter
-	{
-		double scanSizeXmm = 0;
-		double scanSizeYmm = 0;
-		double resZum      = 0;
-	};
-
-	typedef std::vector<BScanPair> BScanList;
-
-	void readImgJpeg(std::istream& stream, OctData::Series& series, BScanList& bscanList, CppFW::Callback* callback, const OctData::FileReadOptions& op)
+	void readImgJpeg(std::istream& stream, TopconData& data, CppFW::Callback* callback, const OctData::FileReadOptions& op)
 	{
 		if(!op.readBScans)
 			return;
@@ -135,14 +114,14 @@ namespace
 		switch(type)
 		{
 			case 0:
-				series.setScanPattern(OctData::Series::ScanPattern::SingleLine);
+				data.series.setScanPattern(OctData::Series::ScanPattern::SingleLine);
 				break;
 			case 1:
-				series.setScanPattern(OctData::Series::ScanPattern::Circular);
+				data.series.setScanPattern(OctData::Series::ScanPattern::Circular);
 				bscanType = OctData::BScan::BScanType::Circle;
 				break;
 			case 2:
-				series.setScanPattern(OctData::Series::ScanPattern::Volume);
+				data.series.setScanPattern(OctData::Series::ScanPattern::Volume);
 				break;
 // 			case 3:
 // 				series.setScanPattern(OctData::Series::ScanPattern::Circular);
@@ -168,26 +147,27 @@ namespace
 
 			image.convertTo(image, cv::DataType<uint8_t>::type, 2, -128);
 
-			BScanPair pair;
+			TopconData::BScanPair pair;
 			pair.image = image;
 			pair.data.bscanType = bscanType;
-			bscanList.push_back(pair);
+			data.bscanList.push_back(pair);
 
 		}
 	}
 
-
-	void readImgTrc(std::istream& stream, OctData::Series& series, ReadProperty& property)
+	enum class SLOType { Fundus, TRC };
+	void readImgSlo(std::istream& stream, TopconData& data, SLOType sloType)
 	{
-		if(series.getSloImage().hasImage())
-			if(!series.getSloImage().getImage().empty())
-				return;
+		uint32_t u1;
 
 		const uint32_t width  = readFStream<uint32_t>(stream);
 		const uint32_t height = readFStream<uint32_t>(stream);
 		const uint32_t bits   = readFStream<uint32_t>(stream);
 		const uint32_t frames = readFStream<uint32_t>(stream);
-		const uint8_t  u1     = readFStream<uint8_t >(stream);
+		if(sloType == SLOType::TRC)
+			u1 = readFStream<uint8_t >(stream);
+		else
+			u1 = readFStream<uint32_t>(stream);
 
 		BOOST_LOG_TRIVIAL(debug) << "width  : " << width
 		                 << '\t' << "height : " << height
@@ -196,77 +176,31 @@ namespace
 		                 << '\t' << "u1     : " << static_cast<int>(u1);
 
 		// use only the first image
-
 		const uint32_t size = readFStream<uint32_t>(stream);
 		cv::Mat image = readAndEncodeJPEG2kData(stream, size);
 
-		OctData::SloImage* sloImage = new OctData::SloImage;
-		sloImage->setImage(image);
-		series.takeSloImage(sloImage);
+		if(image.empty())
+			return;
 
-		property.slotype = ReadProperty::SLOImageType::TRC;
-
+		switch(sloType)
+		{
+			case SLOType::Fundus:
+				data.sloFundus.sloImage = new OctData::SloImage;
+				data.sloFundus.sloImage->setImage(image);
+				break;
+			case SLOType::TRC:
+				data.sloTRC.sloImage = new OctData::SloImage;
+				data.sloTRC.sloImage->setImage(image);
+				break;
+		}
 	}
 
-	void readImgFundus(std::istream& stream, OctData::Series& series, ReadProperty& property)
-	{
-		const uint32_t width  = readFStream<uint32_t>(stream);
-		const uint32_t height = readFStream<uint32_t>(stream);
-		const uint32_t bits   = readFStream<uint32_t>(stream);
-		const uint32_t frames = readFStream<uint32_t>(stream);
-		const uint32_t u1     = readFStream<uint32_t>(stream);
-
-		BOOST_LOG_TRIVIAL(debug) << "width  : " << width
-		                 << '\t' << "height : " << height
-		                 << '\t' << "bits   : " << bits
-		                 << '\t' << "frames : " << frames
-		                 << '\t' << "u1     : " << static_cast<int>(u1);
-
-		// use only the first image
-
-		const uint32_t size = readFStream<uint32_t>(stream);
-
-		cv::Mat image = readAndEncodeJPEG2kData(stream, size);
-
-		OctData::SloImage* sloImage = new OctData::SloImage;
-		sloImage->setImage(image);
-		series.takeSloImage(sloImage);
-
-		property.slotype = ReadProperty::SLOImageType::Fundus;
-	}
-
-	void readPatientInfo02(std::istream& stream, OctData::Patient& pat)
-	{
-		std::string patId;
-		std::string patForeName;
-		std::string patSureName;
-		std::string zeros;
-		readFStream(stream, patId      , 32);
-		readFStream(stream, patForeName, 32);
-		readFStream(stream, patSureName, 32);
-		readFStream(stream, zeros      , 8);
-
-		readFStream<uint8_t>(stream);
-
-		OctData::Date birthDate;
-		birthDate.setYear (readFStream<uint16_t>(stream));
-		birthDate.setMonth(readFStream<uint16_t>(stream));
-		birthDate.setDay  (readFStream<uint16_t>(stream));
-		birthDate.setDateAsValid();
-
-		pat.setId       (patId      );
-		pat.setForename (patForeName);
-		pat.setSurname  (patSureName);
-		pat.setBirthdate(birthDate  );
-	}
 
 	void decriptString(std::string& str, const std::array<unsigned char, 32>& key)
 	{
 		const std::size_t cryptLen = std::min(key.size(), str.size());
 		for(std::size_t i = 0; i < cryptLen; ++i)
 			str[i] = key[i]^static_cast<unsigned char>(str[i]);
-
-		stripZeroCaracters(str);
 	}
 
 	class EncryptKeyPatientInfo03
@@ -306,12 +240,8 @@ namespace
 		bool isKeyLoaded()                                       const { return keyLoaded; }
 	};
 
-	void readPatientInfo03(std::istream& stream, OctData::Patient& pat, const OctData::FileReadOptions& op)
+	void readPatientInfo0203(std::istream& stream, TopconData& data, const OctData::FileReadOptions& op, bool decrypt)
 	{
-		EncryptKeyPatientInfo03 keys(op);
-
-		if(!keys.isKeyLoaded())
-			return;
 
 		std::string patId;
 		std::string patForeName;
@@ -324,17 +254,39 @@ namespace
 
 		readFStream<uint8_t>(stream);
 
-		decriptString(patId      , keys.getKeyID      ());
-		decriptString(patForeName, keys.getKeyForename());
-		decriptString(patSureName, keys.getKeySurename());
+		OctData::Date birthDate;
+
+		if(decrypt)
+		{
+			EncryptKeyPatientInfo03 keys(op);
+
+			if(!keys.isKeyLoaded())
+				return;
+
+			decriptString(patId      , keys.getKeyID      ());
+			decriptString(patForeName, keys.getKeyForename());
+			decriptString(patSureName, keys.getKeySurename());
+		}
+		else
+		{
+			birthDate.setYear (readFStream<uint16_t>(stream));
+			birthDate.setMonth(readFStream<uint16_t>(stream));
+			birthDate.setDay  (readFStream<uint16_t>(stream));
+			birthDate.setDateAsValid();
+		}
 
 
-		pat.setId       (patId      );
-		pat.setForename (patForeName);
-		pat.setSurname  (patSureName);
+		stripZeroCaracters(patId      );
+		stripZeroCaracters(patForeName);
+		stripZeroCaracters(patSureName);
+
+		data.pat.setId       (patId      );
+		data.pat.setForename (patForeName);
+		data.pat.setSurname  (patSureName);
+		data.pat.setBirthdate(birthDate  );
 	}
 
-	void readCaptureInfo02(std::istream& stream, OctData::Series& series)
+	void readCaptureInfo02(std::istream& stream, TopconData& data)
 	{
 		uint8_t lateralityByte = readFStream<uint8_t>(stream);
 		/*uint8_t unknownByte */ readFStream<uint8_t>(stream);
@@ -351,45 +303,28 @@ namespace
 		scanDate.setSec  (readFStream<uint16_t>(stream));
 		scanDate.setDateAsValid();
 
-		series.setScanDate(scanDate);
+		data.series.setScanDate(scanDate);
 
 		switch(lateralityByte)
 		{
-			case 0: series.setLaterality(OctData::Series::Laterality::OD); break;
-			case 1: series.setLaterality(OctData::Series::Laterality::OS); break;
+			case 0: data.series.setLaterality(OctData::Series::Laterality::OD); break;
+			case 1: data.series.setLaterality(OctData::Series::Laterality::OS); break;
 		}
 	}
 
-	void readParamScan04(std::istream& stream, ScanParameter& para)
+	void readParamScan04(std::istream& stream, TopconData& data)
 	{
 		uint32_t unknown1[3];
 		readFStream(stream, unknown1, sizeof(unknown1)/sizeof(unknown1[0]));
-		para.scanSizeXmm = readFStream<double>(stream);
-		para.scanSizeYmm = readFStream<double>(stream);
-		para.resZum      = readFStream<double>(stream);
+		data.scanParameter.scanSizeXmm = readFStream<double>(stream);
+		data.scanParameter.scanSizeYmm = readFStream<double>(stream);
+		data.scanParameter.resZum      = readFStream<double>(stream);
 	}
 
-	void applyParamScan(const ScanParameter& para, BScanList& list)
-	{
-		if(list.size() == 0)
-			return;
 
-		const double resYmm = para.scanSizeYmm/static_cast<double>(list.size());
-		const double resZmm = para.resZum/1000;
-		for(BScanPair& bscan : list)
-		{
-			double resXmm = para.scanSizeXmm/static_cast<double>(bscan.image.cols);
-			switch(bscan.data.bscanType)
-			{
-				case OctData::BScan::BScanType::Circle: bscan.data.scaleFactor = OctData::ScaleFactor(resXmm*M_PI, resYmm, resZmm); break;
-				case OctData::BScan::BScanType::Line  : bscan.data.scaleFactor = OctData::ScaleFactor(resXmm     , resYmm, resZmm); break;
-				case OctData::BScan::BScanType::Unknown: break;
-			}
 
-		}
-	}
 
-	void readConturInfo(std::istream& stream, BScanList& list, const OctData::FileReadOptions& op)
+	void readConturInfo(std::istream& stream, TopconData& data, const OctData::FileReadOptions& op)
 	{
 		class ConturInfo : public std::map<std::string, OctData::Segmentationlines::SegmentlineType>
 		{
@@ -444,6 +379,12 @@ namespace
 		                         << "\twidth  : " << width
 		                         << "\tframes : " << frames
 		                         << "\tsize   : " << size  ;
+
+		TopconData::BScanList& list = data.bscanList;
+
+		if(list.size() < frames)
+			list.resize(frames);
+
 		if(type == 0)
 		{
 			std::unique_ptr<uint16_t[]> tempVector(new uint16_t[width]);
@@ -451,34 +392,22 @@ namespace
 			for(uint32_t frame = 0; frame < frames; ++frame)
 			{
 				uint32_t actFrame = frames-frame-1;
-				if(actFrame < list.size())
-				{
-					BScanPair& bscanPair = list.at(actFrame);
-					int imgHeight = bscanPair.image.rows;
 
-					OctData::Segmentationlines::Segmentline line(width);
-					readFStream(stream, tmpVec, width);
-					std::transform(tmpVec, tmpVec + width, line.begin(), [imgHeight](uint16_t val){ return imgHeight - static_cast<OctData::Segmentationlines::SegmentlineDataType>(val); });
-					bscanPair.data.getSegmentLine(lineType) = std::move(line);
-				}
+				TopconData::BScanPair& bscanPair = list[actFrame];
+				int imgHeight = bscanPair.image.rows;
+
+				OctData::Segmentationlines::Segmentline line(width);
+				readFStream(stream, tmpVec, width);
+				std::transform(tmpVec, tmpVec + width, line.begin(), [imgHeight](uint16_t val){ return imgHeight - static_cast<OctData::Segmentationlines::SegmentlineDataType>(val); });
+				bscanPair.data.getSegmentLine(lineType) = std::move(line);
 			}
 		}
 		else
 			BOOST_LOG_TRIVIAL(error) << "Contuer info: unhandled type: " << type;
 	}
 
-	void applyRegistInfoVol(const uint32_t bound[4], BScanPair& bscan, double pos)
-	{
-		bscan.data.start = OctData::CoordSLOmm(bound[0]*pos + bound[2]*(1.-pos), bound[1]);
-		bscan.data.end   = OctData::CoordSLOmm(bound[0]*pos + bound[2]*(1.-pos), bound[3]);
-	}
-	void applyRegistInfoCircle(const uint32_t bound[4], BScanPair& bscan)
-	{
-		bscan.data.start  = OctData::CoordSLOmm(bound[0] + bound[2], bound[1]);
-		bscan.data.center = OctData::CoordSLOmm(bound[0]           , bound[1]);
-	}
 
-	void readRegistInfo(std::istream& stream, BScanList& list, ReadProperty& property)
+	void readRegistInfo(std::istream& stream, TopconData& data)
 	{
 		uint32_t unknown1   [ 2];
 		uint32_t boundFundus[ 4];
@@ -491,36 +420,30 @@ namespace
 		readFStream(stream, unknown2   , sizeof(unknown2   )/sizeof(unknown2   [0]));
 		readFStream(stream, boundTrc   , sizeof(boundTrc   )/sizeof(boundTrc   [0]));
 
-		const std::size_t numBScans = list.size();
+		data.sloTRC   .registData = TopconData::SloRegistData(boundTrc   );
+		data.sloFundus.registData = TopconData::SloRegistData(boundFundus);
 
-		std::size_t bscanNum = 0;
-		for(BScanPair& bscan : list)
+		/*
+		double bound[4];
+		switch(property.slotype)
 		{
-			double pos = static_cast<double>(bscanNum)/static_cast<double>(numBScans);
-			switch(bscan.data.bscanType)
-			{
-				case OctData::BScan::BScanType::Circle:
-					switch(property.slotype)
-					{
-						case ReadProperty::SLOImageType::Unknown: break;
-						case ReadProperty::SLOImageType::Fundus: applyRegistInfoCircle(boundFundus, bscan); break;
-						case ReadProperty::SLOImageType::TRC:    applyRegistInfoCircle(boundTrc   , bscan); break;
-					}
-					break;
-				case OctData::BScan::BScanType::Line:
-					switch(property.slotype)
-					{
-						case ReadProperty::SLOImageType::Unknown: break;
-						case ReadProperty::SLOImageType::Fundus: applyRegistInfoVol(boundFundus, bscan, pos); break;
-						case ReadProperty::SLOImageType::TRC:    applyRegistInfoVol(boundTrc   , bscan, pos); break;
-					}
-					break;
-				case OctData::BScan::BScanType::Unknown:
-					break;
-			}
-
-			++bscanNum;
+			case ReadProperty::SLOImageType::Unknown: return;
+			case ReadProperty::SLOImageType::Fundus: std::copy(boundFundus, boundFundus+4, bound); break;
+			case ReadProperty::SLOImageType::TRC:    std::copy(boundTrc   , boundTrc+4   , bound); break;
 		}
+
+		double scanSizeXpx = bound[2] - bound[0];
+		double scanSizeYpx = bound[3] - bound[1];
+
+		parameter.sloScaleX = parameter.scanSizeXmm/scanSizeXpx;
+		parameter.sloScaleY = parameter.scanSizeYmm/scanSizeYpx;
+
+		bound[0] *= parameter.sloScaleX;
+		bound[1] *= parameter.sloScaleY;
+		bound[2] *= parameter.sloScaleX;
+		bound[3] *= parameter.sloScaleY;
+*/
+
 	}
 
 
@@ -608,15 +531,7 @@ namespace OctData
 		readFStream(stream, version1);
 		readFStream(stream, version2);
 
-
-		Patient& pat    = oct.getPatient(1);
-		Study&   study  = pat.getStudy(1);
-		Series&  series = study.getSeries(1);
-
-		BScanList bscanList;
-		ScanParameter scanParameter;
-
-		ReadProperty property;
+		TopconData data(oct);
 
 		uint8_t chunkNameSize;
 		while(readFStream(stream, chunkNameSize) > 0)
@@ -638,36 +553,30 @@ namespace OctData
 			BOOST_LOG_TRIVIAL(debug) << "chunkName "<< " (@" << chunkBegin << " -> " << static_cast<int>(chunkSize) << ") : " << chunkName ;
 
 			if(chunkName == "@IMG_TRC_02")
-				readImgTrc(stream, series, property);
+				readImgSlo(stream, data, SLOType::TRC);
 			else if(chunkName == "@IMG_JPEG")
-				readImgJpeg(stream, series, bscanList, callback, op);
+				readImgJpeg(stream, data, callback, op);
 			else if(chunkName == "@PATIENT_INFO_02")
-				readPatientInfo02(stream, pat);
+				readPatientInfo0203(stream, data, op, false);
 			else if(chunkName == "@PATIENT_INFO_03")
-				readPatientInfo03(stream, pat, op);
+				readPatientInfo0203(stream, data, op, true);
 			else if(chunkName == "@CONTOUR_INFO")
-				readConturInfo(stream, bscanList, op);
+				readConturInfo(stream, data, op);
 			else if(chunkName == "@CAPTURE_INFO_02")
-				readCaptureInfo02(stream, series);
+				readCaptureInfo02(stream, data);
 			else if(chunkName == "@IMG_FUNDUS")
-				readImgFundus(stream, series, property);
+				readImgSlo(stream, data, SLOType::Fundus);
 			else if(chunkName == "@REGIST_INFO")
-				readRegistInfo(stream, bscanList, property);
+				readRegistInfo(stream, data);
 			else if(chunkName == "@PARAM_SCAN_04")
-				readParamScan04(stream, scanParameter);
+				readParamScan04(stream, data);
 
 			stream.seekg(chunkBegin + chunkSize);
 		}
 
-		applyParamScan(scanParameter, bscanList);
+// 		applyParamScan(data);
 
-		for(BScanPair& pair : bscanList)
-		{
-			OctData::BScan::Data bscanData;
-			OctData::BScan* bscan = new OctData::BScan(pair.image, pair.data);
 
-			series.takeBScan(bscan);
-		}
 
 
 		BOOST_LOG_TRIVIAL(debug) << "read oct file \"" << file.generic_string() << "\" finished";
