@@ -60,6 +60,8 @@ namespace OctData
 			if(!sloNode)
 				return nullptr;
 
+			BOOST_LOG_TRIVIAL(trace) << "read slo data node";
+
 			const CppFW::CVMatTree* imgNode = sloNode->getDirNodeOpt("img");
 			if(imgNode && imgNode->type() == CppFW::CVMatTree::Type::Mat)
 			{
@@ -273,6 +275,8 @@ namespace OctData
 
 		bool readBScanList(const CppFW::CVMatTree::NodeList& seriesList, Series& series, CppFW::Callback* callback)
 		{
+			BOOST_LOG_TRIVIAL(trace) << "read bscan list";
+
 			CppFW::CallbackStepper bscanCallbackStepper(callback, seriesList.size());
 			for(const CppFW::CVMatTree* bscanNode : seriesList)
 			{
@@ -358,9 +362,10 @@ namespace OctData
 
 		bool readFlatData(OCT& oct, const CppFW::CVMatTree& octtree, const CppFW::CVMatTree* seriesNode, CppFW::Callback* callback)
 		{
+			BOOST_LOG_TRIVIAL(trace) << "open flat octbin structure";
 			if(seriesNode->type() != CppFW::CVMatTree::Type::List)
 			{
-				BOOST_LOG_TRIVIAL(trace) << "Serie node not found or false datatype";
+				BOOST_LOG_TRIVIAL(debug) << "Serie node not found or false datatype";
 				return false;
 			}
 
@@ -378,18 +383,21 @@ namespace OctData
 
 			if(patDataNode)
 			{
+				BOOST_LOG_TRIVIAL(trace) << "read patient data node";
 				CppFW::GetFromCVMatTree patientReader(*patDataNode);
 				pat.getSetParameter(patientReader);
 			}
 
 			if(studyDataNode)
 			{
+				BOOST_LOG_TRIVIAL(trace) << "read study data node";
 				CppFW::GetFromCVMatTree studyReader(*studyDataNode);
 				study.getSetParameter(studyReader);
 			}
 
 			if(seriesDataNode)
 			{
+				BOOST_LOG_TRIVIAL(trace) << "read series data node";
 				CppFW::GetFromCVMatTree seriesReader(*seriesDataNode);
 				series.getSetParameter(seriesReader);
 			}
