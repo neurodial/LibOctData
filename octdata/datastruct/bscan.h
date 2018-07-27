@@ -86,6 +86,9 @@ namespace OctData
 		const CoordSLOmm& getCenter()       const                   { return data.center                 ; }
 		      bool        getClockwiseRot() const                   { return data.clockwiseRotation      ; }
 
+		const CoordSLOmm  getAscanPos(std::size_t ascan) const;
+		const CoordSLOmm  getFracPos(double frac) const;
+
 
 		constexpr static std::size_t getNumSegmentLine()            { return Segmentationlines::getSegmentlineTypes().size(); }
 		const Segmentationlines::Segmentline& getSegmentLine(Segmentationlines::SegmentlineType i) const

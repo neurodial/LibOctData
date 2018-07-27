@@ -1,5 +1,8 @@
 #include "bscan.h"
 
+#define _USE_MATH_DEFINES
+#include<cmath>
+#include<exception>
 
 #include <opencv/cv.hpp>
 
@@ -43,6 +46,52 @@ namespace OctData
 		*angioImage = img;
 	}
 
+	OctData::CoordSLOmm calcCirclePos(const OctData::CoordSLOmm& center, const OctData::CoordSLOmm& start, double frac, bool clockwise)
+	{
+		if(!clockwise)
+			frac = 1-frac;
+
+		const double radius = center.abs(start);
+		const double ratio  = start.getX() - center.getX();
+		const double nullAngle = acos( ratio/radius )/M_PI/2;
+
+		frac += nullAngle;
+		frac *= 2*M_PI;
+
+		const double posX = cos(frac)*radius + center.getX();
+		const double posY = sin(frac)*radius + center.getY();
+
+		return OctData::CoordSLOmm(posX, posY);
+	}
+
+
+
+	const OctData::CoordSLOmm OctData::BScan::getFracPos(double frac) const
+	{
+		switch(getBScanType())
+		{
+			case BScanType::Circle:
+				return calcCirclePos(getCenter(), getStart(), frac, getClockwiseRot());
+				break;
+			case BScanType::Line:
+				return getStart()*(1-frac) + getEnd()*(frac); // TODO: falsche Richtung?
+				break;
+			case BScanType::Unknown:
+				break;
+		}
+		return OctData::CoordSLOmm();
+	}
+
+	const OctData::CoordSLOmm OctData::BScan::getAscanPos(std::size_t ascan) const
+	{
+		const std::size_t bscanWidth = getWidth();
+
+		if(ascan >= bscanWidth && bscanWidth > 1)
+			throw std::out_of_range("ascan number greater than bscan width");
+
+		const double frac = static_cast<double>(ascan)/static_cast<double>(bscanWidth-1);
+		return getFracPos(frac);
+	}
 
 	template<> void BScan::BScanTypeEnumWrapper::toString()
 	{
@@ -60,4 +109,5 @@ namespace OctData
 		else if(*this == "Line"  ) obj = BScan::BScanType::Line  ;
 		else obj = BScan::BScanType::Unknown;
 	}
+
 }
