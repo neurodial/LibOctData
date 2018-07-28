@@ -58,12 +58,12 @@ namespace
 		}
 	}
 
-	void applySloData(TopconData& data, TopconData::SloData& sloData)
+	void applySloDataRect(TopconData& data, TopconData::SloData& sloData)
 	{
 		const double scanSloSizeXpx = sloData.registData.maxX - sloData.registData.minX;
 		const double scanSloSizeYpx = sloData.registData.maxY - sloData.registData.minY;
 
-		TopconData::ScanParameter& parameter = data.scanParameter;
+		const TopconData::ScanParameter& parameter = data.scanParameter;
 
 		double sloScaleX = parameter.scanSizeXmm/scanSloSizeXpx;
 		double sloScaleY = parameter.scanSizeYmm/scanSloSizeYpx;
@@ -72,6 +72,30 @@ namespace
 		sloData.sloImage->setShift(OctData::CoordSLOpx(sloData.registData.minX, sloData.registData.minY));
 
 		data.series.takeSloImage(sloData.sloImage);
+	}
+	void applySloDataCircle(TopconData& data, TopconData::SloData& sloData)
+	{
+		const double scanSloSizePx = sloData.registData.radius;
+
+		const TopconData::ScanParameter& parameter = data.scanParameter;
+
+		double sloScaleX = parameter.scanSizeXmm/scanSloSizePx;
+		double sloScaleY = parameter.scanSizeXmm/scanSloSizePx;
+
+		sloData.sloImage->setScaleFactor(OctData::ScaleFactor(sloScaleX, sloScaleY));
+		sloData.sloImage->setShift(OctData::CoordSLOpx(sloData.registData.centerX, sloData.registData.centerY));
+
+		data.series.takeSloImage(sloData.sloImage);
+	}
+
+	void applySloData(TopconData& data, TopconData::SloData& sloData)
+	{
+		switch(data.series.getScanPattern())
+		{
+			case OctData::Series::ScanPattern::Circular: applySloDataCircle(data, sloData); break;
+			case OctData::Series::ScanPattern::Volume  : applySloDataRect  (data, sloData); break;
+			default: break;
+		}
 	}
 }
 

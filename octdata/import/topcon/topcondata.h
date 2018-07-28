@@ -40,6 +40,10 @@ struct TopconData
 		double minX = 0;
 		double minY = 0;
 
+		double centerX = 0;
+		double centerY = 0;
+		double radius = 1;
+
 
 		SloRegistData() = default;
 
@@ -48,6 +52,9 @@ struct TopconData
 		, maxY(v[3])
 		, minX(v[0])
 		, minY(v[1])
+		, centerX(v[0])
+		, centerY(v[1])
+		, radius(v[2])
 		{}
 	};
 
