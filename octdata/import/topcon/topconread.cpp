@@ -224,9 +224,12 @@ namespace
 	public:
 		EncryptKeyPatientInfo03(const OctData::FileReadOptions& op)
 		{
-			BOOST_LOG_TRIVIAL(info) << "read topcon keys from :" << op.libPath << "/topcon_key.txt";
 			std::fstream stream(op.libPath + "/topcon_key.txt");
 			keyLoaded = stream.good();
+			if(keyLoaded)
+				BOOST_LOG_TRIVIAL(info) << "read topcon keys from :" << op.libPath << "/topcon_key.txt";
+			else
+				BOOST_LOG_TRIVIAL(info) << "read topcon keys from :" << op.libPath << "/topcon_key.txt failed";
 
 			readKey(keyID      , stream);
 			readKey(keyForename, stream);
@@ -573,11 +576,6 @@ namespace OctData
 
 			stream.seekg(chunkBegin + chunkSize);
 		}
-
-// 		applyParamScan(data);
-
-
-
 
 		BOOST_LOG_TRIVIAL(debug) << "read oct file \"" << file.generic_string() << "\" finished";
 		return true;

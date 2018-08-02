@@ -71,7 +71,6 @@ namespace
 		sloData.sloImage->setScaleFactor(OctData::ScaleFactor(sloScaleX, sloScaleY));
 		sloData.sloImage->setShift(OctData::CoordSLOpx(sloData.registData.minX, sloData.registData.minY));
 
-		data.series.takeSloImage(sloData.sloImage);
 	}
 	void applySloDataCircle(TopconData& data, TopconData::SloData& sloData)
 	{
@@ -84,8 +83,6 @@ namespace
 
 		sloData.sloImage->setScaleFactor(OctData::ScaleFactor(sloScaleX, sloScaleY));
 		sloData.sloImage->setShift(OctData::CoordSLOpx(sloData.registData.centerX, sloData.registData.centerY));
-
-		data.series.takeSloImage(sloData.sloImage);
 	}
 
 	void applySloData(TopconData& data, TopconData::SloData& sloData)
@@ -96,6 +93,7 @@ namespace
 			case OctData::Series::ScanPattern::Volume  : applySloDataRect  (data, sloData); break;
 			default: break;
 		}
+		data.series.takeSloImage(sloData.sloImage);
 	}
 }
 
