@@ -65,6 +65,15 @@ namespace OctData
 			}
 		};
 
+		template<typename S>
+		std::string getSubStructureName()
+		{
+			std::string name = boost::typeindex::type_id<typename S::SubstructureType>().pretty_name();
+			std::size_t namePos = name.rfind(':');
+			if(namePos > 0)
+				++namePos;
+			return name.substr(namePos, name.size() - namePos);
+		}
 
 		class XOctWritter
 		{
@@ -94,17 +103,6 @@ namespace OctData
 						break;
 				}
 			}
-
-			template<typename S>
-			std::string getSubStructureName()
-			{
-				std::string name = boost::typeindex::type_id<typename S::SubstructureType>().pretty_name();
-				std::size_t namePos = name.rfind(':');
-				if(namePos > 0)
-					++namePos;
-				return name.substr(namePos, name.size() - namePos);
-			}
-
 
 			void writeImage(bpt::ptree& node, const cv::Mat& image, const std::string& filename, const std::string& imageName)
 			{
@@ -176,18 +174,79 @@ namespace OctData
 			}
 
 			template<typename S>
+			class SubStrutureFileWriter
+			{
+				XOctWritter& parent;
+				bool writeFiles;
+				bpt::ptree& mainTree;
+				std::unique_ptr<bpt::ptree> subTree;
+				const std::string& dataPath;
+				std::string subTreeFilename;
+
+				void finishSubTree()
+				{
+					if(!writeFiles || !subTree || subTreeFilename.empty())
+						return;
+
+					parent.writeXml(subTreeFilename, *subTree);
+				}
+
+			public:
+				SubStrutureFileWriter(XOctWritter& parent, bpt::ptree& mainTree, const std::string& dataPath, const S& structure)
+				: parent(parent)
+				, writeFiles(structure.size() > 1)
+				, mainTree(mainTree)
+				, dataPath(dataPath)
+				{ }
+
+				~SubStrutureFileWriter()
+				{
+					finishSubTree();
+				}
+
+
+				bpt::ptree& getTree(const std::string& nameId, const std::size_t id)
+				{
+					const std::string structureName = getSubStructureName<S>();
+					bpt::ptree& subNode = mainTree.add(structureName, "");
+					subNode.add("id", boost::lexical_cast<std::string>(id));
+
+					if(writeFiles)
+					{
+						finishSubTree();
+						subTreeFilename = dataPath + nameId + ".xml";
+						subNode.add("filename", subTreeFilename);
+						subTree.reset(new bpt::ptree);
+
+						bpt::ptree& newTree = subTree->add(structureName, "");
+						newTree.add("id", boost::lexical_cast<std::string>(id));
+						return newTree;
+					}
+					else
+					{
+						return subNode;
+					}
+				}
+			};
+
+			template<typename S>
 			bool writeStructure(bpt::ptree& tree, const std::string& dataPath, const S& structure)
 			{
 				bool result = true;
 				writeParameter(tree, structure);
 
+				SubStrutureFileWriter<S> writer(*this, tree, dataPath, structure);
+
 				for(typename S::SubstructurePair const& subStructPair : structure)
 				{
-					std::string structureName = getSubStructureName<S>();
-					bpt::ptree& subNode = tree.add(structureName, "");
-					subNode.add("id", boost::lexical_cast<std::string>(subStructPair.first));
+					const std::string structureName = getSubStructureName<S>();
+					const std::string structureNameId = structureName + '_' + boost::lexical_cast<std::string>(subStructPair.first);
 
-					std::string subDataPath = dataPath + structureName + '_' + boost::lexical_cast<std::string>(subStructPair.first) + '/';
+					bpt::ptree& subNode = writer.getTree(structureNameId, subStructPair.first);
+// 					bpt::ptree& subNode = tree.add(structureName, "");
+// 					subNode.add("id", boost::lexical_cast<std::string>(subStructPair.first));
+
+					std::string subDataPath = dataPath + structureNameId + '/';
 					result &= writeStructure(subNode, subDataPath, *subStructPair.second);
 				}
 				return result;

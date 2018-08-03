@@ -240,7 +240,19 @@ namespace OctData
 				const bpt::ptree& subTreeNode = subTreePair.second;
 				const int id = subTreeNode.get<int>("id", 1);
 				CppFW::Callback subCallback = bscanCallbackCreator.getSubTaskCallback();
-				result &= readStructure(subTreeNode, zipfile, structure.getInsertId(id), op, &subCallback);
+
+				boost::optional<std::string> filenameSub(subTreeNode.get_optional<std::string>("filename"));
+				if(filenameSub)
+				{
+					bpt::ptree subFileTree = readXml(zipfile, *filenameSub);
+					boost::optional<bpt::ptree&> subFileTreeNode = subFileTree.get_child_optional(subStructureName);
+					if(subFileTreeNode)
+						result &= readStructure(*subFileTreeNode, zipfile, structure.getInsertId(id), op, &subCallback);
+					else
+						result = false;
+				}
+				else
+					result &= readStructure(subTreeNode, zipfile, structure.getInsertId(id), op, &subCallback);
 			}
 			return result;
 		}
