@@ -428,7 +428,7 @@ namespace OctData
 		boost::uintmax_t filesize = file_size(file, ec);
 		if(ec)
 		{
-			BOOST_LOG_TRIVIAL(error) << "An error severity message";
+			BOOST_LOG_TRIVIAL(error) << "can't read filesize";
 			filesize = 1;
 		}
 		CppFW::CallbackStepper callbackStepper(callback, filesize);
@@ -437,11 +437,11 @@ namespace OctData
 		std::fstream stream(filepathConv(file), std::ios::binary | std::ios::in);
 		if(!stream.good())
 		{
-			BOOST_LOG_TRIVIAL(error) << "Can't open vol file " << filepathConv(file);
+			BOOST_LOG_TRIVIAL(error) << "Can't open oct file " << filepathConv(file);
 			return false;
 		}
 
-		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as vol file";
+		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as oct file";
 
 		std::string dir      = file.branch_path().generic_string();
 		std::string filename = file.filename   ().generic_string();

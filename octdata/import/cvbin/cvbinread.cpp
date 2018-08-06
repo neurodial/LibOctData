@@ -432,9 +432,12 @@ namespace OctData
 
 		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as bins";
 
-		CppFW::CVMatTree octtree = CppFW::CVMatTreeStructBin::readBin(file.generic_string());
-		if(callback)
-			callback->callback(0.5);
+		CppFW::CallbackSubTaskCreator callbackBasisTasks(callback, 4);
+
+		CppFW::Callback loadTask    = callbackBasisTasks.getSubTaskCallback(3);
+		CppFW::Callback convertTask = callbackBasisTasks.getSubTaskCallback(1);
+
+		CppFW::CVMatTree octtree = CppFW::CVMatTreeStructBin::readBin(file.generic_string(), &loadTask);
 
 		if(octtree.type() != CppFW::CVMatTree::Type::Dir)
 		{
@@ -445,9 +448,9 @@ namespace OctData
 		bool fillStatus;
 		const CppFW::CVMatTree* seriesNode = getDirNodeOptCamelCase(octtree, "serie");
 		if(seriesNode)
-			fillStatus = readFlatData(oct, octtree, seriesNode, callback);
+			fillStatus = readFlatData(oct, octtree, seriesNode, &convertTask);
 		else
-			fillStatus = readTreeData(oct, octtree, callback);
+			fillStatus = readTreeData(oct, octtree, &convertTask);
 
 
 
