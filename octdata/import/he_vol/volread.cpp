@@ -5,7 +5,7 @@
 #include <datastruct/bscan.h>
 
 #include <ostream>
-
+#include <thread>
 #include <chrono>
 #include <ctime>
 
@@ -351,10 +351,14 @@ namespace OctData
 		// Read BScann
 		for(std::size_t numBscan = 0; numBscan<numBScans; ++numBscan)
 		{
+// 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			if(callback)
 			{
 				if(!callback->callback(static_cast<double>(numBscan)/static_cast<double>(numBScans)))
-					break;
+				{
+					BOOST_LOG_TRIVIAL(info) << "loading canceled by user";
+					return false;
+				}
 			}
 
 			BScanHeader bscanHeader;

@@ -3,6 +3,8 @@
 #include<locale>
 #include<vector>
 #include<sstream>
+#include <thread>
+#include <chrono>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -196,6 +198,7 @@ namespace OctData
 
 			for(const std::pair<const std::string, bpt::ptree>& subTreePair : seriesNode)
 			{
+// 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 				if(subTreePair.first != "BScan")
 					continue;
 
@@ -297,14 +300,12 @@ namespace OctData
 		boost::optional<bpt::ptree&> xoctTree = xmlTree.get_child_optional("XOCT");
 
 		if(xoctTree)
-			readStructure(*xoctTree, zipfile, oct, op, callback);
+			return readStructure(*xoctTree, zipfile, oct, op, callback);
 		else
 		{
 			BOOST_LOG_TRIVIAL(error) << "XOCT node in xml not found";
 			return false;
 		}
-
-		return true;
 	}
 
 }
