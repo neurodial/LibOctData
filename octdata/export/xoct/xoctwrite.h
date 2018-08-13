@@ -14,7 +14,7 @@ namespace OctData
 	class XOctWrite
 	{
 	public:
-			static bool writeFile(const boost::filesystem::path& file, const OCT& oct, const FileWriteOptions& opt);
+		static bool writeFile(const boost::filesystem::path& file, const OCT& oct, const FileWriteOptions& opt);
 	};
 }
 

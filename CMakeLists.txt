@@ -214,9 +214,10 @@ if(DEFINED DCMTK_FOUND)
 endif()
 
 target_link_libraries(octdata PUBLIC ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
-
 target_link_libraries(octdata PRIVATE OctCppFramework::oct_cpp_framework)
-target_link_libraries(octdata PRIVATE LibE2E::libe2e)
+if(BUILD_WITH_SUPPORT_HE_E2E)
+	target_link_libraries(octdata PRIVATE LibE2E::libe2e)
+endif()
 
 
 

@@ -404,7 +404,7 @@ namespace OctData
 {
 
 	OctFileFormatRead::OctFileFormatRead()
-	: OctFileReader(OctExtension(".OCT", "Oct file"))
+	: OctFileReader(OctExtension(".OCT", "Bioptigen Oct file"))
 	{
 	}
 
@@ -422,7 +422,7 @@ namespace OctData
 		if(file.extension() != ".OCT")
 			return false;
 
-		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as oct file";
+		BOOST_LOG_TRIVIAL(trace) << "Try to open OCT file as Bioptigen oct file";
 
 		boost::system::error_code ec;
 		boost::uintmax_t filesize = file_size(file, ec);
@@ -441,12 +441,12 @@ namespace OctData
 			return false;
 		}
 
-		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as oct file";
+		BOOST_LOG_TRIVIAL(debug) << "open " << file.generic_string() << " as Bioptigen oct file";
 
 		std::string dir      = file.branch_path().generic_string();
 		std::string filename = file.filename   ().generic_string();
 
-		const unsigned char magicHeader[6] = { 0xa5, 0xa7, 0x7d, 0x0c, 0x0a, 0x01 };
+		const unsigned char magicHeader[4] = { 0xa5, 0xa7, 0x7d, 0x0c };
 
 
 		const std::size_t formatstringlength = sizeof(magicHeader)/sizeof(magicHeader[0]);
@@ -457,6 +457,9 @@ namespace OctData
 			BOOST_LOG_TRIVIAL(error) << file.generic_string() << " Wrong fileformat (wrong header)";
 			return false;
 		}
+
+		uint16_t version;
+		readFStream(stream, &version);
 
 
 		Patient& pat    = oct.getPatient(1);
