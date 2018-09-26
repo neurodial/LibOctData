@@ -57,7 +57,6 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 
 if(BUILD_WITH_SUPPORT_CVBIN)
-
 	list(APPEND import_srcs import/cvbin)
 	add_definitions(-DCVBIN_SUPPORT)
 endif()
