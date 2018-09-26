@@ -60,4 +60,6 @@ const char* Segmentationlines::getSegmentlineName(OctData::Segmentationlines::Se
 	return "invalid type";
 }
 
+const Segmentationlines::SegLinesTypeList& Segmentationlines::getSegmentlineTypes()
+ { return segmentlineTypes; }
 }

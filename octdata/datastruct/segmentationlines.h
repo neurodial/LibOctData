@@ -60,7 +60,7 @@ namespace OctData
 
 		static const char* getSegmentlineName(SegmentlineType type);
 
-		constexpr static const SegLinesTypeList& getSegmentlineTypes() { return segmentlineTypes; }
+		static const SegLinesTypeList& getSegmentlineTypes();
 	private:
 		static const SegLinesTypeList segmentlineTypes;
 		std::array<Segmentline, numSegmentlineType> segmentlines;

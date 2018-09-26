@@ -47,7 +47,7 @@ endif()
 
 
 
-find_package(Boost 1.40 COMPONENTS filesystem system locale log REQUIRED)
+find_package(Boost 1.40 COMPONENTS filesystem system locale log serialization REQUIRED)
 find_package(OpenCV REQUIRED)
 string(TIMESTAMP CMAKE_CONFIGURE_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
 
@@ -65,6 +65,7 @@ if(BUILD_WITH_SUPPORT_DICOM)
 	find_package(DCMTK REQUIRED)
 	find_package(OpenJPEG)
 	list(APPEND import_srcs import/dicom)
+	include_directories(SYSTEM ${DCMTK_INCLUDE_DIRS})
 	
 	add_definitions(-DDICOM_SUPPORT)
 		
@@ -101,7 +102,7 @@ if(BUILD_WITH_SUPPORT_OCT_FILE)
 endif()
 
 if(BUILD_WITH_SUPPORT_TOPCON)
-	find_package(OpenJPEG)
+	find_package(OpenJPEG REQUIRED)
 	if(DEFINED OpenJPEG_FOUND)
 		add_definitions(-DDICOM_JPEG2K_SUPPORT)
 		list(APPEND import_srcs import/topcon)
@@ -209,10 +210,11 @@ ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 
 if(DEFINED DCMTK_FOUND)
 	add_definitions(-DUSE_DCMTK)
-	target_link_libraries(octdata PUBLIC ${DCMTK_LIBRARIES})
+	target_link_libraries(octdata PRIVATE ${DCMTK_LIBRARIES})
 endif()
 
-target_link_libraries(octdata PUBLIC ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(octdata PRIVATE ${OPENJPEG_LIBRARIES} ${TIFF_LIBRARIES} ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+
 target_link_libraries(octdata PRIVATE OctCppFramework::oct_cpp_framework)
 if(BUILD_WITH_SUPPORT_HE_E2E)
 	target_link_libraries(octdata PRIVATE LibE2E::libe2e)
